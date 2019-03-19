@@ -7,6 +7,8 @@
 
 #include "ilp_solver_cbc.hpp"
 
+#include "ilp_data.hpp"
+
 #include "CglTreeInfo.hpp" // Needed to deal with the probing_info memory leak in Cbc
 #pragma warning(push)
 #pragma warning(disable : 5033) // silence warning in CBC concerning the deprecated keyword 'register'
@@ -19,6 +21,48 @@
 
 namespace ilp_solver
 {
+    class InterimEventHandler : public CbcEventHandler
+    {
+    public:
+        CbcAction event(CbcEvent whichevent) override;
+        CbcEventHandler* clone() const;
+
+        InterimEventHandler(std::function<void (ILPSolutionData*)> p_interim_handler) : d_interim_handler{p_interim_handler} {}
+    private:
+         std::function<void (ILPSolutionData*)> d_interim_handler;
+         ILPSolutionData                         d_last_solution;
+    };
+
+
+    CbcEventHandler::CbcAction InterimEventHandler::event(CbcEvent p_whichevent)
+    {
+        if (p_whichevent == CbcEvent::solution || p_whichevent == CbcEvent::heuristicSolution)
+        {
+            const double* bestSolution = model_->bestSolution();
+            assert(bestSolution);
+
+            auto new_value = model_->getObjValue();
+            if (d_last_solution.solution_status == SolutionStatus::NO_SOLUTION
+                || (model_->getObjSense() * d_last_solution.objective >= model_->getObjSense() * new_value))
+            {
+                auto size = model_->getNumCols();
+                d_last_solution.solution.resize(size);
+                memcpy(d_last_solution.solution.data(), bestSolution, size * sizeof(*bestSolution));
+                d_last_solution.objective = new_value;
+                d_last_solution.solution_status = SolutionStatus::SUBOPTIMAL;
+                d_interim_handler(&d_last_solution);
+            }
+        }
+        return CbcAction::noAction;
+    }
+
+
+    CbcEventHandler* InterimEventHandler::clone() const
+    {
+        return static_cast<CbcEventHandler*>(new InterimEventHandler(*this));
+    }
+
+
     ILPSolverCbc::ILPSolverCbc()
     {
         // CbcModel assumes ownership over solver and deletes it in its destructor.
@@ -139,6 +183,13 @@ namespace ilp_solver
     void ILPSolverCbc::set_max_rel_gap(double p_rel_gap)
     {
         d_model.setAllowableFractionGap(p_rel_gap);
+    }
+
+
+    void ILPSolverCbc::set_interim_results(std::function<void (ILPSolutionData*)> p_interim_handler)
+    {
+        InterimEventHandler handler{ p_interim_handler };
+        d_model.passInEventHandler(&handler); // CBC clones the handler, so no dangling pointer.
     }
 
 

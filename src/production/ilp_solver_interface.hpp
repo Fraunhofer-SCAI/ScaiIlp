@@ -1,11 +1,14 @@
 #pragma once
 
+#include <functional>
 #include <string>
 #include <vector>
 
 
 namespace ilp_solver
 {
+    struct ILPSolutionData;
+
     enum class SolutionStatus { PROVEN_OPTIMAL, PROVEN_INFEASIBLE, PROVEN_UNBOUNDED, SUBOPTIMAL, NO_SOLUTION };
 
 
@@ -150,6 +153,13 @@ namespace ilp_solver
             // p_path must be valid path to a file with write-permission.
             // Not const because some solvers may apply their caches, e.g. CoinModel.writeMps is not const.
             virtual void print_mps_file         (const std::string& p_path)   = 0;
+
+            // Instructs the solver to deal with interim results.
+            // On obtaining any valid solution, if this solution improves the current one, it is written to an ILPSolutionData (defined in ilp_data.hpp)
+            // Then, the given function p_interim_function is called on this ILPSolutionData.
+            // May be unsupported by some solvers.
+            virtual void set_interim_results    (std::function<void (ILPSolutionData*)> p_interim_function) = 0;
+
 
             virtual ~ILPSolverInterface() noexcept {}
     };

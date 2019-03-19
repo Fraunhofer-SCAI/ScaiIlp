@@ -17,17 +17,17 @@ namespace ilp_solver
     ***************************************/
     static void serialize_result(Serializer* v_serializer, const ILPSolutionData& p_solution_data)
     {
-        *v_serializer << p_solution_data.solution
+        *v_serializer << p_solution_data.solution_status
                       << p_solution_data.objective
-                      << p_solution_data.solution_status;
+                      << p_solution_data.solution;
     }
 
 
     static void deserialize_result(Deserializer* v_deserializer, ILPSolutionData* r_solution_data)
     {
-        *v_deserializer >> r_solution_data->solution
+        *v_deserializer >> r_solution_data->solution_status
                         >> r_solution_data->objective
-                        >> r_solution_data->solution_status;
+                        >> r_solution_data->solution;
     }
 
 

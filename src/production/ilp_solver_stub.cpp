@@ -242,9 +242,9 @@ namespace ilp_solver
         const auto shared_memory_name = communicator.write_ilp_data(d_ilp_data);
 
         auto exit_code = execute_process(d_executable_basename, shared_memory_name, seconds_to_milliseconds (1.5 * d_ilp_data.max_seconds));
-        if (exit_code != SolverExitCode::ok)
+
+        communicator.read_solution_data(&d_ilp_solution_data);
+        if (d_ilp_solution_data.solution_status == SolutionStatus::NO_SOLUTION && exit_code != SolverExitCode::ok)
             handle_error(d_ilp_data.log_level, exit_code);
-        else
-            communicator.read_solution_data(&d_ilp_solution_data);
     }
 }

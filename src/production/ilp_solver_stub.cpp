@@ -191,17 +191,6 @@ namespace ilp_solver
     }
 
 
-    static void handle_error(int p_log_level, SolverExitCode p_exit_code)
-    {
-        if (exit_code_should_be_ignored_silently(p_exit_code))
-        {
-            if (p_log_level)
-                std::cout << exit_code_to_message(p_exit_code) << " Exit Code:" << static_cast<int>(p_exit_code);
-        }
-        else
-            throw std::exception(("External ILP solver: " + exit_code_to_message(p_exit_code)).c_str());
-    }
-
     // set_default_parameters is called in ILPSolverCollect.
     ILPSolverStub::ILPSolverStub(const std::string& p_executable_basename)
         : d_executable_basename(p_executable_basename)
@@ -243,8 +232,12 @@ namespace ilp_solver
 
         auto exit_code = execute_process(d_executable_basename, shared_memory_name, seconds_to_milliseconds (1.5 * d_ilp_data.max_seconds));
 
+        if (d_ilp_data.log_level)
+            std::cout << "External Solver messages: \"" << exit_code_to_message(exit_code) << "\" (Exit Code " << static_cast<int>(exit_code) << ")\n";
+
         communicator.read_solution_data(&d_ilp_solution_data);
-        if (d_ilp_solution_data.solution_status == SolutionStatus::NO_SOLUTION && exit_code != SolverExitCode::ok)
-            handle_error(d_ilp_data.log_level, exit_code);
+
+        if (exit_code != SolverExitCode::ok && !exit_code_should_be_ignored_silently(exit_code))
+            throw std::exception(("External ILP solver: " + exit_code_to_message(exit_code)).c_str());
     }
 }

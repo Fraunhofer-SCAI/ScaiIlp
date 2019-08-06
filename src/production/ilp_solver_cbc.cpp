@@ -38,16 +38,15 @@ namespace ilp_solver
     {
         if (p_whichevent == CbcEvent::solution || p_whichevent == CbcEvent::heuristicSolution)
         {
-            const double* bestSolution = model_->bestSolution();
-            assert(bestSolution);
+            const double* best_solution = model_->bestSolution();
+            assert(best_solution);
 
             auto new_value = model_->getObjValue();
             if (d_last_solution.solution_status == SolutionStatus::NO_SOLUTION
-                || (model_->getObjSense() * d_last_solution.objective >= model_->getObjSense() * new_value))
+                || (model_->getObjSense() * d_last_solution.objective > model_->getObjSense() * new_value))
             {
                 auto size = model_->getNumCols();
-                d_last_solution.solution.resize(size);
-                memcpy(d_last_solution.solution.data(), bestSolution, size * sizeof(*bestSolution));
+                d_last_solution.solution.assign(best_solution, best_solution + size);
                 d_last_solution.objective = new_value;
                 d_last_solution.solution_status = SolutionStatus::SUBOPTIMAL;
                 d_interim_handler(&d_last_solution);

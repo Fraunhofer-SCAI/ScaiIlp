@@ -148,9 +148,6 @@ static SolverExitCode solve_ilp(const std::string& p_shared_memory_name)
         CommunicationChild communicator(p_shared_memory_name);
         communicator.read_ilp_data(&data);
 
-        // Empty solution in shared memory so we can be sure the memory is initialized.
-        communicator.write_solution_data( ILPSolutionData() );
-
         auto solution_data = solve_ilp(data, communicator);
 
         communicator.write_solution_data(solution_data);

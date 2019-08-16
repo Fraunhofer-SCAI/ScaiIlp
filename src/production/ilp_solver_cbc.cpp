@@ -30,7 +30,7 @@ namespace ilp_solver
         InterimEventHandler(std::function<void (ILPSolutionData*)> p_interim_handler) : d_interim_handler{p_interim_handler} {}
     private:
          std::function<void (ILPSolutionData*)> d_interim_handler;
-         ILPSolutionData                         d_last_solution;
+         ILPSolutionData                        d_last_solution;
     };
 
 

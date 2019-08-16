@@ -568,10 +568,24 @@ namespace ilp_solver
     {
         srand(3);
         p_solver->set_num_threads(8);
-        // It is not clear that this is sufficient to provoke a bad_alloc.
-        generate_random_problem(p_solver, 500000, 150);
-
         p_solver->set_max_seconds(10); // Don't waste time if we can build the problem.
+
+        // It is not clear that this is sufficient to provoke a bad_alloc.
+        try
+        {
+            generate_random_problem(p_solver, 750000, 150);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << std::endl;
+            BOOST_FAIL("Bad alloc test failed (Could not create problem of the required size).");
+        }
+        catch (...)
+        {
+            std::cerr << "Stub threw unknown exception." << std::endl;
+            BOOST_FAIL("Bad alloc test failed (Could not create problem of the required size).");
+        }
+
         try
         {
             // bad_alloc should be treated as "no solution"

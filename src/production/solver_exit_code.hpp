@@ -26,6 +26,8 @@ enum class SolverExitCode
     // Observed for stack buffer overflow on Windows 10.
     // Google also points to stack buffer overflow.
     uncaught_exception_3 = -1073740791,
+    // heap corruption, possibly overflow, too.
+    uncaught_exception_4 = -1073740940,
 
     // Our own exit codes, starting from an arbitrary value that is unlikely to be used by Windows for internal codes
     // --------------------------------------------------------------------------------------------------------------

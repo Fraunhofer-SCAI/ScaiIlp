@@ -27,7 +27,7 @@ namespace ilp_solver
         CbcAction event(CbcEvent whichevent) override;
         CbcEventHandler* clone() const;
 
-        InterimEventHandler(std::function<void (ILPSolutionData*)> p_interim_handler) : d_interim_handler{p_interim_handler} {}
+        InterimEventHandler(std::function<void (ILPSolutionData*)> p_interim_handler) : d_interim_handler{std::move(p_interim_handler)} {}
     private:
          std::function<void (ILPSolutionData*)> d_interim_handler;
          ILPSolutionData                        d_last_solution;
@@ -206,6 +206,7 @@ namespace ilp_solver
         if (probing_ptr)
             delete probing_ptr;
 
+        d_model.initialSolve();
         d_model.branchAndBound();
     }
 

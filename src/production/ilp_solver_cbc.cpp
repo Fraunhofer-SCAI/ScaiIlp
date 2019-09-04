@@ -206,7 +206,6 @@ namespace ilp_solver
         if (probing_ptr)
             delete probing_ptr;
 
-        d_model.initialSolve();
         d_model.branchAndBound();
     }
 

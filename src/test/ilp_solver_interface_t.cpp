@@ -573,7 +573,7 @@ namespace ilp_solver
         // It is not clear that this is sufficient to provoke a bad_alloc.
         try
         {
-            generate_random_problem(p_solver, 750000, 150);
+            generate_random_problem(p_solver, 500000, 150);
         }
         catch(const std::exception& e)
         {

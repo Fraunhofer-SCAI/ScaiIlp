@@ -28,6 +28,8 @@ enum class SolverExitCode
     uncaught_exception_3 = -1073740791,
     // heap corruption, possibly overflow, too.
     uncaught_exception_4 = -1073740940,
+    // access violation (-1073741819 = 0xc0000005), see https://stackoverflow.com/questions/17168982/exception-error-c0000005-in-vc
+    uncaught_exception_5 = -1073741819,
 
     // Our own exit codes, starting from an arbitrary value that is unlikely to be used by Windows for internal codes
     // --------------------------------------------------------------------------------------------------------------

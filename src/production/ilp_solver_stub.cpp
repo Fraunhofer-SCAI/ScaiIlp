@@ -149,6 +149,8 @@ namespace ilp_solver
         {
         case SolverExitCode::ok:
             return "";
+        case SolverExitCode::killed_via_task_manager:
+            return "ScaiIlp killed.";
         case SolverExitCode::uncaught_exception_1:
             return "Uncaught exception, likely out of memory (stack buffer overflow Windows 7).";
         case SolverExitCode::uncaught_exception_2:

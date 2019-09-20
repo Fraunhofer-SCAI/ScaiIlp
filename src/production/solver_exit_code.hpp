@@ -4,6 +4,9 @@ enum class SolverExitCode
 {
     ok = 0,
 
+    // According to https://stackoverflow.com/questions/4344923/process-exit-code-when-process-is-killed-forcibly
+    killed_via_task_manager = 1,
+
     // Exit codes that we observed when CBC crashed
     // --------------------------------------------
     // The usual reason for CBC to crash is when a thread runs out of memory and/or throws an exception which is not caught.

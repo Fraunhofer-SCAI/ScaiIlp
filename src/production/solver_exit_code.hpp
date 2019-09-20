@@ -44,3 +44,5 @@ enum class SolverExitCode
 static_assert (static_cast<int>(SolverExitCode::uncaught_exception_1) == 0x00000003);
 static_assert (static_cast<int>(SolverExitCode::uncaught_exception_2) == 0xE06D7363);
 static_assert (static_cast<int>(SolverExitCode::uncaught_exception_3) == 0xC0000409);
+static_assert (static_cast<int>(SolverExitCode::uncaught_exception_4) == 0xC0000374);
+static_assert (static_cast<int>(SolverExitCode::uncaught_exception_5) == 0xC0000005);

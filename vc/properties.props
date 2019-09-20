@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <BOOST_VERSION>1_68</BOOST_VERSION>
+    <BOOST_VERSION>1_71</BOOST_VERSION>
     <BOOST_DIR>$(optsoft)\boost_$(BOOST_VERSION)_0\vc$(PlatformToolsetVersion)_idl0_x$(PlatformArchitecture)</BOOST_DIR>
     <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc141_full</PTHREAD_DIR>
     <WITH_OSI>true</WITH_OSI>

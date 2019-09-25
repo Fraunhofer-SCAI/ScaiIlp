@@ -108,9 +108,9 @@ namespace ilp_solver
         case GRB_OPTIMAL:         return SolutionStatus::PROVEN_OPTIMAL;    // The only three cases were current_status
         case GRB_INFEASIBLE:      return SolutionStatus::PROVEN_INFEASIBLE; // does not hold the correct value.
         case GRB_UNBOUNDED:       return SolutionStatus::PROVEN_UNBOUNDED;
+        case GRB_CUTOFF:          return SolutionStatus::PROVEN_INFEASIBLE;
         case GRB_LOADED:          [[fallthrough]];
         case GRB_INF_OR_UNBD:     [[fallthrough]];
-        case GRB_CUTOFF:          [[fallthrough]];
         case GRB_ITERATION_LIMIT: [[fallthrough]];
         case GRB_NODE_LIMIT:      [[fallthrough]];
         case GRB_TIME_LIMIT:      [[fallthrough]];
@@ -212,6 +212,14 @@ namespace ilp_solver
     {
         assert(p_rel_gap >= 0.);
         call_gurobi( d_model, GRBsetdblparam, GRBgetenv(d_model), GRB_DBL_PAR_MIPGAP, p_rel_gap);
+    }
+
+
+    void ILPSolverGurobi::set_cutoff(double p_cutoff)
+    {
+        // Only set cutoff if intended. Otherwise stick to the Gurobi default.
+        if (p_cutoff != c_default_cutoff)
+            call_gurobi( d_model, GRBsetdblparam, GRBgetenv(d_model), GRB_DBL_PAR_CUTOFF, p_cutoff);
     }
 
 

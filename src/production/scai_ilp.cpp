@@ -77,6 +77,7 @@ static void set_solver_parameters(ILPSolverInterface* v_solver, const ILPData& p
     v_solver->set_max_solutions     (p_data.max_solutions);
     v_solver->set_max_abs_gap       (p_data.max_abs_gap);
     v_solver->set_max_rel_gap       (p_data.max_rel_gap);
+    v_solver->set_cutoff            (p_data.cutoff);
 }
 
 

@@ -53,7 +53,8 @@ namespace ilp_solver
                       << p_data.max_nodes
                       << p_data.max_solutions
                       << p_data.max_abs_gap
-                      << p_data.max_rel_gap;
+                      << p_data.max_rel_gap
+                      << p_data.cutoff;
 
         auto result_address = v_serializer->current_address();
 
@@ -82,7 +83,8 @@ namespace ilp_solver
                         >> r_data->max_nodes
                         >> r_data->max_solutions
                         >> r_data->max_abs_gap
-                        >> r_data->max_rel_gap;
+                        >> r_data->max_rel_gap
+                        >> r_data->cutoff;
 
         return v_deserializer->current_address();
     }

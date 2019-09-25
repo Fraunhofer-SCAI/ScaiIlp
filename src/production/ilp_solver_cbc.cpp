@@ -185,6 +185,14 @@ namespace ilp_solver
     }
 
 
+    void ILPSolverCbc::set_cutoff(double p_cutoff)
+    {
+        // Only set cutoff if intended. Otherwise stick to the CBC default.
+        if (p_cutoff != c_default_cutoff)
+            d_model.setCutoff(p_cutoff);
+    }
+
+
     void ILPSolverCbc::set_interim_results(std::function<void (ILPSolutionData*)> p_interim_handler)
     {
         InterimEventHandler handler{ p_interim_handler };

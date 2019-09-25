@@ -20,6 +20,7 @@ namespace ilp_solver
         p_solver->set_max_solutions     (c_default_max_solutions);
         p_solver->set_max_abs_gap       (c_default_max_abs_gap);
         p_solver->set_max_rel_gap       (c_default_max_rel_gap);
+        p_solver->set_cutoff            (c_default_cutoff);
     }
 
 

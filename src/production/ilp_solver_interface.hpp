@@ -22,6 +22,7 @@ namespace ilp_solver
     static constexpr int    c_default_max_nodes    { std::numeric_limits<int>::max() };
     static constexpr double c_default_max_abs_gap  { 0. };
     static constexpr double c_default_max_rel_gap  { 0. };
+    static constexpr double c_default_cutoff       { std::numeric_limits<double>::max() };
 
     constexpr double c_pos_inf_bound{ std::numeric_limits<double>::max() / 2 };
     constexpr double c_neg_inf_bound{ std::numeric_limits<double>::lowest() / 2 };
@@ -148,6 +149,11 @@ namespace ilp_solver
             // The computation of the relative gap may be solver-dependent.
             // May be unsupported by some solvers.
             virtual void set_max_rel_gap        (double p_gap)         = 0;
+
+            // Set cutoff bound on the objective function
+            // (i.e. upper bound for minimization problems and lower bound for maximization problems).
+            // May be unsupported by some solvers.
+            virtual void set_cutoff             (double p_cutoff)      = 0;
 
             // Print a mps-formatted file of the current model.
             // p_path must be valid path to a file with write-permission.

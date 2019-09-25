@@ -339,4 +339,10 @@ namespace ilp_solver
     {
         d_ilp_data.max_rel_gap = p_rel_gap;
     }
+
+
+    void ILPSolverCollect::set_cutoff(double p_cutoff)
+    {
+        d_ilp_data.cutoff = p_cutoff;
+    }
 }

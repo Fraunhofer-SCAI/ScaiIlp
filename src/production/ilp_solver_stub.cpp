@@ -52,12 +52,10 @@ namespace ilp_solver
 
     static SolverExitCode execute_process(const string& p_executable_basename, const string& p_parameter, int p_wait_milliseconds)
     {
-        // get and check executable path
+        // prepare command line
         const auto executable = full_executable_name(p_executable_basename);
         if (!std::filesystem::exists(executable))
             throw SolverExeException(("Could not find " + p_executable_basename).c_str());
-
-        // prepare command line
         auto command_line = quote(executable) + ' ' + quote(p_parameter);
 
         // prepare parameters

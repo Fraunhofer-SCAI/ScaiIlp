@@ -118,10 +118,11 @@ namespace ilp_solver
 
     void ILPSolverCbc::set_start_solution(const std::vector<double>& p_solution)
     {
-        // Set the current best solution of Cbc to the given solution, check for feasibility, but not for better objective value.
-        // get_num_variables necessary since the cache may not be included in the problem.
+        // make sure that the cache was integrated
+        prepare_impl();
         assert( static_cast<int>(p_solution.size()) == get_num_variables() );
-        d_model.setBestSolution(p_solution.data(), static_cast<int>(p_solution.size()), COIN_DBL_MAX, false);
+        // Set the current best solution of Cbc to the given solution, check for feasibility, but not for better objective value.
+        d_model.setBestSolution(p_solution.data(), static_cast<int>(p_solution.size()), COIN_DBL_MAX, true);
     }
 
 

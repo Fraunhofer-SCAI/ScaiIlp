@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{37250A30-6839-456E-B7EF-BEA2253EA52F}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ScaiIlpExe</RootNamespace>

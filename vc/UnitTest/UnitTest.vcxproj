@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{F7209567-12FF-4106-B62E-ED96B1B0BAA8}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>UnitTest</RootNamespace>

@@ -9,10 +9,10 @@ Table of Contents
 
 2. Building
 
-    1. Building Cbc with VS 2017
-    2. Optional: Building pthreads-win32 with VS 2017
-    3. Building SCIP with VS 2017
-    4. Building ScaiIlp with VS 2017
+    1. Building Cbc with VS 2019
+    2. Optional: Building pthreads-win32 with VS 2019
+    3. Building SCIP with VS 2019
+    4. Building ScaiIlp with VS 2019
 
 3. Code Structure
 
@@ -76,7 +76,7 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 2 Building
 ==========
 
-2.1 Building Cbc with VS 2017
+2.1 Building Cbc with VS 2019
 -----------------------------
 
 1. Download Cbc from the [COIN project](https://www.coin-or.org/).
@@ -84,9 +84,9 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
     * via SVN:  svn co https://projects.coin-or.org/svn/Cbc/stable/2.9 coin-Cbc
     * Wiki:     https://projects.coin-or.org/Cbc/wiki
 
-2. Rename the directory Cbc\MSVisualStudio\v10 to Cbc\MSVisualStudio\v141 and open Cbc\MSVisualStudio\v141\Cbc.sln with VS 2017 (Ignore v14)
+2. Rename the directory Cbc\MSVisualStudio\v10 to Cbc\MSVisualStudio\v142 and open Cbc\MSVisualStudio\v142\Cbc.sln with VS 2019 (Ignore v14)
 
-3. Let VS update the projects (Your current Windows SDK Version, PlatForm Toolset v141)
+3. Let VS update the projects (Your current Windows SDK Version, PlatForm Toolset v142)
 
 4. Right-click onto "Solution" in the Solution Explorer and choose "Properties". Then use the following settings:
     * Common Properties / Project Dependencies:
@@ -122,7 +122,7 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
         * General / Output Directory:                $(SolutionDir)$(PlatformTarget)-$(PlatformToolset)-$(Configuration)\
         * General / Intermediate Directory:          $(PlatformTarget)-$(PlatformToolset)-$(Configuration)\
         * General / Windows SDK Version:             Your current SDK
-        * General / Platform Toolset:                Visual Studio 2017 (v141)
+        * General / Platform Toolset:                Visual Studio 2019 (v142)
         * C/C++   / Preprocessor / Preprocessor Definitions:   prepend "_ITERATOR_DEBUG_LEVEL=0;" (without double quotes)
         * C/C++   / Output Files / Program Database File Name: $(OutDir)$(TargetName).pdb
 
@@ -148,13 +148,13 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
         * libOsiCbc  Release  x64   Release|x64
 
 
-2.2 Optional: Building pthreads-win32 with VS 2017 (only if Cbc should support multi-threading)
+2.2 Optional: Building pthreads-win32 with VS 2019 (only if Cbc should support multi-threading)
 -----------------------------------------------------------------------------------------------
 
 1. Download pthreads-win32 from the [Pthreads-Win32 project](https://sourceware.org/pthreads-win32/)
     * Download: ftp://sourceware.org/pub/pthreads-win32/
 
-2. Open pthread.dsw with VS 2017 and let it upgrade the project.
+2. Open pthread.dsw with VS 2019 and let it upgrade the project.
 
 3. When you want to compile for 64 bit platforms:
     * Choose "Build" -> "Configuration Manager".
@@ -171,7 +171,7 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
         * General / Output Directory:                $(SolutionDir)$(PlatformTarget)-$(PlatformToolset)-$(Configuration)\
         * General / Intermediate Directory:          $(PlatformTarget)-$(PlatformToolset)-$(Configuration)\
         * General / Windows SDK Version:             Your current SDK
-        * General / Platform Toolset:                Visual Studio 2017 (v141)
+        * General / Platform Toolset:                Visual Studio 2019 (v142)
         * C/C++ / General             / Debug Information Format:       Program Database (/Zi)
         * C/C++ / Preprocessor        / Preprocessor Definitions:       prepend "_ITERATOR_DEBUG_LEVEL=0;_TIMESPEC_DEFINED;" (without double quotes)
         * C/C++ / Precompiled Headers / Precompiled Header Output File: $(IntDir)pthread.pch
@@ -198,13 +198,13 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 9. Find the file pthreads.h in project "pthread" -> "Header Files"
     * At the top of the file, insert the line "#define _TIMESPEC_DEFINED" (without double quotes)
 
-2.3 Building SCIP with VS 2017
+2.3 Building SCIP with VS 2019
 ------------------------------
 
 1. To obtain SCIP, visit https://scip.zib.de/index.php#download
    and download the SCIP Optimization Suite.
 
-2. Open the CMake script provided with SCIP in VS2017 with File -> Open -> CMake.
+2. Open the CMake script provided with SCIP in VS2019 with File -> Open -> CMake.
    The correct file is CMakeLists.txt inside the SCIP Optimization Suite folder.
 
 3. You may need to overwrite some compiler flags to compile the Release builds.
@@ -218,14 +218,14 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 
 4. You may want to set different build/install directories.
 
-5. Compile the needed configurations [32|64 bit] in [Release | Debug] mode.
+5. Compile the needed configurations [32|64] bit in [Release | Debug] mode.
 
 6. This version of SCIP will run only single-threaded.
    To use SCIP multithreaded you will need to compile it with the Ubiquity Generator (UG) framework.
    The UG-framework does only provide makefiles,
    so doing this on Windows is not easy and we can not provide a guideline for it.
 
-2.4 Building ScaiIlp with VS 2017
+2.4 Building ScaiIlp with VS 2019
 ---------------------------------
 
 1. Ensure that you have built Cbc as described above.
@@ -240,7 +240,7 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 
 4. [OPTIONAL] If you want to support multithreading,
    specify the root-location of pthread with the User Macro "PTHREAD_DIR" in the properties.props file
-   whereby PTHREAD_DIR has to contain the folders "x86-v141-Release", "x86-v141-Debug", "x64-v141-Release" and "x64-v141-Debug",
+   whereby PTHREAD_DIR has to contain the folders "x86-v142-Release", "x86-v142-Debug", "x64-v142-Release" and "x64-v142-Debug",
    each containing the appropriate version of pthread.dll.
    If your structure does not follow this, you may want to manually edit the corresponding CustomBuild setting in ScaiIlpDll.vcxproj.
 

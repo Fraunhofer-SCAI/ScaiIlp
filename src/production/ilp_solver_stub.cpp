@@ -144,6 +144,8 @@ namespace ilp_solver
             return "Uncaught exception, the heap was most likely filled or corrupted.";
         case SolverExitCode::uncaught_exception_5:
             return "Uncaught exception: Access violation.";
+        case SolverExitCode::missing_dll:
+            return "DLL missing";
         case SolverExitCode::out_of_memory:
             return "Out of memory.";
         case SolverExitCode::command_line_error:

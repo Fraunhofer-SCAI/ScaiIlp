@@ -31,6 +31,9 @@ enum class SolverExitCode
     // access violation, see https://stackoverflow.com/questions/17168982/exception-error-c0000005-in-vc
     uncaught_exception_5 = -1073741819,
 
+    // occurs when ScaiIlpExe.exe is missing a DLL
+    missing_dll = -1073741515,
+
     // Our own exit codes, starting from an arbitrary value that is unlikely to be used by Windows for internal codes
     // --------------------------------------------------------------------------------------------------------------
     out_of_memory        = 14142,
@@ -46,3 +49,4 @@ static_assert (static_cast<int>(SolverExitCode::uncaught_exception_2) == 0xE06D7
 static_assert (static_cast<int>(SolverExitCode::uncaught_exception_3) == 0xC0000409);
 static_assert (static_cast<int>(SolverExitCode::uncaught_exception_4) == 0xC0000374);
 static_assert (static_cast<int>(SolverExitCode::uncaught_exception_5) == 0xC0000005);
+static_assert (static_cast<int>(SolverExitCode::missing_dll)          == 0xC0000135);

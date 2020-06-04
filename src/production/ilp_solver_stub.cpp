@@ -1,5 +1,6 @@
 #include "ilp_solver_stub.hpp"
 
+#include "ilp_solver_interface.hpp"
 #include "shared_memory_communication.hpp"
 #include "solver_exit_code.hpp"
 
@@ -227,7 +228,8 @@ namespace ilp_solver
             std::cout << "External Solver messages: \"" << exit_code_to_message(exit_code) << "\" (Exit Code " << static_cast<int>(exit_code) << ")\n";
 
         communicator.read_solution_data(&d_ilp_solution_data);
-
+        if (exit_code == SolverExitCode::missing_dll) // missing DLL should be a Runtime Error
+            throw ilp_solver::SolverExeException(("External ILP solver: " + exit_code_to_message(exit_code)).c_str());
         if (exit_code != SolverExitCode::ok && !exit_code_should_be_ignored_silently(exit_code))
             throw std::exception(("External ILP solver: " + exit_code_to_message(exit_code)).c_str());
     }

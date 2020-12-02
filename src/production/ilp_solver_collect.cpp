@@ -34,6 +34,7 @@ namespace ilp_solver
         {
             const auto row_index = p_row_indices[i];
             const auto value = p_row_values[i];
+            assert(0 <= row_index && row_index < v_matrix->size());
             (*v_matrix)[row_index].back() = value;
         }
     }
@@ -57,6 +58,7 @@ namespace ilp_solver
         {
             const auto col_index = p_col_indices[i];
             const auto value = p_col_values[i];
+            assert(0 <= col_index && col_index < row.size());
             row[col_index] = value;
         }
     }
@@ -266,7 +268,7 @@ namespace ilp_solver
             assert(p_col_values.size() == p_col_indices->size());
             assert(p_col_indices->size() <= d_ilp_data.objective.size());
 
-            int n_cols = static_cast<int>(d_ilp_data.objective.size());
+            const int n_cols = static_cast<int>(d_ilp_data.objective.size());
             append_row(&d_ilp_data.matrix, n_cols, *p_col_indices, p_col_values);
         }
 

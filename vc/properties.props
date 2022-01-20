@@ -14,6 +14,7 @@
     <GUROBI_DIR>$(optsoft)\Gurobi-8.0.1</GUROBI_DIR>
     <BOOST_LIB_PATH>$(BOOST_DIR)\lib</BOOST_LIB_PATH>
     <BOOST_INCLUDE_PATH>$(BOOST_DIR)\include\boost-$(BOOST_VERSION)</BOOST_INCLUDE_PATH>
+    <PTHREAD_LIB_PATH>$(PTHREAD_DIR)\$(PlatformTarget)-v$(PlatformToolsetVersion)-$(Configuration)</PTHREAD_LIB_PATH>
     <COIN_LIB_PATH>$(COIN_DIR)\lib</COIN_LIB_PATH>
     <COIN_INCLUDE_PATHS>$(COIN_DIR)\include\coin</COIN_INCLUDE_PATHS>
     <SCIP_LIB_PATH>$(SCIP_DIR)\lib</SCIP_LIB_PATH>

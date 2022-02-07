@@ -7,7 +7,7 @@
     <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc$(PlatformToolsetVersion)_full</PTHREAD_DIR>
     <WITH_OSI>true</WITH_OSI>
     <WITH_CBC>true</WITH_CBC>
-    <COIN_DIR>$(optsoft)\Cbc-2.10.6\vc$(PlatformToolsetVersion)_$(Configuration)_$(PlatformTarget)</COIN_DIR>
+    <COIN_DIR>$(optsoft)\Cbc-2.10.7dev\vc$(PlatformToolsetVersion)_$(Configuration)_$(PlatformTarget)</COIN_DIR>
     <WITH_SCIP>false</WITH_SCIP>
     <SCIP_DIR>$(optsoft)\SCIP\$(PlatformTarget)-$(Configuration)</SCIP_DIR>
     <WITH_GUROBI>false</WITH_GUROBI>

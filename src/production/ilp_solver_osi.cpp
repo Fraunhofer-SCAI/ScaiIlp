@@ -1,6 +1,8 @@
 #if WITH_OSI == 1
 
 #include "ilp_solver_osi.hpp"
+#include "utility.hpp"
+
 
 #pragma warning(push)
 #pragma warning(disable : 4309) // silence warning in CBC concerning truncations of constant values in 64 bit.
@@ -30,7 +32,7 @@ namespace ilp_solver
     void ILPSolverOsi::set_start_solution(const std::vector<double>& p_solution)
     {
         // get_num_variables necessary since the cache may not be included in the problem.
-        assert(static_cast<int>(p_solution.size()) == get_num_variables());
+        assert(isize(p_solution) == get_num_variables());
 
         d_ilp_solver->setColSolution(p_solution.data());
     }

@@ -47,7 +47,7 @@ bool operator!=(const vector<T>& p_vector_1, const vector<T>& p_vector_2)
     if (p_vector_1.size() != p_vector_2.size())
         return true;
 
-    for (auto i = 0; i < (int) p_vector_1.size(); ++i)
+    for (auto i = 0; i < isize(p_vector_1); ++i)
         if (p_vector_1[i] != p_vector_2[i])
             return true;
 

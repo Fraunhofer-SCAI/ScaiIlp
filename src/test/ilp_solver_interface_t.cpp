@@ -1,6 +1,8 @@
 #include "ilp_solver_factory.hpp"
 #include "ilp_solver_interface.hpp"
 
+#include "utility.hpp"
+
 #include <algorithm>
 #include <array>
 #include <boost/test/unit_test.hpp>
@@ -84,7 +86,7 @@ namespace ilp_solver
         std::stringstream logging;
 
         std::vector<int> numbers{ 62, 20, 4, 49, 97, 73, 35, 51, 18, 86};
-        const auto num_vars = (int) numbers.size();
+        const auto num_vars = isize(numbers);
 
         // xi - target position of numbers[i]
         //

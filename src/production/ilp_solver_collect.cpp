@@ -1,5 +1,7 @@
 #include "ilp_solver_collect.hpp"
 
+#include "utility.hpp"
+
 #include <cassert>
 #include <fstream>
 #include <iomanip>
@@ -15,7 +17,7 @@ namespace ilp_solver
     static void append_column(Matrix* v_matrix, const vector<double>& p_row_values)
     {
         // set specified values
-        for (int i = 0; i < static_cast<int>(v_matrix->size()); i++)
+        for (int i = 0; i < isize(*v_matrix); i++)
             (*v_matrix)[i].push_back(p_row_values[i]);
     }
 
@@ -30,11 +32,11 @@ namespace ilp_solver
             row.push_back(0.0);
 
         // set specified values
-        for (auto i = 0; i < (int) p_row_indices.size(); ++i)
+        for (auto i = 0; i < isize(p_row_indices); ++i)
         {
             const auto row_index = p_row_indices[i];
             const auto value = p_row_values[i];
-            assert(0 <= row_index && row_index < v_matrix->size());
+            assert(0 <= row_index && row_index < isize(*v_matrix));
             (*v_matrix)[row_index].back() = value;
         }
     }
@@ -54,11 +56,11 @@ namespace ilp_solver
 
         // set specified values
         auto& row = v_matrix->back();
-        for (auto i = 0; i < (int) p_col_indices.size(); ++i)
+        for (auto i = 0; i < isize(p_col_indices); ++i)
         {
             const auto col_index = p_col_indices[i];
             const auto value = p_col_values[i];
-            assert(0 <= col_index && col_index < row.size());
+            assert(0 <= col_index && col_index < isize(row));
             row[col_index] = value;
         }
     }
@@ -66,13 +68,13 @@ namespace ilp_solver
 
     int ILPSolverCollect::get_num_constraints() const
     {
-        return static_cast<int>(d_ilp_data.constraint_lower.size());
+        return isize(d_ilp_data.constraint_lower);
     }
 
 
     int ILPSolverCollect::get_num_variables()   const
     {
-        return static_cast<int>(d_ilp_data.variable_lower.size());
+        return isize(d_ilp_data.variable_lower);
     }
 
 
@@ -99,7 +101,7 @@ namespace ilp_solver
 
             std::stringstream cons, rhs, rhs_range;
 
-            for (int i = 0; i < static_cast<int>(p_data.constraint_lower.size()); ++i)
+            for (int i = 0; i < isize(p_data.constraint_lower); ++i)
             {
                 const auto lower = p_data.constraint_lower[i];
                 const auto upper = p_data.constraint_upper[i];
@@ -156,7 +158,7 @@ namespace ilp_solver
             std::stringstream bounds;
 
             v_outstream << "COLUMNS\n";
-            for (int i = 0; i < static_cast<int>(p_data.objective.size()); ++i)
+            for (int i = 0; i < isize(p_data.objective); ++i)
             {
                 const auto name = to_name(i, 'X');
                 const auto obj  = p_data.objective[i];
@@ -182,7 +184,7 @@ namespace ilp_solver
 
                 v_outstream << "    " << name << ' ' << "OBJ             " << obj << '\n';
 
-                for (int j = 0; j < static_cast<int>(p_data.matrix.size()); ++j)
+                for (int j = 0; j < isize(p_data.matrix); ++j)
                 {
                     v_outstream << "    " << name << ' ' << p_names[j] << ' ' << p_data.matrix[j][i] << '\n';
                 }
@@ -268,7 +270,7 @@ namespace ilp_solver
             assert(p_col_values.size() == p_col_indices->size());
             assert(p_col_indices->size() <= d_ilp_data.objective.size());
 
-            const int n_cols = static_cast<int>(d_ilp_data.objective.size());
+            const auto n_cols = isize(d_ilp_data.objective);
             append_row(&d_ilp_data.matrix, n_cols, *p_col_indices, p_col_values);
         }
 

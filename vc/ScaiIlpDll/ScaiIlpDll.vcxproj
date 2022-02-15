@@ -23,7 +23,7 @@
     <ProjectGuid>{F3E554F5-F2D5-4185-86A5-87D100CCDA78}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ScaiIlpDll</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -204,6 +204,7 @@
     <ClInclude Include="..\..\src\production\serialization.hpp" />
     <ClInclude Include="..\..\src\production\shared_memory_communication.hpp" />
     <ClInclude Include="..\..\src\production\solver_exit_code.hpp" />
+    <ClInclude Include="..\..\src\production\utility.hpp" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

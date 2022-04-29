@@ -8,6 +8,7 @@
 #include "ilp_solver_cbc.hpp"
 
 #include "ilp_data.hpp"
+#include "utility.hpp"
 
 #include "CglTreeInfo.hpp" // Needed to deal with the probing_info memory leak in Cbc
 #pragma warning(push)
@@ -122,9 +123,9 @@ namespace ilp_solver
     {
         // make sure that the cache was integrated
         prepare_impl();
-        assert( static_cast<int>(p_solution.size()) == get_num_variables() );
+        assert( isize(p_solution) == get_num_variables() );
         // Set the current best solution of Cbc to the given solution, check for feasibility, but not for better objective value.
-        d_model.setBestSolution(p_solution.data(), static_cast<int>(p_solution.size()), COIN_DBL_MAX, true);
+        d_model.setBestSolution(p_solution.data(), isize(p_solution), COIN_DBL_MAX, true);
     }
 
 

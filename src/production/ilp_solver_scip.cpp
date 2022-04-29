@@ -1,6 +1,7 @@
 #if WITH_SCIP == 1
 
 #include "ilp_solver_scip.hpp"
+#include "utility.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -71,13 +72,13 @@ namespace ilp_solver
 
     int ILPSolverSCIP::get_num_constraints() const
     {
-        return static_cast<int>(d_rows.size());
+        return isize(d_rows);
     }
 
 
     int ILPSolverSCIP::get_num_variables() const
     {
-        return static_cast<int>(d_cols.size());
+        return isize(d_cols);
     }
 
 
@@ -182,7 +183,7 @@ namespace ilp_solver
         // Internally, SCIP calls a single-variable setter for every variable with a by-value pass of the corresponding double,
         // so the const_cast should not violate actual const-ness.
         // Sadly, it is not avoidable since SCIP is not const-correct. (SCIP 6.0)
-        call_scip(SCIPsetSolVals, d_scip, sol, static_cast<int>(d_cols.size()), d_cols.data(), const_cast<double*>(p_solution.data()));
+        call_scip(SCIPsetSolVals, d_scip, sol, isize(d_cols), d_cols.data(), const_cast<double*>(p_solution.data()));
         call_scip(SCIPaddSolFree, d_scip, &sol, &ignored);
     }
 
@@ -315,7 +316,7 @@ namespace ilp_solver
         call_scip( SCIPaddVar, d_scip, var );
         d_cols.push_back(var); // We need to store the variables seperately to access them later on.
 
-        auto n = static_cast<int>(d_rows.size()); // num_constraints.
+        auto n = isize(d_rows); // num_constraints.
 
         if (p_row_values) // If we have coefficients given...
         {
@@ -370,7 +371,7 @@ namespace ilp_solver
                 tmp.push_back(d_cols[i]);
             }
             vars = tmp.data();
-            size = static_cast<int>(tmp.size());
+            size = isize(tmp);
         }
 
         // SCIP uses a double*, not a const double*, but ScaiILP demands a const std::vector<double>&.

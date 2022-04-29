@@ -6,6 +6,7 @@
 #pragma comment(lib, "libOsiClp.lib")
 
 #include "ilp_solver_osi_model.hpp"
+#include "utility.hpp"
 
 #pragma warning(push)
 #pragma warning(disable : 4309) // silence warning in CBC concerning truncations of constant values in 64 bit.
@@ -61,16 +62,16 @@ namespace ilp_solver
             if (p_values != nullptr) {
                 assert ((p_indices == nullptr) || (p_indices->size() == p_values->size()));
 
-                int num_zeros{ static_cast<int>(std::count(p_values->begin(), p_values->end(), 0.)) };
+                auto num_zeros{ static_cast<int>(std::count(p_values->begin(), p_values->end(), 0.)) };
 
                 if (num_zeros > 0)
                 {
-                    d_num_indices = static_cast<int>(p_values->size()) - num_zeros;
+                    d_num_indices = isize(*p_values) - num_zeros;
                     d_owns        = c_owns_values | c_owns_indices;
                     d_values      = new double[d_num_indices];
                     d_indices     = new int   [d_num_indices];
 
-                    for (int i = 0, j = 0; i < static_cast<int>(p_values->size()); i++)
+                    for (int i = 0, j = 0; i < isize(*p_values); i++)
                     {
                         auto value = (*p_values)[i];
                         // Construct the new arrays. If we have no indices, use the current index.
@@ -86,7 +87,7 @@ namespace ilp_solver
                     // const_cast is valid since we do not ever manipulate this data
                     // and the getter-methods return const pointers again.
                     d_values      = const_cast<double*>(p_values->data());
-                    d_num_indices = static_cast<int>(p_values->size());
+                    d_num_indices = isize(*p_values);
 
                     if (p_indices == nullptr)
                     {

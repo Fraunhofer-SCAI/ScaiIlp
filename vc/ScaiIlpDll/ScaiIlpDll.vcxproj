@@ -204,6 +204,7 @@
     <ClInclude Include="..\..\src\production\serialization.hpp" />
     <ClInclude Include="..\..\src\production\shared_memory_communication.hpp" />
     <ClInclude Include="..\..\src\production\solver_exit_code.hpp" />
+    <ClInclude Include="..\..\src\production\utility.hpp" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

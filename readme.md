@@ -81,11 +81,10 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 
 1. Download the coinbrew script from https://coin-or.github.io/coinbrew/
 
-2. Follow the instructions described there or in its help to compile.
+2. Follow the instructions described in https://coin-or.github.io/user_introduction#windows-1 to compile it to your specifications.
 
 3. We require the configuration options
     * --enable-shared
-   if using the MSVC compiler, we also require
     * ADD_CXXFLAGS=-D_ITERATOR_DEBUG_LEVEL=0
 
 4. If Cbc should support multi-threading via pthreads (see section 2.2), you also need to provide the configuration options

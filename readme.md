@@ -81,17 +81,16 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 
 1. Download the coinbrew script from https://coin-or.github.io/coinbrew/
 
-2. Follow the instructions described there or in its help to compile.
+2. Follow the instructions described in https://coin-or.github.io/user_introduction#windows-1 to compile it to your specifications.
 
 3. We require the configuration options
     * --enable-shared
-   if using the MSVC compiler, we also require
-	* ADD_CXXFLAGS=-D_ITERATOR_DEBUG_LEVEL=0
+    * ADD_CXXFLAGS=-D_ITERATOR_DEBUG_LEVEL=0
 
 4. If Cbc should support multi-threading via pthreads (see section 2.2), you also need to provide the configuration options
     * --enable-cbc-parallel
-	* --with-pthreadsw32-lib=path_to_pthreads_lib
-	* --with-pthreadsw32-incdir=path_to_pthreads_include
+    * --with-pthreadsw32-lib=path_to_pthreads_lib
+    * --with-pthreadsw32-incdir=path_to_pthreads_include
 
 2.2 Optional: Building pthreads-win32 with VS 2019 (only if Cbc should support multi-threading)
 -----------------------------------------------------------------------------------------------
@@ -155,13 +154,13 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 3. You may need to overwrite some compiler flags to compile the Release builds.
    In the files ./scip/CMakeLists.txt and ./soplex/CMakeLists.txt in lines 3 and 4 respectively,
 
-```
+   ```
    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS_RELEASE}")
        -> set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE}")
 
    set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_DEBUG} ${CMAKE_C_FLAGS_RELEASE}")
        -> set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELEASE}")
-```
+   ```
 
 4. You may want to set different build/install directories.
 

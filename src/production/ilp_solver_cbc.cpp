@@ -39,14 +39,16 @@ namespace ilp_solver
     {
         if (p_whichevent == CbcEvent::solution || p_whichevent == CbcEvent::heuristicSolution)
         {
-            const double* best_solution = model_->bestSolution();
-            assert(best_solution);
+            auto          model         = this->getModel();
+            const double* best_solution = model->bestSolution();
+            if (!best_solution)
+                return CbcAction::noAction;
 
-            auto new_value = model_->getObjValue();
+            auto new_value = model->getObjValue();
             if (d_last_solution.solution_status == SolutionStatus::NO_SOLUTION
-                || (model_->getObjSense() * d_last_solution.objective > model_->getObjSense() * new_value))
+                || (model->getObjSense() * d_last_solution.objective > model->getObjSense() * new_value))
             {
-                auto size = model_->getNumCols();
+                auto size = model->getNumCols();
                 d_last_solution.solution.assign(best_solution, best_solution + size);
                 d_last_solution.objective = new_value;
                 d_last_solution.solution_status = SolutionStatus::SUBOPTIMAL;

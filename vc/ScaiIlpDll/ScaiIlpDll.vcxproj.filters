@@ -54,8 +54,6 @@
     <CustomBuild Include="$(GUROBI_DIR)\bin\gurobi80.dll">
       <Filter>binaries</Filter>
     </CustomBuild>
-    <CustomBuild Include="$(PTHREAD_DIR)\$(PlatformTarget)-$(PlatformToolset)-$(Configuration)\pthread.dll">
-      <Filter>binaries</Filter>
-    </CustomBuild>
+    <CustomBuild Include="$(PTHREAD_LIB_PATH)\pthread.dll" />
   </ItemGroup>
 </Project>

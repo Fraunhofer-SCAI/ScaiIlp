@@ -3,18 +3,21 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
     <BOOST_VERSION>1_73</BOOST_VERSION>
-    <BOOST_DIR>$(optsoft)\boost_$(BOOST_VERSION)_0\vc$(PlatformToolsetVersion)_idl0_$(PlatformTarget)</BOOST_DIR>
-    <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc$(PlatformToolsetVersion)_full</PTHREAD_DIR>
+    <BOOST_LIB_TOOLSET>vc142</BOOST_LIB_TOOLSET>
+    <BOOST_DIR>$(optsoft)\boost_$(BOOST_VERSION)_0\$(BOOST_LIB_TOOLSET)_idl0_$(PlatformTarget)</BOOST_DIR>
+    <PTHREAD_TOOLSET>142</PTHREAD_TOOLSET>
+    <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc$(PTHREAD_TOOLSET)_full</PTHREAD_DIR>
+    <PTHREAD_LIB_PATH>$(PTHREAD_DIR)\$(PlatformTarget)-v$(PTHREAD_TOOLSET)-$(Configuration)</PTHREAD_LIB_PATH>
     <WITH_OSI>true</WITH_OSI>
     <WITH_CBC>true</WITH_CBC>
-    <COIN_DIR>$(optsoft)\Cbc-2.10.7dev\vc$(PlatformToolsetVersion)_$(Configuration)_$(PlatformTarget)</COIN_DIR>
+    <COIN_TOOLSET>142</COIN_TOOLSET>
+    <COIN_DIR>$(optsoft)\Cbc-2.10.7dev\vc$(COIN_TOOLSET)_$(Configuration)_$(PlatformTarget)</COIN_DIR>
     <WITH_SCIP>false</WITH_SCIP>
     <SCIP_DIR>$(optsoft)\SCIP\$(PlatformTarget)-$(Configuration)</SCIP_DIR>
     <WITH_GUROBI>false</WITH_GUROBI>
     <GUROBI_DIR>$(optsoft)\Gurobi-8.0.1</GUROBI_DIR>
     <BOOST_LIB_PATH>$(BOOST_DIR)\lib</BOOST_LIB_PATH>
     <BOOST_INCLUDE_PATH>$(BOOST_DIR)\include\boost-$(BOOST_VERSION)</BOOST_INCLUDE_PATH>
-    <PTHREAD_LIB_PATH>$(PTHREAD_DIR)\$(PlatformTarget)-v$(PlatformToolsetVersion)-$(Configuration)</PTHREAD_LIB_PATH>
     <COIN_LIB_PATH>$(COIN_DIR)\lib</COIN_LIB_PATH>
     <COIN_INCLUDE_PATHS>$(COIN_DIR)\include\coin</COIN_INCLUDE_PATHS>
     <SCIP_LIB_PATH>$(SCIP_DIR)\lib</SCIP_LIB_PATH>
@@ -36,6 +39,7 @@
       <PreprocessorDefinitions Condition="'$(WITH_SCIP)' != 'true'">WITH_SCIP=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' == 'true'">WITH_GUROBI=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' != 'true'">WITH_GUROBI=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(BOOST_LIB_TOOLSET)' != ''">BOOST_LIB_TOOLSET="$(BOOST_LIB_TOOLSET)";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>

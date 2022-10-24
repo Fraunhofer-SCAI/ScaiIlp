@@ -2,9 +2,9 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <BOOST_VERSION>1_73</BOOST_VERSION>
-    <BOOST_LIB_TOOLSET>vc142</BOOST_LIB_TOOLSET>
-    <BOOST_DIR>$(optsoft)\boost_$(BOOST_VERSION)_0\$(BOOST_LIB_TOOLSET)_idl0_$(PlatformTarget)</BOOST_DIR>
+    <BOOST_VERSION>1_80</BOOST_VERSION>
+    <BOOST_LIB_TOOLSET>vc143</BOOST_LIB_TOOLSET>
+    <BOOST_DIR>$(optsoft)\boost_$(BOOST_VERSION)_0_$(BOOST_LIB_TOOLSET)_idl0_$(PlatformTarget)</BOOST_DIR>
     <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc142_full</PTHREAD_DIR>
     <PTHREAD_LIB_PATH>$(PTHREAD_DIR)\$(PlatformTarget)-v142-$(Configuration)</PTHREAD_LIB_PATH>
     <WITH_OSI>true</WITH_OSI>

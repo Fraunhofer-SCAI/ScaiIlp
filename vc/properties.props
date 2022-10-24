@@ -5,13 +5,11 @@
     <BOOST_VERSION>1_73</BOOST_VERSION>
     <BOOST_LIB_TOOLSET>vc142</BOOST_LIB_TOOLSET>
     <BOOST_DIR>$(optsoft)\boost_$(BOOST_VERSION)_0\$(BOOST_LIB_TOOLSET)_idl0_$(PlatformTarget)</BOOST_DIR>
-    <PTHREAD_TOOLSET>142</PTHREAD_TOOLSET>
-    <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc$(PTHREAD_TOOLSET)_full</PTHREAD_DIR>
-    <PTHREAD_LIB_PATH>$(PTHREAD_DIR)\$(PlatformTarget)-v$(PTHREAD_TOOLSET)-$(Configuration)</PTHREAD_LIB_PATH>
+    <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc142_full</PTHREAD_DIR>
+    <PTHREAD_LIB_PATH>$(PTHREAD_DIR)\$(PlatformTarget)-v142-$(Configuration)</PTHREAD_LIB_PATH>
     <WITH_OSI>true</WITH_OSI>
     <WITH_CBC>true</WITH_CBC>
-    <COIN_TOOLSET>142</COIN_TOOLSET>
-    <COIN_DIR>$(optsoft)\Cbc-2.10.7dev\vc$(COIN_TOOLSET)_$(Configuration)_$(PlatformTarget)</COIN_DIR>
+    <COIN_DIR>$(optsoft)\Cbc-2.10.7dev\vc142_$(Configuration)_$(PlatformTarget)</COIN_DIR>
     <WITH_SCIP>false</WITH_SCIP>
     <SCIP_DIR>$(optsoft)\SCIP\$(PlatformTarget)-$(Configuration)</SCIP_DIR>
     <WITH_GUROBI>false</WITH_GUROBI>

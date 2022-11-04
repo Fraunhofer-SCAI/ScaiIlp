@@ -21,13 +21,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -137,7 +137,7 @@
       <Message Condition="'$(WITH_SCIP)' == 'true'">Copy %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(WITH_SCIP)' == 'true'">$(OutDir)\%(Filename)%(Extension)</Outputs>
     </CustomBuild>
-    <CustomBuild Include="$(PTHREAD_DIR)\$(PlatformTarget)-$(PlatformToolset)-$(Configuration)\pthread.dll">
+    <CustomBuild Include="$(PTHREAD_LIB_PATH)\pthread.dll">
       <FileType>Document</FileType>
       <Command>copy "%(FullPath)" "$(OutDir)\"</Command>
       <Message>Copy %(Filename)%(Extension)</Message>

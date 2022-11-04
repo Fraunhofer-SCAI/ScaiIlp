@@ -112,23 +112,23 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 5. Right-click onto the project "pthread" in the Solution Explorer and choose
     * "Properties" -> "Configuration Properties".
     * Select "All Configurations" and "All Platforms" and use the following settings:
-        * General / Output Directory:                $(SolutionDir)$(PlatformTarget)-$(PlatformToolset)-$(Configuration)\
-        * General / Intermediate Directory:          $(PlatformTarget)-$(PlatformToolset)-$(Configuration)\
+        * General / Output Directory:                `$(SolutionDir)$(PlatformTarget)-$(PlatformToolset)-$(Configuration)\`
+        * General / Intermediate Directory:          `$(PlatformTarget)-$(PlatformToolset)-$(Configuration)\`
         * General / Windows SDK Version:             Your current SDK
-        * General / Platform Toolset:                Visual Studio 2022 (v143)
-        * C/C++ / General             / Debug Information Format:       Program Database (/Zi)
-        * C/C++ / Preprocessor        / Preprocessor Definitions:       prepend "_ITERATOR_DEBUG_LEVEL=0;_TIMESPEC_DEFINED;" (without double quotes)
-        * C/C++ / Precompiled Headers / Precompiled Header Output File: $(IntDir)pthread.pch
-        * C/C++ / Output Files        / ASM List Location:              $(IntDir)
-        * C/C++ / Output Files        / Object File Name:               $(IntDir)
-        * C/C++ / Output Files        / Program Database File Name:     $(IntDir)
-        * Linker / General   / Output File:         $(OutDir)$(TargetName)$(TargetExt)
-        * Linker / Debugging / Generate Debug Info: Generate Debug Information (/DEBUG)
-        * Linker / Advanced  / Import Library:      $(OutDir)$(TargetName).lib
+        * General / Platform Toolset:                `Visual Studio 2022 (v143)`
+        * C/C++ / General             / Debug Information Format:       `Program Database (/Zi)`
+        * C/C++ / Preprocessor        / Preprocessor Definitions:       prepend `_ITERATOR_DEBUG_LEVEL=0;_TIMESPEC_DEFINED;`
+        * C/C++ / Precompiled Headers / Precompiled Header Output File: `$(IntDir)pthread.pch`
+        * C/C++ / Output Files        / ASM List Location:              `$(IntDir)`
+        * C/C++ / Output Files        / Object File Name:               `$(IntDir)`
+        * C/C++ / Output Files        / Program Database File Name:     `$(IntDir)`
+        * Linker / General   / Output File:         `$(OutDir)$(TargetName)$(TargetExt)`
+        * Linker / Debugging / Generate Debug Info: `Generate Debug Information (/DEBUG)`
+        * Linker / Advanced  / Import Library:      `$(OutDir)$(TargetName).lib`
 
     * For faster compilation, you can additionally use the following settings (set none or both):
-        * C/C++   / General         / Multi-processor Compilation:  Yes (/MP)
-        * C/C++   / Code Generation / Enable Minimal Rebuild:       No (/Gm-)
+        * C/C++   / General         / Multi-processor Compilation:  `Yes (/MP)`
+        * C/C++   / Code Generation / Enable Minimal Rebuild:       `No (/Gm-)`
 
 8. In the Solution Explorer
     * Find the filter "Resource Files"
@@ -136,11 +136,11 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
     * Choose "Properties".
     * Select "All Configurations"
     * Resources / General / Preprocessor Definitions:
-        * prepend "PTW32_ARCHx86;" (without double quotes) when compiling for 32 bit platforms
-        * or      "PTW32_ARCHx64;" (without double quotes) otherwise.
+        * prepend `PTW32_ARCHx86;` when compiling for 32 bit platforms
+        * or      `PTW32_ARCHx64;` (without double quotes) otherwise.
 
 9. Find the file pthreads.h in project "pthread" -> "Header Files"
-    * At the top of the file, insert the line "#define _TIMESPEC_DEFINED" (without double quotes)
+    * At the top of the file, insert the line `#define _TIMESPEC_DEFINED`
 
 2.3 Building SCIP with VS 2022
 ------------------------------
@@ -177,33 +177,33 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 1. Ensure that you have built Cbc as described above.
 
 2. Ensure that you have built Boost. When building Boost, you need to set the parameters
-    * "define=_ITERATOR_DEBUG_LEVEL=0" (without double quotes)
-    * "define=BOOST_TEST_NO_MAIN"      (without double quotes)
+    * `define=_ITERATOR_DEBUG_LEVEL=0`
+    * `define=BOOST_TEST_NO_MAIN`
 
 3. Specify the location of Cbc by opening the properties.props file
-   and setting the User Macros WITH_OSI and WITH_CBC to 'true', and COIN_DIR to the correct path (if your paths follow our examples).
+   and setting the User Macros `WITH_OSI` and `WITH_CBC` to 'true', and `COIN_DIR` to the correct path (if your paths follow our examples).
    If your paths do not follow our examples, you may want to manually edit the include and linker directories or the properties.props outside of VS.
 
 4. [OPTIONAL] If you want to support multithreading,
-   specify the root-location of pthread with the User Macro "PTHREAD_DIR" in the properties.props file.
-   Then set PTHREAD_LIB_PATH, such that it points to the folder containing the appropriate version of pthread.dll.
+   specify the root-location of pthread with the User Macro `PTHREAD_DIR` in the properties.props file.
+   Then set `PTHREAD_LIB_PATH`, such that it points to the folder containing the appropriate version of pthread.dll.
    Usually this will be `$(PTHREAD_DIR)\$(PlatformTarget)-v$(PlatformToolsetVersion)-$(Configuration)`.
    If your structure does not follow this, you may want to manually edit the corresponding CustomBuild setting in ScaiIlpDll.vcxproj.
 
 5. [OPTIONAL] If you want to support SCIP,
    specify the location of SCIP by opening the properties.props file
-   and setting the User Macro WITH_SCIP to 'true' and SCIP_DIR to the correct path (if your paths follow our examples).
+   and setting the User Macro `WITH_SCIP` to 'true' and SCIP_DIR to the correct path (if your paths follow our examples).
    If your paths do not follow our examples, you may want to manually edit the include and linker directories or the properties.props outside of VS.
 
 6. [OPTIONAL] If you want to support Gurobi,
    specify the location of Gurobi by opening the properties.props file
-   and setting the User Macro WITH_GUROBI to 'true' and GUROBI_DIR to the root directory of your Gurobi Installation.
+   and setting the User Macro `WITH_GUROBI` to 'true' and `GUROBI_DIR` to the root directory of your Gurobi Installation.
    Note that current versions of Gurobi only support 64-bit compilation,
    and that you need a valid Gurobi license to run ScaiILP with Gurobi.
 
 7. Specify the location of Boost by opening the properties.props file
-   and setting the User Macros BOOST_VERSION and BOOST_DIR (if your paths follow our examples)
-   or by setting the BOOST_INCLUDE_PATH and BOOST_LIB_PATH manually to the correct paths on your system outside of VS.
+   and setting the User Macros `BOOST_VERSION and BOOST_DIR` (if your paths follow our examples)
+   or by setting the `BOOST_INCLUDE_PATH` and `BOOST_LIB_PATH` manually to the correct paths on your system outside of VS.
 
 8. Build ScaiIlpDll, ScaiIlpExe, and UnitTest.
 
@@ -318,7 +318,7 @@ the class hierarchy.
    Most likely you don't want to derive from IlpSolverInterface directly.
 
 If you want your solver to be accessible via the DLL, then you must declare a function
-
+```
     extern "C" __declspec (dllexport) ILPSolverInterface* __stdcall create_solver_xyz(parameters);
-
+```
 in ilp_solver_factory.hpp and define it in ilp_solver_factory.cpp, respectively.

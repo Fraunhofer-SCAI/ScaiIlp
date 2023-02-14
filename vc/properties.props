@@ -22,6 +22,9 @@
     <SCIP_INCLUDE_PATH>$(SCIP_DIR)\include</SCIP_INCLUDE_PATH>
     <GUROBI_INCLUDE_PATH>$(GUROBI_DIR)\include</GUROBI_INCLUDE_PATH>
     <GUROBI_LIB_PATH>$(GUROBI_DIR)\lib</GUROBI_LIB_PATH>
+    <WITH_MIMALLOC>true</WITH_MIMALLOC>
+    <MIMALLOC_DIR>$(optsoft)\mimalloc-2.0.9</MIMALLOC_DIR>
+    <MIMALLOC_OVERRIDE_DIR>$(MIMALLOC_DIR)\out\msvc-$(PlatformTarget)\$(Configuration)\</MIMALLOC_OVERRIDE_DIR>
   </PropertyGroup>
   <PropertyGroup>
     <OutDir>$(SolutionDir)$(Configuration)_$(PlatformTarget)\</OutDir>
@@ -37,6 +40,7 @@
       <PreprocessorDefinitions Condition="'$(WITH_SCIP)' != 'true'">WITH_SCIP=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' == 'true'">WITH_GUROBI=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' != 'true'">WITH_GUROBI=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_MIMALLOC)' == 'true'">WITH_MIMALLOC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(BOOST_LIB_TOOLSET)' != ''">BOOST_LIB_TOOLSET="$(BOOST_LIB_TOOLSET)";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -73,6 +77,12 @@
     </BuildMacro>
     <BuildMacro Include="GUROBI_DIR">
       <Value>$(GUROBI_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="WITH_MIMALLOC">
+      <Value>$(WITH_MIMALLOC)</Value>
+    </BuildMacro>
+    <BuildMacro Include="MIMALLOC_DIR">
+      <Value>$(MIMALLOC_DIR)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

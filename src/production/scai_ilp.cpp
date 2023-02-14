@@ -8,7 +8,19 @@
 #include <stdexcept>
 #include <string>
 
-#include <windows.h>    // for SetErrorMode
+#include <windows.h> // for SetErrorMode
+
+#if WITH_MIMALLOC
+#pragma warning(push)
+#pragma warning(disable : 28251) // inconsistent annotation
+#pragma warning(disable : 4559)  // redefinition with __declspec(restrict)
+
+#include "mimalloc-new-delete.h"
+#include "mimalloc.h"
+
+const inline int c_mimalloc_version = mi_version();
+#pragma warning(pop)
+#endif
 
 using namespace ilp_solver;
 

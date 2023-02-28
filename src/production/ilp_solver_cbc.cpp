@@ -119,7 +119,7 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverCbc::set_start_solution(const std::vector<double>& p_solution)
+    void ILPSolverCbc::set_start_solution(ValueArray p_solution)
     {
         // make sure that the cache was integrated
         prepare_impl();

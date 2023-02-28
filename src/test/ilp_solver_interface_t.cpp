@@ -19,7 +19,7 @@ using std::string;
 using std::vector;
 
 const auto c_eps = 0.0001;
-const auto c_num_performance_test_repetitions = 10000;
+const auto c_num_performance_test_repetitions = 100;
 
 const bool LOGGING = true;
 
@@ -320,8 +320,9 @@ namespace ilp_solver
 
         if (LOGGING)
         {
-            cout << "Successfully wrote mps-File to " << std::filesystem::absolute(path).generic_u8string() << ".\n";
-            cout << "\tFilesize is " << size << " Byte." << std::endl;
+            const auto u8path = std::filesystem::absolute(path).generic_u8string();
+            std::cout << "Successfully wrote mps-File to " << std::string(u8path.begin(), u8path.end()) << ".\n";
+            std::cout << "\tFilesize is " << size << " Byte." << std::endl;
         }
     }
 

@@ -36,7 +36,7 @@ namespace ilp_solver
 
         void                reset_solution()      override;
 
-        void set_start_solution    (const std::vector<double>& p_solution) override;
+        void set_start_solution    (ValueArray p_solution)                 override;
 
         void set_num_threads       (int p_num_threads)                     override;
         void set_deterministic_mode(bool p_deterministic)                  override;
@@ -63,13 +63,13 @@ namespace ilp_solver
         void set_objective_sense_impl(ObjectiveSense p_sense) override;
         void solve_impl() override;
         void add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
-            const std::string& p_name = "", const std::vector<double>* p_row_values = nullptr,
-            const std::vector<int>* p_row_indices = nullptr) override;
+                                const std::string& p_name = "", OptionValueArray p_row_values = {},
+                                OptionIndexArray p_row_indices = {}) override;
 
 
         void add_constraint_impl (double p_lower_bound, double p_upper_bound,
-            const std::vector<double>& p_col_values, const std::string& p_name = "",
-            const std::vector<int>* p_col_indices = nullptr) override;
+                                  ValueArray p_col_values, const std::string& p_name = "",
+                                  OptionIndexArray p_col_indices = {}) override;
     };
 }
 

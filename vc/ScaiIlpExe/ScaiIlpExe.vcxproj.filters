@@ -24,4 +24,8 @@
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="$(MIMALLOC_OVERRIDE_DIR)mimalloc-override.dll" />
+    <CustomBuild Include="$(MIMALLOC_DIR)\bin\mimalloc-redirect.dll" />
+  </ItemGroup>
 </Project>

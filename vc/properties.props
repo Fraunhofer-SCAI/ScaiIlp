@@ -24,7 +24,7 @@
     <GUROBI_LIB_PATH>$(GUROBI_DIR)\lib</GUROBI_LIB_PATH>
     <WITH_MIMALLOC>true</WITH_MIMALLOC>
     <MIMALLOC_DIR>$(optsoft)\mimalloc-2.0.9</MIMALLOC_DIR>
-    <MIMALLOC_OVERRIDE_DIR>$(MIMALLOC_DIR)\out\msvc-$(PlatformTarget)\$(Configuration)\</MIMALLOC_OVERRIDE_DIR>
+    <MIMALLOC_OVERRIDE_DIR>$(MIMALLOC_DIR)\out\msvc-$(PlatformTarget)\$(Configuration)</MIMALLOC_OVERRIDE_DIR>
   </PropertyGroup>
   <PropertyGroup>
     <OutDir>$(SolutionDir)$(Configuration)_$(PlatformTarget)\</OutDir>

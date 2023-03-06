@@ -52,7 +52,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;WINVER=0x0601;_ITERATOR_DEBUG_LEVEL=0;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>>$(MIMALLOC_DIR)\include;$(BOOST_INCLUDE_PATH)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST_INCLUDE_PATH)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(WITH_MIMALLOC)' == 'true'">$(MIMALLOC_DIR)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -106,14 +106,14 @@
     <ResourceCompile Include="..\ScaiIlpDll\ScaiIlp.rc" />
   </ItemGroup>
     <ItemGroup>
-    <CustomBuild Include="$(MIMALLOC_OVERRIDE_DIR)mimalloc-override.dll">
+    <CustomBuild Include="$(MIMALLOC_OVERRIDE_DIR)\mimalloc-override.dll">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(WITH_MIMALLOC)' != 'true'">true</ExcludedFromBuild>
       <Command Condition="'$(WITH_MIMALLOC)' == 'true'">copy "%(FullPath)" "$(OutDir)\"</Command>
       <Message Condition="'$(WITH_MIMALLOC)' == 'true'">Copy %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(WITH_MIMALLOC)' == 'true'">$(OutDir)\%(Filename)%(Extension)</Outputs>
     </CustomBuild>
-    <CustomBuild Include="$(MIMALLOC_DIR)\bin\mimalloc-redirect.dll">
+    <CustomBuild Include="$(MIMALLOC_OVERRIDE_DIR)\mimalloc-redirect.dll">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(WITH_MIMALLOC)' != 'true'">true</ExcludedFromBuild>
       <Command Condition="'$(WITH_MIMALLOC)' == 'true'">copy "%(FullPath)" "$(OutDir)\"</Command>

@@ -10,7 +10,7 @@
 
 #include <windows.h> // for SetErrorMode
 
-#if WITH_MIMALLOC
+#if WITH_MIMALLOC == 1
 #pragma warning(push)
 #pragma warning(disable : 28251) // inconsistent annotation
 #pragma warning(disable : 4559)  // redefinition with __declspec(restrict)

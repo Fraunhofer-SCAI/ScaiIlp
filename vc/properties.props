@@ -24,7 +24,7 @@
     <GUROBI_LIB_PATH>$(GUROBI_DIR)\lib</GUROBI_LIB_PATH>
     <WITH_MIMALLOC>true</WITH_MIMALLOC>
     <MIMALLOC_DIR>$(optsoft)\mimalloc-2.0.9</MIMALLOC_DIR>
-    <MIMALLOC_OVERRIDE_DIR>$(MIMALLOC_DIR)\out\msvc-$(PlatformTarget)\$(Configuration)\</MIMALLOC_OVERRIDE_DIR>
+    <MIMALLOC_OVERRIDE_DIR>$(MIMALLOC_DIR)\out\msvc-$(PlatformTarget)\$(Configuration)</MIMALLOC_OVERRIDE_DIR>
   </PropertyGroup>
   <PropertyGroup>
     <OutDir>$(SolutionDir)$(Configuration)_$(PlatformTarget)\</OutDir>
@@ -41,6 +41,7 @@
       <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' == 'true'">WITH_GUROBI=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' != 'true'">WITH_GUROBI=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_MIMALLOC)' == 'true'">WITH_MIMALLOC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_MIMALLOC)' != 'true'">WITH_MIMALLOC=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(BOOST_LIB_TOOLSET)' != ''">BOOST_LIB_TOOLSET="$(BOOST_LIB_TOOLSET)";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp20</LanguageStandard>

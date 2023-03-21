@@ -14,7 +14,7 @@ namespace ilp_solver
         // Inner vectors are rows/constraints. The size of the outer vector is the number of constraints.
         // The size of the inner vectors is the number of variables.
         // If no constraints are given, we can not know the number of variables. (m x 0 can be stored, 0 x n can not).
-        struct Matrix : std::vector<std::vector<double>>
+        struct Matrix : public std::vector<std::vector<double>>
         {
             const std::vector<std::vector<double>>& to_base() const noexcept { return *this; }
             std::vector<std::vector<double>>& to_base() noexcept { return *this; }
@@ -79,7 +79,7 @@ namespace ilp_solver
         std::vector<double>       constraint_upper;
         std::vector<VariableType> variable_type;
         std::vector<double>       start_solution;
-        ObjectiveSense                       objective_sense{ObjectiveSense::MINIMIZE};
+        ObjectiveSense            objective_sense{ObjectiveSense::MINIMIZE};
 
         // Defaults will be overwritten in ilp_solver_collect,
         // but are initialized to the same constants to be sure.

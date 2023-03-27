@@ -41,7 +41,7 @@ namespace ilp_solver
         class ZeroPruner
         {
         public:
-            ZeroPruner (OptionIndexArray p_indices, OptionValueArray p_values);
+            ZeroPruner (OptionalIndexArray p_indices, OptionalValueArray p_values);
             ~ZeroPruner() noexcept;
 
             int           size()    const { return d_num_indices; }
@@ -57,7 +57,7 @@ namespace ilp_solver
             int     d_owns        {0};
         };
 
-        ZeroPruner::ZeroPruner(OptionIndexArray p_indices, OptionValueArray p_values)
+        ZeroPruner::ZeroPruner(OptionalIndexArray p_indices, OptionalValueArray p_values)
         {
             if (p_values) {
                 assert ((!p_indices) || (p_indices->size() == p_values->size()));
@@ -148,7 +148,7 @@ namespace ilp_solver
 
 
     void ILPSolverOsiModel::add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
-                                               const std::string& p_name, OptionValueArray p_row_values, OptionIndexArray p_row_indices)
+                                               const std::string& p_name, OptionalValueArray p_row_values, OptionalIndexArray p_row_indices)
     {
         ZeroPruner pruner{p_row_indices, p_row_values};
         assert (pruner.size() <= get_num_constraints());
@@ -169,7 +169,7 @@ namespace ilp_solver
 
 
     void ILPSolverOsiModel::add_constraint_impl (double p_lower_bound, double p_upper_bound, ValueArray p_col_values,
-                                                 const std::string& p_name, OptionIndexArray p_col_indices)
+                                                 const std::string& p_name, OptionalIndexArray p_col_indices)
     {
         ZeroPruner pruner{p_col_indices, p_col_values};
 

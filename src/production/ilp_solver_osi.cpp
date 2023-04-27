@@ -95,8 +95,9 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverOsi::set_max_seconds(double)
+    void ILPSolverOsi::set_max_seconds(double p_seconds)
     {
+        d_max_seconds = p_seconds;
         // Not supported by OsiSolverInterface.
     }
 

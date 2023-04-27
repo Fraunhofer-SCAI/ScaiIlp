@@ -141,6 +141,9 @@ namespace ilp_solver
 
     void ILPSolverImpl::minimize()
     {
+        if (d_max_seconds <= 0)
+            return;
+
         prepare_impl();
         set_objective_sense_impl(ObjectiveSense::MINIMIZE);
         solve_impl();
@@ -149,6 +152,9 @@ namespace ilp_solver
 
     void ILPSolverImpl::maximize()
     {
+        if (d_max_seconds <= 0)
+            return;
+
         prepare_impl();
         set_objective_sense_impl(ObjectiveSense::MAXIMIZE);
         solve_impl();

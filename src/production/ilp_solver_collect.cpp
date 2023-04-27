@@ -317,6 +317,7 @@ namespace ilp_solver
 
     void ILPSolverCollect::set_max_seconds(double p_seconds)
     {
+        d_max_seconds          = p_seconds;
         d_ilp_data.max_seconds = p_seconds;
     }
 

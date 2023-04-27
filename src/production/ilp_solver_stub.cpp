@@ -222,7 +222,8 @@ namespace ilp_solver
         CommunicationParent communicator;
         const auto shared_memory_name = communicator.write_ilp_data(d_ilp_data);
 
-        auto exit_code = execute_process(d_executable_basename, shared_memory_name, seconds_to_milliseconds (1.5 * d_ilp_data.max_seconds));
+        const auto wait_time = seconds_to_milliseconds(1.5 * std::max(1.0, d_ilp_data.max_seconds));
+        auto exit_code = execute_process(d_executable_basename, shared_memory_name, wait_time);
 
         if (d_ilp_data.log_level)
             std::cout << "External Solver messages: \"" << exit_code_to_message(exit_code) << "\" (Exit Code " << static_cast<int>(exit_code) << ")\n";

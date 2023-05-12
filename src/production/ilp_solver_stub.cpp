@@ -184,8 +184,8 @@ namespace ilp_solver
 
 
     // set_default_parameters is called in ILPSolverCollect.
-    ILPSolverStub::ILPSolverStub(const std::string& p_executable_basename)
-        : d_executable_basename(p_executable_basename)
+    ILPSolverStub::ILPSolverStub(const std::string& p_executable_basename, bool p_throw_on_all_crashes)
+        : d_executable_basename(p_executable_basename), d_throw_on_all_crashes(p_throw_on_all_crashes)
     { }
 
 
@@ -231,7 +231,7 @@ namespace ilp_solver
         communicator.read_solution_data(&d_ilp_solution_data);
         if (exit_code == SolverExitCode::missing_dll) // missing DLL should be a Runtime Error
             throw ilp_solver::SolverExeException(("External ILP solver: " + exit_code_to_message(exit_code)).c_str());
-        if (exit_code != SolverExitCode::ok && !exit_code_should_be_ignored_silently(exit_code))
+        if (exit_code != SolverExitCode::ok && (d_throw_on_all_crashes || !exit_code_should_be_ignored_silently(exit_code)))
             throw std::exception(("External ILP solver: " + exit_code_to_message(exit_code)).c_str());
     }
 }

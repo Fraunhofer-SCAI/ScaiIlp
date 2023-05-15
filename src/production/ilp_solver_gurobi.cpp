@@ -181,10 +181,9 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverGurobi::set_max_seconds(double p_seconds)
+    void ILPSolverGurobi::set_max_seconds_impl(double p_seconds)
     {
         assert(p_seconds >= 0.);
-        d_max_seconds = p_seconds;
         call_gurobi( d_model, GRBsetdblparam, GRBgetenv(d_model), GRB_DBL_PAR_TIMELIMIT, p_seconds);
     }
 

@@ -159,9 +159,8 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverCbc::set_max_seconds(double p_seconds)
+    void ILPSolverCbc::set_max_seconds_impl(double p_seconds)
     {
-        d_max_seconds = p_seconds;
         d_model.setMaximumSeconds(p_seconds);
     }
 

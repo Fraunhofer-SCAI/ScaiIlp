@@ -135,6 +135,13 @@ namespace ilp_solver
     }
 
 
+    void ILPSolverImpl::set_max_seconds(double p_seconds)
+    {
+        d_max_seconds = p_seconds;
+        set_max_seconds_impl(p_seconds);
+    }
+
+
     void ILPSolverImpl::prepare_impl()
     { }
 

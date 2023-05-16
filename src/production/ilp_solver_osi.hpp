@@ -29,7 +29,6 @@ namespace ilp_solver
             void                set_log_level           (int p_level)            override;
             void                set_presolve            (bool p_presolve)        override;
 
-            void                set_max_seconds         (double p_seconds)       override;
             void                set_max_nodes           (int p_nodes)            override;
             void                set_max_solutions       (int p_solutions)        override;
             void                set_max_abs_gap         (double p_gap)           override;
@@ -39,10 +38,11 @@ namespace ilp_solver
         private:
             OsiSolverInterface* d_ilp_solver;
 
-            OsiSolverInterface* get_solver_osi_model   ()                        override;
+            OsiSolverInterface* get_solver_osi_model    ()                       override;
 
-            void                solve_impl             ()                        override;
+            void                solve_impl              ()                       override;
             void                set_objective_sense_impl(ObjectiveSense p_sense) override;
+            void                set_max_seconds_impl    (double p_seconds)       override;
     };
 }
 

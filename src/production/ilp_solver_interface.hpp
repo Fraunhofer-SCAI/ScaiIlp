@@ -130,6 +130,7 @@ namespace ilp_solver
 
             // Set the number of seconds after which the solver should terminate.
             // This may be not followed exactly. The duration may be slightly longer than the given number.
+            // Setting this to zero guarantees to not produce a solution.
             // May be unsupported by some solvers.
             virtual void set_max_seconds        (double p_seconds)     = 0;
 

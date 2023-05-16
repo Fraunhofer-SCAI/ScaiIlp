@@ -24,42 +24,45 @@ namespace ilp_solver
     class ILPSolverImpl : public ILPSolverInterface
     {
         public:
-            void add_variable_boolean    (                                                   double p_objective,                                             const std::string& p_name = "") override;
-            void add_variable_boolean    (                          ValueArray p_row_values, double p_objective,                                             const std::string& p_name = "") override;
-            void add_variable_boolean    (IndexArray p_row_indices, ValueArray p_row_values, double p_objective,                                             const std::string& p_name = "") override;
-            void add_variable_integer    (                                                   double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") override;
-            void add_variable_integer    (                          ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") override;
-            void add_variable_integer    (IndexArray p_row_indices, ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") override;
-            void add_variable_continuous (                                                   double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") override;
-            void add_variable_continuous (                          ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") override;
-            void add_variable_continuous (IndexArray p_row_indices, ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") override;
+            void add_variable_boolean    (                                                   double p_objective,                                             const std::string& p_name = "") override final;
+            void add_variable_boolean    (                          ValueArray p_row_values, double p_objective,                                             const std::string& p_name = "") override final;
+            void add_variable_boolean    (IndexArray p_row_indices, ValueArray p_row_values, double p_objective,                                             const std::string& p_name = "") override final;
+            void add_variable_integer    (                                                   double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") override final;
+            void add_variable_integer    (                          ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") override final;
+            void add_variable_integer    (IndexArray p_row_indices, ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") override final;
+            void add_variable_continuous (                                                   double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") override final;
+            void add_variable_continuous (                          ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") override final;
+            void add_variable_continuous (IndexArray p_row_indices, ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") override final;
 
-            void add_constraint          (                          ValueArray p_col_values, double p_lower_bound, double p_upper_bound,                     const std::string& p_name = "") override;
-            void add_constraint          (IndexArray p_col_indices, ValueArray p_col_values, double p_lower_bound, double p_upper_bound,                     const std::string& p_name = "") override;
-            void add_constraint_upper    (                          ValueArray p_col_values,                       double p_upper_bound,                     const std::string& p_name = "") override;
-            void add_constraint_upper    (IndexArray p_col_indices, ValueArray p_col_values,                       double p_upper_bound,                     const std::string& p_name = "") override;
-            void add_constraint_lower    (                          ValueArray p_col_values, double p_lower_bound,                                           const std::string& p_name = "") override;
-            void add_constraint_lower    (IndexArray p_col_indices, ValueArray p_col_values, double p_lower_bound,                                           const std::string& p_name = "") override;
-            void add_constraint_equality (                          ValueArray p_col_values,                                              double p_value,    const std::string& p_name = "") override;
-            void add_constraint_equality (IndexArray p_col_indices, ValueArray p_col_values,                                              double p_value,    const std::string& p_name = "") override;
+            void add_constraint          (                          ValueArray p_col_values, double p_lower_bound, double p_upper_bound,                     const std::string& p_name = "") override final;
+            void add_constraint          (IndexArray p_col_indices, ValueArray p_col_values, double p_lower_bound, double p_upper_bound,                     const std::string& p_name = "") override final;
+            void add_constraint_upper    (                          ValueArray p_col_values,                       double p_upper_bound,                     const std::string& p_name = "") override final;
+            void add_constraint_upper    (IndexArray p_col_indices, ValueArray p_col_values,                       double p_upper_bound,                     const std::string& p_name = "") override final;
+            void add_constraint_lower    (                          ValueArray p_col_values, double p_lower_bound,                                           const std::string& p_name = "") override final;
+            void add_constraint_lower    (IndexArray p_col_indices, ValueArray p_col_values, double p_lower_bound,                                           const std::string& p_name = "") override final;
+            void add_constraint_equality (                          ValueArray p_col_values,                                              double p_value,    const std::string& p_name = "") override final;
+            void add_constraint_equality (IndexArray p_col_indices, ValueArray p_col_values,                                              double p_value,    const std::string& p_name = "") override final;
 
-            void minimize() override;
-            void maximize() override;
+            void minimize() override final;
+            void maximize() override final;
 
+            void set_max_seconds(double p_seconds) override final;
         protected:
             ILPSolverImpl() = default;
+			double d_max_seconds; // Stored separately because solver input may transform the seconds.
 
         private:
             // If there is anything that needs to be done before a solve, overwrite prepare_impl.
             // It will be called before set_objective_sense_impl and solve_impl.
             // Useful e.g. for cached problems etc.
             // The default version does nothing.
-            virtual void                      prepare_impl();
-            virtual void                      add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
-                                                                 const std::string& p_name = "", OptionalValueArray p_row_values = {}, OptionalIndexArray p_row_indices = {}) = 0;
-            virtual void                      add_constraint_impl (double p_lower_bound, double p_upper_bound, ValueArray p_col_values,
-                                                                   const std::string& p_name = "", OptionalIndexArray p_col_indices = {}) = 0;
-            virtual void                      solve_impl() = 0;
-            virtual void                      set_objective_sense_impl(ObjectiveSense p_sense) = 0;
+            virtual void prepare_impl();
+            virtual void add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
+                                            const std::string& p_name = "", OptionalValueArray p_row_values = {}, OptionalIndexArray p_row_indices = {}) = 0;
+            virtual void add_constraint_impl (double p_lower_bound, double p_upper_bound, ValueArray p_col_values,
+                                              const std::string& p_name = "", OptionalIndexArray p_col_indices = {}) = 0;
+            virtual void solve_impl() = 0;
+            virtual void set_objective_sense_impl(ObjectiveSense p_sense) = 0;
+			virtual void set_max_seconds_impl(double p_seconds) = 0;
     };
 }

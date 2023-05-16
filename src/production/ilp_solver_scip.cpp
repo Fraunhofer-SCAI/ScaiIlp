@@ -235,7 +235,7 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverSCIP::set_max_seconds(double p_seconds)
+    void ILPSolverSCIP::set_max_seconds_impl(double p_seconds)
     {
         p_seconds = std::clamp(p_seconds, 0., 1e20); // SCIP Maximum.
         call_scip(SCIPsetRealParam, d_scip, "limits/time", p_seconds);

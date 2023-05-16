@@ -49,7 +49,7 @@ namespace ilp_solver
             void set_max_seconds(double p_seconds) override final;
         protected:
             ILPSolverImpl() = default;
-			double d_max_seconds; // Stored separately because solver input may transform the seconds.
+            double d_max_seconds; // Stored separately because solver input may transform the seconds.
 
         private:
             // If there is anything that needs to be done before a solve, overwrite prepare_impl.
@@ -63,6 +63,6 @@ namespace ilp_solver
                                               const std::string& p_name = "", OptionalIndexArray p_col_indices = {}) = 0;
             virtual void solve_impl() = 0;
             virtual void set_objective_sense_impl(ObjectiveSense p_sense) = 0;
-			virtual void set_max_seconds_impl(double p_seconds) = 0;
+            virtual void set_max_seconds_impl(double p_seconds) = 0;
     };
 }

@@ -53,7 +53,6 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;ILPSOLVERDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(COIN_INCLUDE_PATHS);$(SCIP_INCLUDE_PATH);$(GUROBI_INCLUDE_PATH);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
-      <DisableSpecificWarnings>4127</DisableSpecificWarnings>
       <AdditionalOptions>/Zc:externC- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -70,7 +69,6 @@
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;ILPSOLVERDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(COIN_INCLUDE_PATHS);$(SCIP_INCLUDE_PATH);$(GUROBI_INCLUDE_PATH);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>4127</DisableSpecificWarnings>
       <AdditionalOptions>/Zc:externC- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>

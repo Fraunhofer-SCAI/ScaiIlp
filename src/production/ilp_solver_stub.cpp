@@ -5,125 +5,25 @@
 #include "solver_exit_code.hpp"
 
 #include <cassert>
+#include <chrono>
 #include <filesystem>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <unordered_map>
 
-#define NOMINMAX
-#include <windows.h>    // for GetModuleFileNameW, CreateProcessW etc.
-
-constexpr auto c_file_separator  = "\\";
-constexpr auto c_max_path_length = 1 << 16;
-
-using std::string;
-using std::wstring;
+#include <boost/dll/runtime_symbol_info.hpp>
+#include <boost/process.hpp>
 
 namespace ilp_solver
 {
-    static string quote(const string& p_string)
+    static std::chrono::milliseconds seconds_to_millisecods(double p_seconds)
     {
-        return '"' + p_string + '"';
-    }
-
-
-    static string directory_name(string p_filename)
-    {
-        const auto file_separator_pos = p_filename.rfind(c_file_separator);
-        assert(file_separator_pos != std::wstring::npos);
-        p_filename.erase(file_separator_pos);
-        return p_filename + c_file_separator;
-    }
-
-
-    static string executable_dir()
-    {
-        char exe_path[c_max_path_length];
-        GetModuleFileNameA(NULL, exe_path, c_max_path_length);
-        return directory_name(exe_path);
-    }
-
-
-    static string full_executable_name(const string& p_basename)
-    {
-        return executable_dir() + p_basename;
-    }
-
-
-    static SolverExitCode execute_process(const string& p_executable_basename, const string& p_parameter, int p_wait_milliseconds)
-    {
-        // prepare command line
-        const auto executable = full_executable_name(p_executable_basename);
-        if (!std::filesystem::exists(executable))
-            throw SolverExeException(("Could not find " + p_executable_basename).c_str());
-        auto command_line = quote(executable) + ' ' + quote(p_parameter);
-
-        // prepare parameters
-        STARTUPINFOA startup_info;
-        PROCESS_INFORMATION process_info;
-        std::memset(&startup_info, 0, sizeof(startup_info));
-        std::memset(&process_info, 0, sizeof(process_info));
-        startup_info.cb = sizeof(startup_info);
-
-        // start process
-        if (!CreateProcessA(executable.c_str(),             // lpApplicationName
-                            command_line.data(),            // lpCommandLine
-                            0,                              // lpProcessAttributes
-                            0,                              // lpThreadAttributes
-                            false,                          // bInheritHandles
-                            CREATE_DEFAULT_ERROR_MODE ,     // dwCreationFlags
-                            0,                              // lpEnvironment
-                            0,                              // lpCurrentDirectory
-                            &startup_info,
-                            &process_info))
-            throw SolverExeException(("Error starting " + p_executable_basename + ". Error code:" + std::to_string(GetLastError())).c_str());
-
-        // close handles via RAII
-        struct HandleCloser
-        {
-            explicit HandleCloser(PROCESS_INFORMATION* p_process_info) : process_info(p_process_info) {}
-            ~HandleCloser()
-            {
-                CloseHandle(process_info->hProcess);
-                CloseHandle(process_info->hThread);
-            }
-
-            PROCESS_INFORMATION* process_info;
-        } handle_closer(&process_info);
-
-        // wait for the process to terminate
-        auto return_code = WaitForSingleObject(process_info.hProcess, p_wait_milliseconds);
-        switch (return_code) // according to https://msdn.microsoft.com/de-de/library/windows/desktop/ms687032%28v=vs.85%29.aspx, WaitForSingeObject can return the 4 values listed below
-        {
-        case WAIT_OBJECT_0:
-            break;
-        case WAIT_TIMEOUT:
-            TerminateProcess(process_info.hProcess, static_cast<DWORD>(SolverExitCode::forced_termination));
-            break;
-        case WAIT_ABANDONED:
-        case WAIT_FAILED:
-        default: // we also handle unexpected values, just in case
-            TerminateProcess(process_info.hProcess, static_cast<DWORD>(SolverExitCode::forced_termination));
-            throw std::exception (("Error running " + p_executable_basename + ". Unexpected return code of WaitForSingleObject.").c_str());
-        }
-
-        // read process exit code
-        DWORD exit_code;
-        if (GetExitCodeProcess(process_info.hProcess, &exit_code))
-            return SolverExitCode(exit_code);
-        else
-            throw std::exception(("Error obtaining exit code from " + p_executable_basename + ". Error code: " + std::to_string(GetLastError())).c_str());
-    }
-
-
-    int seconds_to_milliseconds (double p_seconds)
-    {
-        p_seconds *= 1000;
-        if (p_seconds > std::numeric_limits<int>::max())
-            return std::numeric_limits<int>::max();
-        else
-            return static_cast<int>(p_seconds);
+        const auto     milliseconds = 1000. * p_seconds;
+        constexpr auto max_milliseconds = std::numeric_limits<std::chrono::milliseconds::rep>::max();
+        if (milliseconds >= max_milliseconds)
+            return std::chrono::milliseconds(max_milliseconds);
+        return std::chrono::milliseconds(static_cast<std::chrono::milliseconds::rep>(milliseconds));
     }
 
 
@@ -214,19 +114,25 @@ namespace ilp_solver
     }
 
 
-
     void ILPSolverStub::solve_impl()
     {
         d_ilp_solution_data = ILPSolutionData(d_ilp_data.objective_sense);
 
         CommunicationParent communicator;
-        const auto shared_memory_name = communicator.write_ilp_data(d_ilp_data);
-
-        const auto wait_time = seconds_to_milliseconds(1.5 * std::max(1.0, d_ilp_data.max_seconds));
-        auto exit_code = execute_process(d_executable_basename, shared_memory_name, wait_time);
+        const auto          shared_memory_name = communicator.write_ilp_data(d_ilp_data);
+        // We expect the ScaiILP executable lying next to the one calling it.
+        const auto full_executable_path = boost::dll::program_location().parent_path() / d_executable_basename;
+        // Start the process. We use path::native to ensure supporting unicode paths on windows.
+        auto proc = boost::process::child(full_executable_path.native(), shared_memory_name);
+        // We wait for the process to complete for 1.5 times longer than we allow the solver to compute.
+        // If the process did not finish by then, we forcibly terminate it.
+        if (!proc.wait_for(seconds_to_millisecods(1.5 * std::max(1.0, d_ilp_data.max_seconds))))
+            proc.terminate();
+        auto exit_code = SolverExitCode(proc.exit_code());
 
         if (d_ilp_data.log_level)
-            std::cout << "External Solver messages: \"" << exit_code_to_message(exit_code) << "\" (Exit Code " << static_cast<int>(exit_code) << ")\n";
+            std::cout << "External Solver messages: \"" << exit_code_to_message(exit_code) << "\" (Exit Code "
+                      << static_cast<int>(exit_code) << ")\n";
 
         communicator.read_solution_data(&d_ilp_solution_data);
         if (exit_code == SolverExitCode::missing_dll) // missing DLL should be a Runtime Error

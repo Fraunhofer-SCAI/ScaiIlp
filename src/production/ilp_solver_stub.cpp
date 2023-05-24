@@ -122,8 +122,8 @@ namespace ilp_solver
         const auto          shared_memory_name = communicator.write_ilp_data(d_ilp_data);
         // We expect the ScaiILP executable lying next to the one calling it.
         const auto full_executable_path = boost::dll::program_location().parent_path() / d_executable_basename;
-        // Start the process. We use path::native to ensure supporting unicode paths on windows.
-        auto proc = boost::process::child(full_executable_path.native(), shared_memory_name);
+        // Start the process.
+        auto proc = boost::process::child(full_executable_path, shared_memory_name);
         // We wait for the process to complete for 1.5 times longer than we allow the solver to compute.
         // If the process did not finish by then, we forcibly terminate it.
         if (!proc.wait_for(seconds_to_millisecods(1.5 * std::max(1.0, d_ilp_data.max_seconds))))

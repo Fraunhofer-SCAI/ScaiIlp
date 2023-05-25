@@ -136,8 +136,8 @@ namespace ilp_solver
 
         communicator.read_solution_data(&d_ilp_solution_data);
         if (exit_code == SolverExitCode::missing_dll) // missing DLL should be a Runtime Error
-            throw ilp_solver::SolverExeException(("External ILP solver: " + exit_code_to_message(exit_code)).c_str());
+            throw SolverExeException("External ILP solver: " + exit_code_to_message(exit_code));
         if (exit_code != SolverExitCode::ok && (d_throw_on_all_crashes || !exit_code_should_be_ignored_silently(exit_code)))
-            throw std::exception(("External ILP solver: " + exit_code_to_message(exit_code)).c_str());
+            throw std::logic_error("External ILP solver: " + exit_code_to_message(exit_code));
     }
 }

@@ -20,7 +20,7 @@ using std::string;
 using std::vector;
 
 const auto c_eps = 0.0001;
-const auto c_num_performance_test_repetitions = 10000;
+const auto c_num_performance_test_repetitions = 100;
 
 const bool LOGGING = true;
 

@@ -167,7 +167,7 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverSCIP::set_start_solution(const std::vector<double>& p_solution)
+    void ILPSolverSCIP::set_start_solution(ValueArray p_solution)
     {
         assert(p_solution.size() == d_cols.size());
 
@@ -179,7 +179,7 @@ namespace ilp_solver
         SCIP_Bool ignored{ false };
         call_scip(SCIPcreateSol, d_scip, &sol, nullptr);
 
-        // SCIP uses a double*, not a const double*, but ScaiILP demands a const std::vector<double>&.
+        // SCIP uses a double*, not a const double*.
         // Internally, SCIP calls a single-variable setter for every variable with a by-value pass of the corresponding double,
         // so the const_cast should not violate actual const-ness.
         // Sadly, it is not avoidable since SCIP is not const-correct. (SCIP 6.0)
@@ -300,7 +300,7 @@ namespace ilp_solver
 
 
     void ILPSolverSCIP::add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
-        const std::string& p_name, const std::vector<double>* p_row_values, const std::vector<int>* p_row_indices)
+        const std::string& p_name, OptionValueArray p_row_values, OptionIndexArray p_row_indices)
     {
         SCIP_VAR* var;
         const char* name = p_name.c_str();
@@ -344,7 +344,7 @@ namespace ilp_solver
 
 
     void ILPSolverSCIP::add_constraint_impl (double p_lower_bound, double p_upper_bound,
-        const std::vector<double>& p_col_values, const std::string& p_name, const std::vector<int>* p_col_indices)
+        ValueArray p_col_values, const std::string& p_name, OptionIndexArray p_col_indices)
     {
         SCIP_CONS* cons;
         SCIP_VAR**  vars;

@@ -38,16 +38,11 @@
     <Import Project="..\properties.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>$(ProjectName)</TargetName>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <TargetName>$(ProjectName)</TargetName>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(MIMALLOC_DIR)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(WITH_MIMALLOC)' == 'true'">$(MIMALLOC_DIR)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -83,7 +78,7 @@
   <ItemGroup>
     <ResourceCompile Include="..\ScaiIlpDll\ScaiIlp.rc" />
   </ItemGroup>
-    <ItemGroup>
+  <ItemGroup>
     <CustomBuild Include="$(MIMALLOC_OVERRIDE_DIR)\mimalloc-override.dll">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(WITH_MIMALLOC)' != 'true'">true</ExcludedFromBuild>

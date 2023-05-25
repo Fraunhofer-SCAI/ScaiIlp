@@ -126,11 +126,11 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverGurobi::set_start_solution(const std::vector<double>& p_solution)
+    void ILPSolverGurobi::set_start_solution(ValueArray p_solution)
     {
         assert(isize(p_solution) == d_num_vars);
         call_gurobi( d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_VARHINTVAL, 0, d_num_vars, const_cast<double*>(p_solution.data()));
-        call_gurobi( d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_START, 0, d_num_vars, const_cast<double*>(p_solution.data()));
+        call_gurobi( d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_START,      0, d_num_vars, const_cast<double*>(p_solution.data()));
     }
 
 
@@ -232,7 +232,7 @@ namespace ilp_solver
 
 
     void ILPSolverGurobi::add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
-        const std::string& p_name, const std::vector<double>* p_row_values, const std::vector<int>* p_row_indices)
+        const std::string& p_name, OptionValueArray p_row_values, OptionIndexArray p_row_indices)
     {
         int     num{0};
         int*    indices{nullptr};
@@ -266,7 +266,7 @@ namespace ilp_solver
 
 
     void ILPSolverGurobi::add_constraint_impl (double p_lower_bound, double p_upper_bound,
-        const std::vector<double>& p_col_values, const std::string& p_name, const std::vector<int>* p_col_indices)
+        ValueArray p_col_values, const std::string& p_name, OptionIndexArray p_col_indices)
     {
         int     num{0};
         int*    indices{nullptr};

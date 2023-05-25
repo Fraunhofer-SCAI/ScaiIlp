@@ -32,7 +32,7 @@ namespace ilp_solver
 
             void                reset_solution()       override;
 
-            void set_start_solution     (const std::vector<double>& p_solution)                    override;
+            void set_start_solution     (ValueArray p_solution)                                    override;
 
             void set_num_threads        (int p_num_threads)                                        override;
             void set_deterministic_mode (bool p_deterministic)                                     override;

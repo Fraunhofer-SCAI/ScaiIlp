@@ -34,7 +34,7 @@ namespace ilp_solver
     class SolverExeException : public std::runtime_error
     {
     public:
-        explicit SolverExeException (const std::string& p_what) : std::runtime_error(p_what) {};
+        explicit SolverExeException(const std::string& p_what) : std::runtime_error("External ILP Solver: " + p_what){};
     };
 
     // This class is the basic interface fulfilled by all ScaiILP solver classes.

@@ -116,27 +116,41 @@ namespace ilp_solver
 
     void ILPSolverStub::solve_impl()
     {
-        d_ilp_solution_data = ILPSolutionData(d_ilp_data.objective_sense);
+        SolverExitCode exit_code{};
+        try
+        {
+            d_ilp_solution_data = ILPSolutionData(d_ilp_data.objective_sense);
 
-        CommunicationParent communicator;
-        const auto          shared_memory_name = communicator.write_ilp_data(d_ilp_data);
-        // We expect the ScaiILP executable lying next to the one calling it.
-        const auto full_executable_path = boost::dll::program_location().parent_path() / d_executable_basename;
-        // Start the process.
-        auto proc = boost::process::child(full_executable_path, shared_memory_name);
-        // We wait for the process to complete for 1.5 times longer than we allow the solver to compute.
-        // If the process did not finish by then, we forcibly terminate it.
-        if (!proc.wait_for(seconds_to_millisecods(1.5 * std::max(1.0, d_ilp_data.max_seconds))))
-            proc.terminate();
-        auto exit_code = SolverExitCode(proc.exit_code());
+            CommunicationParent communicator;
+            const auto          shared_memory_name = communicator.write_ilp_data(d_ilp_data);
+            // We expect the ScaiILP executable lying next to the one calling it.
+            const auto full_executable_path = boost::dll::program_location().parent_path() / d_executable_basename;
+            // Start the process.
+            auto proc = boost::process::child(full_executable_path, shared_memory_name);
+            // We wait for the process to complete for 1.5 times longer than we allow the solver to compute.
+            // If the process did not finish by then, we forcibly terminate it.
+            if (!proc.wait_for(seconds_to_millisecods(1.5 * std::max(1.0, d_ilp_data.max_seconds))))
+                proc.terminate();
+            exit_code = SolverExitCode(proc.exit_code());
 
-        if (d_ilp_data.log_level)
-            std::cout << "External Solver messages: \"" << exit_code_to_message(exit_code) << "\" (Exit Code "
-                      << static_cast<int>(exit_code) << ")\n";
+            if (d_ilp_data.log_level)
+                std::cout << "External Solver messages: \"" << exit_code_to_message(exit_code) << "\" (Exit Code "
+                          << static_cast<int>(exit_code) << ")\n";
 
-        communicator.read_solution_data(&d_ilp_solution_data);
+            communicator.read_solution_data(&d_ilp_solution_data);
+        }
+        // Rethrow all exceptions as SolverExeExceptions, so they can be easily traced back to this function.
+        catch (const std::exception& p_e)
+        {
+            throw SolverExeException(p_e.what());
+        }
+        catch (...)
+        {
+            throw SolverExeException("Unknown Error.");
+        }
+
         if (exit_code == SolverExitCode::missing_dll) // missing DLL should be a Runtime Error
-            throw SolverExeException("External ILP solver: " + exit_code_to_message(exit_code));
+            throw SolverExeException(exit_code_to_message(exit_code));
         if (exit_code != SolverExitCode::ok && (d_throw_on_all_crashes || !exit_code_should_be_ignored_silently(exit_code)))
             throw std::logic_error("External ILP solver: " + exit_code_to_message(exit_code));
     }

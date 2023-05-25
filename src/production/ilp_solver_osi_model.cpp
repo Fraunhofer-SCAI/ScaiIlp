@@ -132,7 +132,7 @@ namespace ilp_solver
         // number of values per dataline (1 or 2),
         // keepStrings (no idea what it does, false is default).
         if( d_cache.writeMps(p_filename.c_str(), 0, 1, 1, false) )
-            throw std::exception("Could not write mps file.");
+            throw std::runtime_error("Could not write mps file.");
     }
 
 

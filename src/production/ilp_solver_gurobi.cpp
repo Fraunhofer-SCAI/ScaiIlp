@@ -23,7 +23,7 @@ namespace ilp_solver
             if (retcode != 0)
             {
                 auto ret = std::string("Gurobi Error: \"") + GRBgeterrormsg(GRBgetenv(p_model)) + '"';
-                throw std::exception(ret.c_str());
+                throw std::runtime_error(ret);
             }
         }
 
@@ -45,11 +45,11 @@ namespace ilp_solver
         // We can not use call_gurobi before the model is set up.
         auto ret = GRBloadenv(&d_env, nullptr);
         if (ret != 0)
-            throw std::exception("Gurobi Error: \"Could not set up the environment.\"");
+            throw std::runtime_error("Gurobi Error: \"Could not set up the environment.\"");
 
         ret = GRBnewmodel( d_env, &d_model, "", 0, nullptr, nullptr, nullptr, nullptr, nullptr);
         if (ret != 0)
-            throw std::exception("Gurobi Error: \"Could not create a new model.\"");
+            throw std::runtime_error("Gurobi Error: \"Could not create a new model.\"");
 
         set_default_parameters(this);
     }

@@ -149,9 +149,7 @@ namespace ilp_solver
             throw SolverExeException("Unknown Error.");
         }
 
-        if (exit_code == SolverExitCode::missing_dll) // missing DLL should be a Runtime Error
-            throw SolverExeException(exit_code_to_message(exit_code));
         if (exit_code != SolverExitCode::ok && (d_throw_on_all_crashes || !exit_code_should_be_ignored_silently(exit_code)))
-            throw std::logic_error("External ILP solver: " + exit_code_to_message(exit_code));
+            throw SolverExeException(exit_code_to_message(exit_code));
     }
 }

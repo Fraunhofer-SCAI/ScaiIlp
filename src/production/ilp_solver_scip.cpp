@@ -23,25 +23,25 @@ namespace ilp_solver
             switch (retcode)
             {
                 case SCIP_OKAY:               break;
-                case SCIP_ERROR:              throw std::exception("SCIP produced an unspecified error.");
-                case SCIP_NOMEMORY:           throw std::exception("SCIP has insufficient memory.");
-                case SCIP_READERROR:          throw std::exception("SCIP could not read data.");
-                case SCIP_WRITEERROR:         throw std::exception("SCIP could not write data.");
-                case SCIP_NOFILE:             throw std::exception("SCIP could not read file.");
-                case SCIP_FILECREATEERROR:    throw std::exception("SCIP could not write file.");
-                case SCIP_LPERROR:            throw std::exception("SCIP produced error in LP solve.");
-                case SCIP_NOPROBLEM:          throw std::exception("SCIP had no problem to solve.");
-                case SCIP_INVALIDCALL:        throw std::exception("SCIP tried to call a method that was invalid at this time.");
-                case SCIP_INVALIDDATA:        throw std::exception("SCIP tried to call a method with invalid data.");
-                case SCIP_INVALIDRESULT:      throw std::exception("SCIP method returned an invalid result code.");
-                case SCIP_PLUGINNOTFOUND:     throw std::exception("SCIP could not find a required plugin.");
-                case SCIP_PARAMETERUNKNOWN:   throw std::exception("SCIP could not find a parameter of the given name.");
-                case SCIP_PARAMETERWRONGTYPE: throw std::exception("SCIP parameter had an unexpected type.");
-                case SCIP_PARAMETERWRONGVAL:  throw std::exception("SCIP tried to set a parameter to an invalid value.");
-                case SCIP_KEYALREADYEXISTING: throw std::exception("SCIP tried to insert an already existing key into the table.");
-                case SCIP_MAXDEPTHLEVEL:      throw std::exception("SCIP exceeded the maximal branching depth level.");
-                case SCIP_BRANCHERROR:        throw std::exception("SCIP could not perform the branching.");
-                default:                      throw std::exception("SCIP produced an unknown error.");
+                case SCIP_ERROR:              throw std::runtime_error("SCIP produced an unspecified error.");
+                case SCIP_NOMEMORY:           throw std::runtime_error("SCIP has insufficient memory.");
+                case SCIP_READERROR:          throw std::runtime_error("SCIP could not read data.");
+                case SCIP_WRITEERROR:         throw std::runtime_error("SCIP could not write data.");
+                case SCIP_NOFILE:             throw std::runtime_error("SCIP could not read file.");
+                case SCIP_FILECREATEERROR:    throw std::runtime_error("SCIP could not write file.");
+                case SCIP_LPERROR:            throw std::runtime_error("SCIP produced error in LP solve.");
+                case SCIP_NOPROBLEM:          throw std::runtime_error("SCIP had no problem to solve.");
+                case SCIP_INVALIDCALL:        throw std::runtime_error("SCIP tried to call a method that was invalid at this time.");
+                case SCIP_INVALIDDATA:        throw std::runtime_error("SCIP tried to call a method with invalid data.");
+                case SCIP_INVALIDRESULT:      throw std::runtime_error("SCIP method returned an invalid result code.");
+                case SCIP_PLUGINNOTFOUND:     throw std::runtime_error("SCIP could not find a required plugin.");
+                case SCIP_PARAMETERUNKNOWN:   throw std::runtime_error("SCIP could not find a parameter of the given name.");
+                case SCIP_PARAMETERWRONGTYPE: throw std::runtime_error("SCIP parameter had an unexpected type.");
+                case SCIP_PARAMETERWRONGVAL:  throw std::runtime_error("SCIP tried to set a parameter to an invalid value.");
+                case SCIP_KEYALREADYEXISTING: throw std::runtime_error("SCIP tried to insert an already existing key into the table.");
+                case SCIP_MAXDEPTHLEVEL:      throw std::runtime_error("SCIP exceeded the maximal branching depth level.");
+                case SCIP_BRANCHERROR:        throw std::runtime_error("SCIP could not perform the branching.");
+                default:                      throw std::runtime_error("SCIP produced an unknown error.");
             }
         };
     }

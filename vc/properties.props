@@ -11,7 +11,7 @@
     <WITH_CBC>true</WITH_CBC>
     <COIN_DIR>$(optsoft)\Cbc-2.10.10\vc143_$(Configuration)_$(PlatformTarget)</COIN_DIR>
     <WITH_SCIP>false</WITH_SCIP>
-    <SCIP_DIR>$(optsoft)\SCIP\$(PlatformTarget)-$(Configuration)</SCIP_DIR>
+    <SCIP_DIR>$(optsoft)\SCIP-6.0.0\$(PlatformTarget)-$(Configuration)</SCIP_DIR>
     <WITH_GUROBI>false</WITH_GUROBI>
     <GUROBI_DIR>$(optsoft)\Gurobi-8.0.1</GUROBI_DIR>
     <BOOST_LIB_PATH>$(BOOST_DIR)\lib</BOOST_LIB_PATH>

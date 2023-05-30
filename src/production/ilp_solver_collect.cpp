@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <utility>
 
 using std::string;
 using std::vector;
@@ -90,9 +91,9 @@ namespace ilp_solver
                     }
                 }
             }
-            cons_names.emplace_back("ROWS\n N  OBJ\n" + cons.str());
-            cons_names.emplace_back("RHS\n" + rhs.str());
-            auto ranges = rhs_range.str();
+            cons_names.emplace_back("ROWS\n N  OBJ\n" + std::move(cons).str());
+            cons_names.emplace_back("RHS\n" + std::move(rhs).str());
+            auto ranges = std::move(rhs_range).str();
             if (!ranges.empty())
                 cons_names.back().append("RANGES\n" + ranges);
 
@@ -135,7 +136,7 @@ namespace ilp_solver
                     v_outstream << "    " << name << ' ' << p_names[j] << ' ' << p_data.matrix[j][i] << '\n';
                 }
             }
-            return "BOUNDS\n" + bounds.str();
+            return "BOUNDS\n" + std::move(bounds).str();
         }
     }
 

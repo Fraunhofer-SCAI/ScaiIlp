@@ -17,6 +17,15 @@
 
 namespace ilp_solver
 {
+// Introduced in AXS-1452 because we observed instances not terminating after hours despite a time limit of minutes.
+// When timeout_factor * time_limit is exceeded, the external process is killed, but the intermediate result reached is preserved.
+// This is more convenient than letting the user kill the external process or even AutoBarSizer. (The latter would lose the intermediate result).
+// Initial value was 1.5, which we hoped to be large enough to terminate regularly, but smaller than 2.0 (after which we recommended one of our customers to kill the process).
+// After AXS-2636 we observed that occasionally CBC still ran into the limit.
+// Unlike the initial instance from AXS-1452, the runtime of instance of AXS-2636 seems very volatile. Instance total time reaches from 62s to >90s.
+// Current value is experimental.
+constexpr auto c_timeout_factor = 1.5;
+
     static std::chrono::milliseconds seconds_to_millisecods(double p_seconds)
     {
         const auto     milliseconds = 1000. * p_seconds;
@@ -117,6 +126,8 @@ namespace ilp_solver
     void ILPSolverStub::solve_impl()
     {
         SolverExitCode exit_code{};
+        std::string    exit_message{};
+
         try
         {
             d_ilp_solution_data = ILPSolutionData(d_ilp_data.objective_sense);
@@ -127,15 +138,26 @@ namespace ilp_solver
             const auto full_executable_path = boost::dll::program_location().parent_path() / d_executable_basename;
             // Start the process.
             auto proc = boost::process::child(full_executable_path, shared_memory_name);
-            // We wait for the process to complete for 1.5 times longer than we allow the solver to compute.
-            // If the process did not finish by then, we forcibly terminate it.
-            if (!proc.wait_for(seconds_to_millisecods(1.5 * std::max(1.0, d_ilp_data.max_seconds))))
-                proc.terminate();
-            exit_code = SolverExitCode(proc.exit_code());
+            // Wait hopefully long enough. Kill child if time limit is exceeded. See comment on c_timeout_factor.
+            auto timeout_max_seconds = c_timeout_factor * std::max(1.0, d_ilp_data.max_seconds);
+            if (!proc.wait_for(seconds_to_millisecods(timeout_max_seconds)))
+            {
+                proc.terminate(); // There is an overload function that takes an exit code as parameter.
+                                  // However, proc.exit_code still seems to be 259
+                exit_code = SolverExitCode::forced_termination;
+                exit_message = std::string("Failed solving by timeout.")
+                             + " (limit:" + std::to_string(d_ilp_data.max_seconds)
+                             + " timeout:" + std::to_string(timeout_max_seconds) + ")";
+            }
+            else
+            {
+                exit_code    = SolverExitCode(proc.exit_code());
+                exit_message = exit_code_to_message(exit_code);
+            }
 
             if (d_ilp_data.log_level)
-                std::cout << "External Solver messages: \"" << exit_code_to_message(exit_code) << "\" (Exit Code "
-                          << static_cast<int>(exit_code) << ")\n";
+                std::cout << "External Solver messages: \"" << exit_message
+                          << "\" (Exit Code " << static_cast<int>(exit_code) << ")\n";
 
             communicator.read_solution_data(&d_ilp_solution_data);
         }
@@ -150,6 +172,6 @@ namespace ilp_solver
         }
 
         if (exit_code != SolverExitCode::ok && (d_throw_on_all_crashes || !exit_code_should_be_ignored_silently(exit_code)))
-            throw SolverExeException(exit_code_to_message(exit_code));
+            throw SolverExeException(exit_message);
     }
 }

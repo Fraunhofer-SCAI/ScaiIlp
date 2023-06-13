@@ -17,16 +17,19 @@
 
 namespace ilp_solver
 {
-// effective_time_limit (in addition to given_time_limit) introduced in AXS-1452 because we observed instances not terminating after hours despite a given_time_limit of minutes.
-// We now wait for given_time_limit plus some overtime.
-// When this effective_time_limit is exceeded, the external process is killed, but the intermediate result reached is preserved.
+// In AXS-1452, we introduced a wait time limit because we observed instances not terminating after hours despite a given_time_limit of minutes.
+// We now wait for (max_seconds plus some overtime) =: wait_max_seconds.
+// When wait_max_seconds is exceeded, the external process is killed, but the intermediate result reached is preserved.
 // This is more convenient than letting the user kill the external process or even AutoBarSizer. (The latter would lose the intermediate result).
-// Initially we started with relative_overtime=0.5.
+//
+// In AXS-1452, we started with relative_overtime=0.5.
 // We hoped that this would be large enough to always terminate regularly.
-// Also we had recommended one of our customers to kill the process after 2*given_time_limit, so we wanted a smaller effective_time_limit.
-// After AXS-2636 we observed that occasionally CBC still ran into effective_time_limit. So we added absolute_overtime.
-// Unlike the initial instance from AXS-1452, the runtime of instance of AXS-2636 seems very volatile.
-// With given_time_limit=20s (60s distributed to 3 calls), overtime reaches from <2s total to >10s for on one run.
+// Also we had recommended one of our customers to kill the process after 2*max_seconds, so we wanted a smaller wait_max_seconds.
+//
+// After AXS-2636 we observed that occasionally CBC still ran into wait_max_seconds. So we added absolute_overtime.
+// Unlike the initial instance from AXS-1452, the runtime of the instance of AXS-2636 seems very volatile.
+// With time_limit=20s (60s distributed to 3 calls), overtime reaches from <2s total to >10s for on one run.
+//
 // Current values are experimental.
 constexpr auto c_relative_overtime = 0.5;
 constexpr auto c_absolute_overtime_seconds = 10.0;
@@ -146,15 +149,15 @@ constexpr auto c_absolute_overtime_seconds = 10.0;
             // Start the process.
             auto proc = boost::process::child(full_executable_path, shared_memory_name);
             // Wait hopefully long enough. Kill child if time limit is exceeded. See comment on c_timeout_factor.
-            auto effective_max_seconds = (1.0 + c_relative_overtime) * d_ilp_data.max_seconds + c_absolute_overtime_seconds;
-            if (!proc.wait_for(seconds_to_millisecods(effective_max_seconds)))
+            const auto wait_max_seconds = (1.0 + c_relative_overtime) * d_ilp_data.max_seconds + c_absolute_overtime_seconds;
+            if (!proc.wait_for(seconds_to_millisecods(wait_max_seconds)))
             {
                 proc.terminate(); // There is an overload function that takes an exit code as parameter.
                                   // However, proc.exit_code still seems to be 259
                 exit_code = SolverExitCode::forced_termination;
                 exit_message = std::string("Failed solving by timeout.")
                              + " (limit:" + std::to_string(d_ilp_data.max_seconds)
-                             + " timeout:" + std::to_string(effective_max_seconds) + ")";
+                             + " timeout:" + std::to_string(wait_max_seconds) + ")";
             }
             else
             {

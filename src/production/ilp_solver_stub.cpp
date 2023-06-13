@@ -17,14 +17,19 @@
 
 namespace ilp_solver
 {
-// Introduced in AXS-1452 because we observed instances not terminating after hours despite a time limit of minutes.
-// When timeout_factor * time_limit is exceeded, the external process is killed, but the intermediate result reached is preserved.
+// effective_time_limit (in addition to given_time_limit) introduced in AXS-1452 because we observed instances not terminating after hours despite a given_time_limit of minutes.
+// We now wait for given_time_limit plus some overtime.
+// When this effective_time_limit is exceeded, the external process is killed, but the intermediate result reached is preserved.
 // This is more convenient than letting the user kill the external process or even AutoBarSizer. (The latter would lose the intermediate result).
-// Initial value was 1.5, which we hoped to be large enough to terminate regularly, but smaller than 2.0 (after which we recommended one of our customers to kill the process).
-// After AXS-2636 we observed that occasionally CBC still ran into the limit.
-// Unlike the initial instance from AXS-1452, the runtime of instance of AXS-2636 seems very volatile. Instance total time reaches from 62s to >90s.
-// Current value is experimental.
-constexpr auto c_timeout_factor = 1.5;
+// Initially we started with relative_overtime=0.5.
+// We hoped that this would be large enough to always terminate regularly.
+// Also we had recommended one of our customers to kill the process after 2*given_time_limit, so we wanted a smaller effective_time_limit.
+// After AXS-2636 we observed that occasionally CBC still ran into effective_time_limit. So we added absolute_overtime.
+// Unlike the initial instance from AXS-1452, the runtime of instance of AXS-2636 seems very volatile.
+// With given_time_limit=20s (60s distributed to 3 calls), overtime reaches from <2s total to >10s for on one run.
+// Current values are experimental.
+constexpr auto c_relative_overtime = 0.5;
+constexpr auto c_absolute_overtime_seconds = 10.0;
 
     static std::chrono::milliseconds seconds_to_millisecods(double p_seconds)
     {
@@ -141,15 +146,15 @@ constexpr auto c_timeout_factor = 1.5;
             // Start the process.
             auto proc = boost::process::child(full_executable_path, shared_memory_name);
             // Wait hopefully long enough. Kill child if time limit is exceeded. See comment on c_timeout_factor.
-            auto timeout_max_seconds = c_timeout_factor * std::max(1.0, d_ilp_data.max_seconds);
-            if (!proc.wait_for(seconds_to_millisecods(timeout_max_seconds)))
+            auto effective_max_seconds = (1.0 + c_relative_overtime) * d_ilp_data.max_seconds + c_absolute_overtime_seconds;
+            if (!proc.wait_for(seconds_to_millisecods(effective_max_seconds)))
             {
                 proc.terminate(); // There is an overload function that takes an exit code as parameter.
                                   // However, proc.exit_code still seems to be 259
                 exit_code = SolverExitCode::forced_termination;
                 exit_message = std::string("Failed solving by timeout.")
                              + " (limit:" + std::to_string(d_ilp_data.max_seconds)
-                             + " timeout:" + std::to_string(timeout_max_seconds) + ")";
+                             + " timeout:" + std::to_string(effective_max_seconds) + ")";
             }
             else
             {

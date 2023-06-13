@@ -67,7 +67,9 @@ constexpr auto c_timeout_factor = 1.5;
         case SolverExitCode::solver_error:
             return "Failed solving (solver error).";
         case SolverExitCode::forced_termination:
-            return "Failed solving (timeout).";
+            return "Unexpected exit code \"forced termination\"."; // If forced termination by stub occurs, we do not
+                                                                   // call exit_code_to_message. So the exit code is
+                                                                   // unexpected here.
         default:
             return "Unknown exit code " + std::to_string(static_cast<int>(p_exit_code)) + ".";
         }

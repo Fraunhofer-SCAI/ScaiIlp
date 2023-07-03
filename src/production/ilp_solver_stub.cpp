@@ -152,9 +152,9 @@ constexpr auto c_absolute_overtime_seconds = 10.0;
             const auto wait_max_seconds = (1.0 + c_relative_overtime) * d_ilp_data.max_seconds + c_absolute_overtime_seconds;
             if (!proc.wait_for(seconds_to_millisecods(wait_max_seconds)))
             {
-                proc.terminate(); // There is an overload function that takes an exit code as parameter.
-                                  // However, proc.exit_code still seems to be 259
-                exit_code = SolverExitCode::forced_termination;
+                proc.terminate(); // boost::process seems not to support to set the exit code by terminate().
+                                  // Note that terminate(error_code&) does not set the exit code either, but has a different purpose.
+                exit_code = SolverExitCode::forced_termination; // Don't read the exit code, but set it manually to the fixed desired value.
                 exit_message = std::string("Failed solving by timeout.")
                              + " (limit:" + std::to_string(d_ilp_data.max_seconds)
                              + " timeout:" + std::to_string(wait_max_seconds) + ")";

@@ -17,18 +17,18 @@
 
 namespace ilp_solver
 {
-// In AXS-1452, we introduced a wait time limit because we observed instances not terminating after hours despite a given_time_limit of minutes.
+// In AXS-1452, we introduced a wait time limit because we observed CBC not terminating after hours despite a given time limit of minutes.
 // We now wait for (max_seconds plus some overtime) =: wait_max_seconds.
 // When wait_max_seconds is exceeded, the external process is killed, but the intermediate result reached is preserved.
-// This is more convenient than letting the user kill the external process or even AutoBarSizer. (The latter would lose the intermediate result).
+// This is more convenient than letting the user kill the external process or even this process. (The latter would lose the intermediate result).
 //
 // In AXS-1452, we started with relative_overtime=0.5.
 // We hoped that this would be large enough to always terminate regularly.
-// Also we had recommended one of our customers to kill the process after 2*max_seconds, so we wanted a smaller wait_max_seconds.
+// Also we had recommended one of our users to kill the process after 2*max_seconds, so we wanted a smaller wait_max_seconds.
 //
 // After AXS-2636 we observed that occasionally CBC still ran into wait_max_seconds. So we added absolute_overtime.
 // Unlike the initial instance from AXS-1452, the runtime of the instance of AXS-2636 seems very volatile.
-// With time_limit=20s (60s distributed to 3 calls), overtime reaches from <2s total to >10s for on one run.
+// With time_limit=20s (60s distributed to 3 calls), overtime ranges from <2s total to >10s for on one run.
 //
 // Current values are experimental.
 constexpr auto c_relative_overtime = 0.5;

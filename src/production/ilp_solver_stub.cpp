@@ -6,11 +6,8 @@
 
 #include <cassert>
 #include <chrono>
-#include <filesystem>
 #include <iostream>
-#include <memory>
 #include <stdexcept>
-#include <unordered_map>
 
 #include <boost/dll/runtime_symbol_info.hpp>
 #include <boost/process.hpp>

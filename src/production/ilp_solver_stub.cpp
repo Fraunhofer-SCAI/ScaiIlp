@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <chrono>
+#include <format>
 #include <iostream>
 #include <stdexcept>
 
@@ -156,9 +157,8 @@ void ILPSolverStub::solve_impl()
             proc.terminate(); // boost::process seems not to support to set the exit code by terminate().
                               // Note that terminate(error_code&) does not set the exit code either, but has a different purpose.
             exit_code = SolverExitCode::forced_termination; // Don't read the exit code, but set it manually to the fixed desired value.
-            exit_message = std::string("Failed solving by timeout.")
-                         + " (limit:" + std::to_string(d_ilp_data.max_seconds)
-                         + " timeout:" + std::to_string(wait_max_seconds) + ")";
+            exit_message = std::format("Failed solving by timeout. (limit:{} timeout:{})", d_ilp_data.max_seconds,
+                                       wait_max_seconds);
         }
         else
         {

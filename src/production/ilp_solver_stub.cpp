@@ -19,7 +19,7 @@ namespace ilp_solver
 // despite a given time limit of minutes.
 // We now wait for (max_seconds plus some overtime) =: wait_max_seconds.
 // When wait_max_seconds is exceeded, the external process is killed, but the intermediate result reached is preserved.
-// This is more convenient than letting the user kill the external process or even this process.
+// This is more convenient than letting the user kill the external process or even the calling process.
 // (The latter would lose the intermediate result).
 //
 // In AXS-1452, we started with relative_overtime=0.5.

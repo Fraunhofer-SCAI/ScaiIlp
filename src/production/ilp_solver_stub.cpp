@@ -148,8 +148,13 @@ void ILPSolverStub::solve_impl()
         const auto          shared_memory_name = communicator.write_ilp_data(d_ilp_data);
         // We expect the ScaiILP executable lying next to the one calling it.
         const auto full_executable_path = boost::dll::program_location().parent_path() / d_executable_basename;
-        // Start the process.
-        auto proc = boost::process::child(full_executable_path, shared_memory_name);
+        // Start the process. If the log level is zero, suppress all of its output.
+        // Ideally, suppressing the output should not be necessary,
+        // but we have repeatedly observed CBC writing to stdout at log level zero.
+        auto proc = d_ilp_data.log_level != 0 ? boost::process::child(full_executable_path, shared_memory_name)
+                                              : boost::process::child(full_executable_path, shared_memory_name,
+                                                                      boost::process::std_out > boost::process::null,
+                                                                      boost::process::std_err > boost::process::null);
         // Wait hopefully long enough. Kill child if time limit is exceeded. See comment on c_timeout_factor.
         const auto wait_max_seconds = (1.0 + c_relative_overtime) * d_ilp_data.max_seconds + c_absolute_overtime_seconds;
         if (!proc.wait_for(seconds_to_millisecods(wait_max_seconds)))

@@ -12,7 +12,7 @@ namespace ilp_solver
     class ILPSolverStub : public ILPSolverCollect
     {
         public:
-            explicit ILPSolverStub(const std::string& p_executable_basename);
+            ILPSolverStub(const std::string& p_executable_basename, bool p_throw_on_all_crashes);
 
             std::vector<double>       get_solution  () const override;
             double                    get_objective () const override;
@@ -22,6 +22,7 @@ namespace ilp_solver
 
         private:
             std::string d_executable_basename;
+            bool        d_throw_on_all_crashes;
 
             ILPSolutionData d_ilp_solution_data;
 

@@ -6,66 +6,13 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <utility>
 
 using std::string;
 using std::vector;
 
 namespace ilp_solver
 {
-    using Matrix = ILPData::Matrix;
-
-    static void append_column(Matrix* v_matrix, const vector<double>& p_row_values)
-    {
-        // set specified values
-        for (int i = 0; i < isize(*v_matrix); i++)
-            (*v_matrix)[i].push_back(p_row_values[i]);
-    }
-
-
-    static void append_column(Matrix* v_matrix, const vector<int>& p_row_indices, const vector<double>& p_row_values)
-    {
-        if (v_matrix->empty())
-            return;
-
-        // enlarge matrix
-        for (auto& row: *v_matrix)
-            row.push_back(0.0);
-
-        // set specified values
-        for (auto i = 0; i < isize(p_row_indices); ++i)
-        {
-            const auto row_index = p_row_indices[i];
-            const auto value = p_row_values[i];
-            assert(0 <= row_index && row_index < isize(*v_matrix));
-            (*v_matrix)[row_index].back() = value;
-        }
-    }
-
-
-    static void append_row(Matrix* v_matrix, const vector<double>& p_col_values)
-    {
-        // enlarge matrix
-        v_matrix->emplace_back(p_col_values);
-    }
-
-
-    static void append_row(Matrix* v_matrix, int p_num_cols, const vector<int>& p_col_indices, const vector<double>& p_col_values)
-    {
-        // enlarge matrix
-        v_matrix->emplace_back(p_num_cols, 0.0);
-
-        // set specified values
-        auto& row = v_matrix->back();
-        for (auto i = 0; i < isize(p_col_indices); ++i)
-        {
-            const auto col_index = p_col_indices[i];
-            const auto value = p_col_values[i];
-            assert(0 <= col_index && col_index < isize(row));
-            row[col_index] = value;
-        }
-    }
-
-
     int ILPSolverCollect::get_num_constraints() const
     {
         return isize(d_ilp_data.constraint_lower);
@@ -144,16 +91,16 @@ namespace ilp_solver
                     }
                 }
             }
-            cons_names.emplace_back("ROWS\n N  OBJ\n" + cons.str());
-            cons_names.emplace_back("RHS\n" + rhs.str());
-            auto ranges = rhs_range.str();
+            cons_names.emplace_back("ROWS\n N  OBJ\n" + std::move(cons).str());
+            cons_names.emplace_back("RHS\n" + std::move(rhs).str());
+            auto ranges = std::move(rhs_range).str();
             if (!ranges.empty())
                 cons_names.back().append("RANGES\n" + ranges);
 
             return cons_names;
         }
 
-        std::string handle_mps_cols(const ILPData& p_data, const std::vector<std::string>& p_names, std::ofstream& v_outstream)
+        std::string handle_mps_cols(const ILPData& p_data, std::span<std::string> p_names, std::ofstream& v_outstream)
         {
             std::stringstream bounds;
 
@@ -189,7 +136,7 @@ namespace ilp_solver
                     v_outstream << "    " << name << ' ' << p_names[j] << ' ' << p_data.matrix[j][i] << '\n';
                 }
             }
-            return "BOUNDS\n" + bounds.str();
+            return "BOUNDS\n" + std::move(bounds).str();
         }
     }
 
@@ -226,27 +173,26 @@ namespace ilp_solver
 
 
     void ILPSolverCollect::add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
-        const std::string& /* p_name */, const std::vector<double>* p_row_values,
-        const std::vector<int>* p_row_indices)
+        const std::string& /* p_name */, OptionalValueArray p_row_values, OptionalIndexArray p_row_indices)
     {
         if (p_row_values)
         {
             if (!p_row_indices)
             {
                 assert (p_row_values->size() == d_ilp_data.matrix.size());
-                append_column(&d_ilp_data.matrix, *p_row_values);
+                d_ilp_data.matrix.append_column(*p_row_values);
             }
             else
             {
                 assert (p_row_values->size() == p_row_indices->size());
                 assert (p_row_indices->size() <= d_ilp_data.matrix.size());
-                append_column(&d_ilp_data.matrix, *p_row_indices, *p_row_values);
+                d_ilp_data.matrix.append_column(*p_row_indices, *p_row_values);
             }
         }
         else
         {
-            assert( p_row_indices == nullptr );
-            append_column(&d_ilp_data.matrix, std::vector<int>(), std::vector<double>());
+            assert( !p_row_indices );
+            d_ilp_data.matrix.append_column(IndexArray(), ValueArray());
         }
 
         d_ilp_data.objective.push_back(p_objective);
@@ -257,13 +203,12 @@ namespace ilp_solver
 
 
     void ILPSolverCollect::add_constraint_impl (double p_lower_bound, double p_upper_bound,
-        const std::vector<double>& p_col_values, const std::string& /* p_name */,
-        const std::vector<int>* p_col_indices)
+        ValueArray p_col_values, const std::string& /* p_name */, OptionalIndexArray p_col_indices)
     {
         if (!p_col_indices)
         {
             assert( p_col_values.size() == d_ilp_data.objective.size() );
-            append_row(&d_ilp_data.matrix, p_col_values);
+            d_ilp_data.matrix.append_row(p_col_values);
         }
         else
         {
@@ -271,7 +216,7 @@ namespace ilp_solver
             assert(p_col_indices->size() <= d_ilp_data.objective.size());
 
             const auto n_cols = isize(d_ilp_data.objective);
-            append_row(&d_ilp_data.matrix, n_cols, *p_col_indices, p_col_values);
+            d_ilp_data.matrix.append_row(n_cols, *p_col_indices, p_col_values);
         }
 
         d_ilp_data.constraint_lower.push_back(p_lower_bound);
@@ -285,9 +230,9 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverCollect::set_start_solution(const std::vector<double>& p_solution)
+    void ILPSolverCollect::set_start_solution(ValueArray p_solution)
     {
-        d_ilp_data.start_solution = p_solution;
+        d_ilp_data.start_solution = std::vector<double>(p_solution.begin(), p_solution.end());
     }
 
 
@@ -315,7 +260,7 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverCollect::set_max_seconds(double p_seconds)
+    void ILPSolverCollect::set_max_seconds_impl(double p_seconds)
     {
         d_ilp_data.max_seconds = p_seconds;
     }

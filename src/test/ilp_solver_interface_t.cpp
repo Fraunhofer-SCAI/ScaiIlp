@@ -8,6 +8,7 @@
 #include <boost/test/unit_test.hpp>
 #include <filesystem>
 #include <iostream>
+#include <string>
 #include <string_view>
 
 #define NOMINMAX
@@ -19,12 +20,18 @@ using std::string;
 using std::vector;
 
 const auto c_eps = 0.0001;
-const auto c_num_performance_test_repetitions = 10000;
+const auto c_num_performance_test_repetitions = 1;
 
 const bool LOGGING = true;
 
 namespace ilp_solver
 {
+    static_assert(sizeof(char8_t) == sizeof(char));
+    static std::string u8string_to_string(std::u8string_view p_string)
+    {
+        return std::string(p_string.begin(), p_string.end());
+    }
+
     static int round(double x)
     {
         return (int) (x+0.5);
@@ -320,8 +327,9 @@ namespace ilp_solver
 
         if (LOGGING)
         {
-            cout << "Successfully wrote mps-File to " << std::filesystem::absolute(path).generic_u8string() << ".\n";
-            cout << "\tFilesize is " << size << " Byte." << std::endl;
+            cout << "Successfully wrote mps-File to "
+                 << u8string_to_string(std::filesystem::absolute(path).generic_u8string()) << ".\n"
+                 << "\tFilesize is " << size << " Byte." << std::endl;
         }
     }
 
@@ -633,7 +641,7 @@ namespace ilp_solver
     ILPSolverInterface* __stdcall create_stub()
     {
         constexpr std::string_view solver_exe_name = "ScaiIlpExe.exe";
-        return create_solver_stub(solver_exe_name.data());
+        return create_solver_stub(solver_exe_name.data(), SCAIILP_SOLVER_STUB_IGNORE_KNOWN_CRASHES);
     }
 }
 

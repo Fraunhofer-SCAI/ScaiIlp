@@ -5,232 +5,190 @@
 #include "solver_exit_code.hpp"
 
 #include <cassert>
-#include <filesystem>
+#include <chrono>
+#include <format>
 #include <iostream>
-#include <memory>
 #include <stdexcept>
-#include <unordered_map>
 
-#define NOMINMAX
-#include <windows.h>    // for GetModuleFileNameW, CreateProcessW etc.
-
-constexpr auto c_file_separator  = "\\";
-constexpr auto c_max_path_length = 1 << 16;
-
-using std::string;
-using std::wstring;
+#include <boost/dll/runtime_symbol_info.hpp>
+#include <boost/process.hpp>
 
 namespace ilp_solver
 {
-    static string quote(const string& p_string)
+// In AXS-1452, we introduced a wait time limit because we observed CBC not terminating after hours
+// despite a given time limit of minutes.
+// We now wait for (max_seconds plus some overtime) =: wait_max_seconds.
+// When wait_max_seconds is exceeded, the external process is killed, but the intermediate result reached is preserved.
+// This is more convenient than letting the user kill the external process or even the calling process.
+// (The latter would lose the intermediate result).
+//
+// In AXS-1452, we started with relative_overtime=0.5.
+// We hoped that this would be large enough to always terminate regularly.
+// Also we had recommended one of our users to kill the process after 2*max_seconds,
+// so we wanted a smaller wait_max_seconds.
+//
+// After AXS-2636 we observed that occasionally CBC still ran into wait_max_seconds. So we added absolute_overtime.
+// Unlike the initial instance from AXS-1452, the runtime of the instance of AXS-2636 seems very volatile.
+// With time_limit=20s (60s distributed to 3 calls), overtime ranges from <2s total to >10s for on one run.
+//
+// Current values are experimental.
+constexpr auto c_relative_overtime         = 0.5;
+constexpr auto c_absolute_overtime_seconds = 10.0;
+
+
+static std::chrono::milliseconds seconds_to_millisecods(double p_seconds)
+{
+    const auto     milliseconds     = 1000. * p_seconds;
+    constexpr auto max_milliseconds = std::numeric_limits<std::chrono::milliseconds::rep>::max();
+    if (milliseconds >= max_milliseconds)
+        return std::chrono::milliseconds(max_milliseconds);
+    return std::chrono::milliseconds(static_cast<std::chrono::milliseconds::rep>(milliseconds));
+}
+
+
+static std::string exit_code_to_message(SolverExitCode p_exit_code)
+{
+    switch (p_exit_code)
     {
-        return '"' + p_string + '"';
+    case SolverExitCode::ok:
+        return "";
+    case SolverExitCode::killed_via_task_manager:
+        return "ScaiIlp killed.";
+    case SolverExitCode::uncaught_exception_1:
+        return "Uncaught exception, likely out of memory (stack buffer overflow Windows 7).";
+    case SolverExitCode::uncaught_exception_2:
+        return "Uncaught exception, likely out of memory (C++ exception).";
+    case SolverExitCode::uncaught_exception_3:
+        return "Uncaught exception, likely out of memory (stack buffer overflow Windows 10).";
+    case SolverExitCode::uncaught_exception_4:
+        return "Uncaught exception, the heap was most likely filled or corrupted.";
+    case SolverExitCode::uncaught_exception_5:
+        return "Uncaught exception: Access violation.";
+    case SolverExitCode::missing_dll:
+        return "DLL missing";
+    case SolverExitCode::out_of_memory:
+        return "Out of memory.";
+    case SolverExitCode::command_line_error:
+        return "Invalid command line.";
+    case SolverExitCode::shared_memory_error:
+        return "Failed communicating via shared memory.";
+    case SolverExitCode::model_error:
+        return "Failed generating model.";
+    case SolverExitCode::solver_error:
+        return "Failed solving (solver error).";
+    case SolverExitCode::forced_termination:
+        return "Unexpected exit code \"forced termination\"."; // If forced termination by stub occurs, we do not
+                                                                // call exit_code_to_message. So the exit code is
+                                                                // unexpected here.
+    default:
+        return "Unknown exit code " + std::to_string(static_cast<int>(p_exit_code)) + ".";
     }
+}
 
 
-    static string directory_name(string p_filename)
+static bool exit_code_should_be_ignored_silently(SolverExitCode p_exit_code)
+{
+    switch (p_exit_code)
     {
-        const auto file_separator_pos = p_filename.rfind(c_file_separator);
-        assert(file_separator_pos != std::wstring::npos);
-        p_filename.erase(file_separator_pos);
-        return p_filename + c_file_separator;
+    case SolverExitCode::out_of_memory:
+    case SolverExitCode::uncaught_exception_1:
+    case SolverExitCode::uncaught_exception_2:
+    case SolverExitCode::uncaught_exception_3:
+    case SolverExitCode::uncaught_exception_4:
+    case SolverExitCode::uncaught_exception_5:
+    case SolverExitCode::forced_termination:
+        return true;
+    default:
+        return false;
     }
+}
 
 
-    static string executable_dir()
-    {
-        char exe_path[c_max_path_length];
-        GetModuleFileNameA(NULL, exe_path, c_max_path_length);
-        return directory_name(exe_path);
-    }
+// set_default_parameters is called in ILPSolverCollect.
+ILPSolverStub::ILPSolverStub(const std::string& p_executable_basename, bool p_throw_on_all_crashes)
+    : d_executable_basename(p_executable_basename), d_throw_on_all_crashes(p_throw_on_all_crashes)
+{ }
 
 
-    static string full_executable_name(const string& p_basename)
-    {
-        return executable_dir() + p_basename;
-    }
+std::vector<double> ILPSolverStub::get_solution() const
+{
+    return d_ilp_solution_data.solution;
+}
 
 
-    static SolverExitCode execute_process(const string& p_executable_basename, const string& p_parameter, int p_wait_milliseconds)
-    {
-        // prepare command line
-        const auto executable = full_executable_name(p_executable_basename);
-        if (!std::filesystem::exists(executable))
-            throw SolverExeException(("Could not find " + p_executable_basename).c_str());
-        auto command_line = quote(executable) + ' ' + quote(p_parameter);
-
-        // prepare parameters
-        STARTUPINFOA startup_info;
-        PROCESS_INFORMATION process_info;
-        std::memset(&startup_info, 0, sizeof(startup_info));
-        std::memset(&process_info, 0, sizeof(process_info));
-        startup_info.cb = sizeof(startup_info);
-
-        // start process
-        if (!CreateProcessA(executable.c_str(),             // lpApplicationName
-                            command_line.data(),            // lpCommandLine
-                            0,                              // lpProcessAttributes
-                            0,                              // lpThreadAttributes
-                            false,                          // bInheritHandles
-                            CREATE_DEFAULT_ERROR_MODE ,     // dwCreationFlags
-                            0,                              // lpEnvironment
-                            0,                              // lpCurrentDirectory
-                            &startup_info,
-                            &process_info))
-            throw SolverExeException(("Error starting " + p_executable_basename + ". Error code:" + std::to_string(GetLastError())).c_str());
-
-        // close handles via RAII
-        struct HandleCloser
-        {
-            explicit HandleCloser(PROCESS_INFORMATION* p_process_info) : process_info(p_process_info) {}
-            ~HandleCloser()
-            {
-                CloseHandle(process_info->hProcess);
-                CloseHandle(process_info->hThread);
-            }
-
-            PROCESS_INFORMATION* process_info;
-        } handle_closer(&process_info);
-
-        // wait for the process to terminate
-        auto return_code = WaitForSingleObject(process_info.hProcess, p_wait_milliseconds);
-        switch (return_code) // according to https://msdn.microsoft.com/de-de/library/windows/desktop/ms687032%28v=vs.85%29.aspx, WaitForSingeObject can return the 4 values listed below
-        {
-        case WAIT_OBJECT_0:
-            break;
-        case WAIT_TIMEOUT:
-            TerminateProcess(process_info.hProcess, static_cast<DWORD>(SolverExitCode::forced_termination));
-            break;
-        case WAIT_ABANDONED:
-        case WAIT_FAILED:
-        default: // we also handle unexpected values, just in case
-            TerminateProcess(process_info.hProcess, static_cast<DWORD>(SolverExitCode::forced_termination));
-            throw std::exception (("Error running " + p_executable_basename + ". Unexpected return code of WaitForSingleObject.").c_str());
-        }
-
-        // read process exit code
-        DWORD exit_code;
-        if (GetExitCodeProcess(process_info.hProcess, &exit_code))
-            return SolverExitCode(exit_code);
-        else
-            throw std::exception(("Error obtaining exit code from " + p_executable_basename + ". Error code: " + std::to_string(GetLastError())).c_str());
-    }
+double ILPSolverStub::get_objective() const
+{
+    return d_ilp_solution_data.objective;
+}
 
 
-    int seconds_to_milliseconds (double p_seconds)
-    {
-        p_seconds *= 1000;
-        if (p_seconds > std::numeric_limits<int>::max())
-            return std::numeric_limits<int>::max();
-        else
-            return static_cast<int>(p_seconds);
-    }
+SolutionStatus ILPSolverStub::get_status() const
+{
+    return d_ilp_solution_data.solution_status;
+}
 
 
-    static std::string exit_code_to_message(SolverExitCode p_exit_code)
-    {
-        switch (p_exit_code)
-        {
-        case SolverExitCode::ok:
-            return "";
-        case SolverExitCode::killed_via_task_manager:
-            return "ScaiIlp killed.";
-        case SolverExitCode::uncaught_exception_1:
-            return "Uncaught exception, likely out of memory (stack buffer overflow Windows 7).";
-        case SolverExitCode::uncaught_exception_2:
-            return "Uncaught exception, likely out of memory (C++ exception).";
-        case SolverExitCode::uncaught_exception_3:
-            return "Uncaught exception, likely out of memory (stack buffer overflow Windows 10).";
-        case SolverExitCode::uncaught_exception_4:
-            return "Uncaught exception, the heap was most likely filled or corrupted.";
-        case SolverExitCode::uncaught_exception_5:
-            return "Uncaught exception: Access violation.";
-        case SolverExitCode::missing_dll:
-            return "DLL missing";
-        case SolverExitCode::out_of_memory:
-            return "Out of memory.";
-        case SolverExitCode::command_line_error:
-            return "Invalid command line.";
-        case SolverExitCode::shared_memory_error:
-            return "Failed communicating via shared memory.";
-        case SolverExitCode::model_error:
-            return "Failed generating model.";
-        case SolverExitCode::solver_error:
-            return "Failed solving (solver error).";
-        case SolverExitCode::forced_termination:
-            return "Failed solving (timeout).";
-        default:
-            return "Unknown exit code " + std::to_string(static_cast<int>(p_exit_code)) + ".";
-        }
-    }
+void ILPSolverStub::reset_solution()
+{
+    d_ilp_data.start_solution.clear();
+    d_ilp_solution_data = ILPSolutionData(d_ilp_data.objective_sense);
+}
 
 
-    static bool exit_code_should_be_ignored_silently(SolverExitCode p_exit_code)
-    {
-        switch (p_exit_code)
-        {
-        case SolverExitCode::out_of_memory:
-        case SolverExitCode::uncaught_exception_1:
-        case SolverExitCode::uncaught_exception_2:
-        case SolverExitCode::uncaught_exception_3:
-        case SolverExitCode::uncaught_exception_4:
-        case SolverExitCode::uncaught_exception_5:
-        case SolverExitCode::forced_termination:
-            return true;
-        default:
-            return false;
-        }
-    }
+void ILPSolverStub::solve_impl()
+{
+    SolverExitCode exit_code{};
+    std::string    exit_message{};
 
-
-    // set_default_parameters is called in ILPSolverCollect.
-    ILPSolverStub::ILPSolverStub(const std::string& p_executable_basename)
-        : d_executable_basename(p_executable_basename)
-    { }
-
-
-    std::vector<double> ILPSolverStub::get_solution() const
-    {
-        return d_ilp_solution_data.solution;
-    }
-
-
-    double ILPSolverStub::get_objective() const
-    {
-        return d_ilp_solution_data.objective;
-    }
-
-
-    SolutionStatus ILPSolverStub::get_status() const
-    {
-        return d_ilp_solution_data.solution_status;
-    }
-
-
-    void ILPSolverStub::reset_solution()
-    {
-        d_ilp_data.start_solution.clear();
-        d_ilp_solution_data = ILPSolutionData(d_ilp_data.objective_sense);
-    }
-
-
-
-    void ILPSolverStub::solve_impl()
+    try
     {
         d_ilp_solution_data = ILPSolutionData(d_ilp_data.objective_sense);
 
         CommunicationParent communicator;
-        const auto shared_memory_name = communicator.write_ilp_data(d_ilp_data);
-
-        auto exit_code = execute_process(d_executable_basename, shared_memory_name, seconds_to_milliseconds (1.5 * d_ilp_data.max_seconds));
+        const auto          shared_memory_name = communicator.write_ilp_data(d_ilp_data);
+        // We expect the ScaiILP executable lying next to the one calling it.
+        const auto full_executable_path = boost::dll::program_location().parent_path() / d_executable_basename;
+        // Start the process. If the log level is zero, suppress all of its output.
+        // Ideally, suppressing the output should not be necessary,
+        // but we have repeatedly observed CBC writing to stdout at log level zero.
+        auto proc = d_ilp_data.log_level != 0 ? boost::process::child(full_executable_path, shared_memory_name)
+                                              : boost::process::child(full_executable_path, shared_memory_name,
+                                                                      boost::process::std_out > boost::process::null,
+                                                                      boost::process::std_err > boost::process::null);
+        // Wait hopefully long enough. Kill child if time limit is exceeded. See comment on c_timeout_factor.
+        const auto wait_max_seconds = (1.0 + c_relative_overtime) * d_ilp_data.max_seconds + c_absolute_overtime_seconds;
+        if (!proc.wait_for(seconds_to_millisecods(wait_max_seconds)))
+        {
+            proc.terminate(); // boost::process seems not to support to set the exit code by terminate().
+                              // Note that terminate(error_code&) does not set the exit code either, but has a different purpose.
+            exit_code = SolverExitCode::forced_termination; // Don't read the exit code, but set it manually to the fixed desired value.
+            exit_message = std::format("Failed solving by timeout. (limit:{} timeout:{})", d_ilp_data.max_seconds,
+                                       wait_max_seconds);
+        }
+        else
+        {
+            exit_code    = SolverExitCode(proc.exit_code());
+            exit_message = exit_code_to_message(exit_code);
+        }
 
         if (d_ilp_data.log_level)
-            std::cout << "External Solver messages: \"" << exit_code_to_message(exit_code) << "\" (Exit Code " << static_cast<int>(exit_code) << ")\n";
+            std::cout << "External Solver messages: \"" << exit_message
+                      << "\" (Exit Code " << static_cast<int>(exit_code) << ")\n";
 
         communicator.read_solution_data(&d_ilp_solution_data);
-        if (exit_code == SolverExitCode::missing_dll) // missing DLL should be a Runtime Error
-            throw ilp_solver::SolverExeException(("External ILP solver: " + exit_code_to_message(exit_code)).c_str());
-        if (exit_code != SolverExitCode::ok && !exit_code_should_be_ignored_silently(exit_code))
-            throw std::exception(("External ILP solver: " + exit_code_to_message(exit_code)).c_str());
     }
+    // Rethrow all exceptions as SolverExeExceptions, so they can be easily traced back to this function.
+    catch (const std::exception& p_e)
+    {
+        throw SolverExeException(p_e.what());
+    }
+    catch (...)
+    {
+        throw SolverExeException("Unknown Error.");
+    }
+
+    if (exit_code != SolverExitCode::ok && (d_throw_on_all_crashes || !exit_code_should_be_ignored_silently(exit_code)))
+        throw SolverExeException(exit_message);
 }
+
+} // namespace ilp_solver

@@ -30,16 +30,16 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverImpl::add_variable_boolean(const vector<double>& p_row_values, double p_objective, const string& p_name)
+    void ILPSolverImpl::add_variable_boolean(ValueArray p_row_values, double p_objective, const string& p_name)
     {
-        add_variable_impl (VariableType::BINARY, p_objective, 0., 1., p_name, &p_row_values);
+        add_variable_impl (VariableType::BINARY, p_objective, 0., 1., p_name, p_row_values);
     }
 
 
-    void ILPSolverImpl::add_variable_boolean(const vector<int>& p_row_indices, const vector<double>& p_row_values, double p_objective, const string& p_name)
+    void ILPSolverImpl::add_variable_boolean(IndexArray p_row_indices, ValueArray p_row_values, double p_objective, const string& p_name)
     {
         assert(p_row_values.size() == p_row_indices.size());
-        add_variable_impl (VariableType::BINARY, p_objective, 0., 1., p_name, &p_row_values, &p_row_indices);
+        add_variable_impl (VariableType::BINARY, p_objective, 0., 1., p_name, p_row_values, p_row_indices);
     }
 
 
@@ -49,16 +49,16 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverImpl::add_variable_integer(const vector<double>& p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_variable_integer(ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name)
     {
-        add_variable_impl (VariableType::INTEGER, p_objective, p_lower_bound, p_upper_bound, p_name, &p_row_values);
+        add_variable_impl (VariableType::INTEGER, p_objective, p_lower_bound, p_upper_bound, p_name, p_row_values);
     }
 
 
-    void ILPSolverImpl::add_variable_integer(const vector<int>& p_row_indices, const vector<double>& p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_variable_integer(IndexArray p_row_indices, ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name)
     {
         assert(p_row_values.size() == p_row_indices.size());
-        add_variable_impl (VariableType::INTEGER, p_objective, p_lower_bound, p_upper_bound, p_name, &p_row_values, &p_row_indices);
+        add_variable_impl (VariableType::INTEGER, p_objective, p_lower_bound, p_upper_bound, p_name, p_row_values, p_row_indices);
     }
 
 
@@ -68,70 +68,77 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverImpl::add_variable_continuous(const vector<double>& p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_variable_continuous(ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name)
     {
-        add_variable_impl (VariableType::CONTINUOUS, p_objective, p_lower_bound, p_upper_bound, p_name, &p_row_values);
+        add_variable_impl (VariableType::CONTINUOUS, p_objective, p_lower_bound, p_upper_bound, p_name, p_row_values);
     }
 
 
-    void ILPSolverImpl::add_variable_continuous(const vector<int>& p_row_indices, const vector<double>& p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_variable_continuous(IndexArray p_row_indices, ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name)
     {
         assert(p_row_values.size() == p_row_indices.size());
-        add_variable_impl (VariableType::CONTINUOUS, p_objective, p_lower_bound, p_upper_bound, p_name, &p_row_values, &p_row_indices);
+        add_variable_impl (VariableType::CONTINUOUS, p_objective, p_lower_bound, p_upper_bound, p_name, p_row_values, p_row_indices);
     }
 
 
-    void ILPSolverImpl::add_constraint(const vector<double>& p_col_values, double p_lower_bound, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_constraint(ValueArray p_col_values, double p_lower_bound, double p_upper_bound, const string& p_name)
     {
         if ( p_upper_bound > c_pos_inf_bound && p_lower_bound < c_neg_inf_bound ) return;
         add_constraint_impl (p_lower_bound, p_upper_bound, p_col_values, p_name);
     }
 
 
-    void ILPSolverImpl::add_constraint(const vector<int>& p_col_indices, const vector<double>& p_col_values, double p_lower_bound, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_constraint(IndexArray p_col_indices, ValueArray p_col_values, double p_lower_bound, double p_upper_bound, const string& p_name)
     {
         if ( p_upper_bound > c_pos_inf_bound && p_lower_bound < c_neg_inf_bound ) return;
-        add_constraint_impl (p_lower_bound, p_upper_bound, p_col_values, p_name, &p_col_indices);
+        add_constraint_impl (p_lower_bound, p_upper_bound, p_col_values, p_name, p_col_indices);
     }
 
 
-    void ILPSolverImpl::add_constraint_upper(const vector<double>& p_col_values, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_constraint_upper(ValueArray p_col_values, double p_upper_bound, const string& p_name)
     {
         if (p_upper_bound > c_pos_inf_bound) return;
         add_constraint_impl (c_neg_inf, p_upper_bound, p_col_values, p_name);
     }
 
 
-    void ILPSolverImpl::add_constraint_upper(const vector<int>& p_col_indices, const vector<double>& p_col_values, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_constraint_upper(IndexArray p_col_indices, ValueArray p_col_values, double p_upper_bound, const string& p_name)
     {
         if (p_upper_bound > c_pos_inf_bound) return;
-        add_constraint_impl (c_neg_inf, p_upper_bound, p_col_values, p_name, &p_col_indices);
+        add_constraint_impl (c_neg_inf, p_upper_bound, p_col_values, p_name, p_col_indices);
     }
 
 
-    void ILPSolverImpl::add_constraint_lower(const vector<double>& p_col_values, double p_lower_bound, const string& p_name)
+    void ILPSolverImpl::add_constraint_lower(ValueArray p_col_values, double p_lower_bound, const string& p_name)
     {
         if (p_lower_bound < c_neg_inf_bound) return;
         add_constraint_impl (p_lower_bound, c_pos_inf, p_col_values, p_name);
     }
 
 
-    void ILPSolverImpl::add_constraint_lower(const vector<int>& p_col_indices, const vector<double>& p_col_values, double p_lower_bound, const string& p_name)
+    void ILPSolverImpl::add_constraint_lower(IndexArray p_col_indices, ValueArray p_col_values, double p_lower_bound, const string& p_name)
     {
         if (p_lower_bound < c_neg_inf_bound) return;
-        add_constraint_impl (p_lower_bound, c_pos_inf, p_col_values, p_name, &p_col_indices);
+        add_constraint_impl (p_lower_bound, c_pos_inf, p_col_values, p_name, p_col_indices);
     }
 
 
-    void ILPSolverImpl::add_constraint_equality(const vector<double>& p_col_values, double p_value, const string& p_name)
+    void ILPSolverImpl::add_constraint_equality(ValueArray p_col_values, double p_value, const string& p_name)
     {
         add_constraint_impl (p_value, p_value, p_col_values, p_name);
     }
 
 
-    void ILPSolverImpl::add_constraint_equality(const vector<int>& p_col_indices, const vector<double>& p_col_values, double p_value, const string& p_name)
+    void ILPSolverImpl::add_constraint_equality(IndexArray p_col_indices, ValueArray p_col_values, double p_value, const string& p_name)
     {
-        add_constraint_impl (p_value, p_value, p_col_values, p_name, &p_col_indices);
+        add_constraint_impl (p_value, p_value, p_col_values, p_name, p_col_indices);
+    }
+
+
+    void ILPSolverImpl::set_max_seconds(double p_seconds)
+    {
+        d_max_seconds = p_seconds;
+        set_max_seconds_impl(p_seconds);
     }
 
 
@@ -141,6 +148,9 @@ namespace ilp_solver
 
     void ILPSolverImpl::minimize()
     {
+        if (d_max_seconds <= 0)
+            return;
+
         prepare_impl();
         set_objective_sense_impl(ObjectiveSense::MINIMIZE);
         solve_impl();
@@ -149,6 +159,9 @@ namespace ilp_solver
 
     void ILPSolverImpl::maximize()
     {
+        if (d_max_seconds <= 0)
+            return;
+
         prepare_impl();
         set_objective_sense_impl(ObjectiveSense::MAXIMIZE);
         solve_impl();

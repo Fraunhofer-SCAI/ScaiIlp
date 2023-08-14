@@ -30,7 +30,7 @@ namespace ilp_solver
             double              get_objective() const override;
             SolutionStatus      get_status()    const override;
 
-            void set_start_solution(const std::vector<double>& p_solution)   override;
+            void set_start_solution(ValueArray p_solution)                   override;
             void reset_solution    ()                                        override;
 
             void set_num_threads       (int p_num_threads)                   override;
@@ -38,7 +38,6 @@ namespace ilp_solver
             void set_log_level         (int p_level)                         override;
             void set_presolve          (bool p_presolve)                     override;
 
-            void set_max_seconds       (double p_seconds)                    override;
             void set_max_nodes         (int    p_nodes)                      override;
             void set_max_solutions     (int    p_solutions)                  override;
             void set_max_abs_gap       (double p_gap)                        override;
@@ -58,16 +57,16 @@ namespace ilp_solver
             int              d_num_cons{ 0 };
 
             void add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
-                const std::string& p_name = "", const std::vector<double>* p_row_values = nullptr,
-                const std::vector<int>* p_row_indices = nullptr) override;
+                                    const std::string& p_name = "", OptionValueArray p_row_values = {},
+                                    OptionIndexArray p_row_indices = {}) override;
 
 
-            void add_constraint_impl (double p_lower_bound, double p_upper_bound,
-                const std::vector<double>& p_col_values, const std::string& p_name = "",
-                const std::vector<int>* p_col_indices = nullptr) override;
+            void add_constraint_impl (double p_lower_bound, double p_upper_bound, ValueArray p_col_values,
+                                      const std::string& p_name = "", OptionIndexArray p_col_indices = {}) override;
 
             void solve_impl() override;
             void set_objective_sense_impl(ObjectiveSense p_sense) override;
+            void set_max_seconds_impl(double p_seconds) override;
     };
 }
 

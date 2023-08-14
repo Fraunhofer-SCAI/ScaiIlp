@@ -41,8 +41,8 @@ namespace ilp_solver
         class ZeroPruner
         {
         public:
-            ZeroPruner (const std::vector<int>* p_indices, const std::vector<double>* p_values);
-            ~ZeroPruner();
+            ZeroPruner (OptionalIndexArray p_indices, OptionalValueArray p_values);
+            ~ZeroPruner() noexcept;
 
             int           size()    const { return d_num_indices; }
             const double* values()  const { return d_values; }
@@ -57,10 +57,10 @@ namespace ilp_solver
             int     d_owns        {0};
         };
 
-        ZeroPruner::ZeroPruner(const std::vector<int>* p_indices, const std::vector<double>* p_values)
+        ZeroPruner::ZeroPruner(OptionalIndexArray p_indices, OptionalValueArray p_values)
         {
-            if (p_values != nullptr) {
-                assert ((p_indices == nullptr) || (p_indices->size() == p_values->size()));
+            if (p_values) {
+                assert ((!p_indices) || (p_indices->size() == p_values->size()));
 
                 auto num_zeros{ static_cast<int>(std::count(p_values->begin(), p_values->end(), 0.)) };
 
@@ -78,7 +78,7 @@ namespace ilp_solver
                         if (value != 0.)
                         {
                             d_values [j]   = value;
-                            d_indices[j++] = (p_indices != nullptr) ? (*p_indices)[i] : i;
+                            d_indices[j++] = (p_indices) ? (*p_indices)[i] : i;
                         }
                     }
                 }
@@ -89,7 +89,7 @@ namespace ilp_solver
                     d_values      = const_cast<double*>(p_values->data());
                     d_num_indices = isize(*p_values);
 
-                    if (p_indices == nullptr)
+                    if (!p_indices)
                     {
                         d_owns    = c_owns_indices;
                         d_indices = new int[d_num_indices];
@@ -132,7 +132,7 @@ namespace ilp_solver
         // number of values per dataline (1 or 2),
         // keepStrings (no idea what it does, false is default).
         if( d_cache.writeMps(p_filename.c_str(), 0, 1, 1, false) )
-            throw std::exception("Could not write mps file.");
+            throw std::runtime_error("Could not write mps file.");
     }
 
 
@@ -148,7 +148,7 @@ namespace ilp_solver
 
 
     void ILPSolverOsiModel::add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
-                                               const std::string& p_name, const std::vector<double>* p_row_values, const std::vector<int>* p_row_indices)
+                                               const std::string& p_name, OptionalValueArray p_row_values, OptionalIndexArray p_row_indices)
     {
         ZeroPruner pruner{p_row_indices, p_row_values};
         assert (pruner.size() <= get_num_constraints());
@@ -168,10 +168,10 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverOsiModel::add_constraint_impl (double p_lower_bound, double p_upper_bound, const std::vector<double>& p_col_values,
-                                                 const std::string& p_name, const std::vector<int>* p_col_indices)
+    void ILPSolverOsiModel::add_constraint_impl (double p_lower_bound, double p_upper_bound, ValueArray p_col_values,
+                                                 const std::string& p_name, OptionalIndexArray p_col_indices)
     {
-        ZeroPruner pruner{p_col_indices, &p_col_values};
+        ZeroPruner pruner{p_col_indices, p_col_values};
 
         if (!p_name.empty())
         {

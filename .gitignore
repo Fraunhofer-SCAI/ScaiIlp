@@ -7,7 +7,7 @@ vc/ScaiIlpExe/Debug_x64/*
 vc/ScaiIlpExe/Release_x64/*
 vc/UnitTest/Debug_x64/*
 vc/UnitTest/Release_x64/*
-vc/UnitTest/*.mps
+*.mps
 vc/.vs/*
 *.aps
 *.vcxproj.user

@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <array>
 #include <boost/test/unit_test.hpp>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 #include <iostream>
 #include <string>
 #include <string_view>
@@ -319,16 +319,16 @@ namespace ilp_solver
 
         p_solver->print_mps_file(p_path);
 
-        std::filesystem::path path{ p_path };
-        BOOST_REQUIRE(std::filesystem::is_regular_file(path));
+        boost::filesystem::path path{ p_path };
+        BOOST_REQUIRE(boost::filesystem::is_regular_file(path));
 
-        auto size{ std::filesystem::file_size(path) };
-        BOOST_REQUIRE(std::filesystem::file_size(path) > 0);
+        auto size{ boost::filesystem::file_size(path) };
+        BOOST_REQUIRE(size > 0);
 
         if (LOGGING)
         {
             cout << "Successfully wrote mps-File to "
-                 << u8string_to_string(std::filesystem::absolute(path).generic_u8string()) << ".\n"
+                 << boost::filesystem::absolute(path).generic_string() << ".\n"
                  << "\tFilesize is " << size << " Byte." << std::endl;
         }
     }

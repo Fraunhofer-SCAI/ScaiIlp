@@ -157,7 +157,13 @@ void ILPSolverStub::solve_impl()
                                                                       boost::process::std_err > boost::process::null);
         // Wait hopefully long enough. Kill child if time limit is exceeded. See comment on c_timeout_factor.
         const auto wait_max_seconds = (1.0 + c_relative_overtime) * d_ilp_data.max_seconds + c_absolute_overtime_seconds;
+// boost::child::wait_for/wait_until have been deprecated, because they may be unreliable.
+// However, it seems that they are only problematic on posix based systems and not on windows.
+// See https://www.boost.org/doc/libs/1_83_0/doc/html/boost_process/v2.html#boost_process.v2.introduction.unreliable
+// So we just ignore the deprecation warning.
+#pragma warning(disable : 4996)
         if (!proc.wait_for(seconds_to_millisecods(wait_max_seconds)))
+#pragma warning(default : 4996)
         {
             proc.terminate(); // boost::process seems not to support to set the exit code by terminate().
                               // Note that terminate(error_code&) does not set the exit code either, but has a different purpose.

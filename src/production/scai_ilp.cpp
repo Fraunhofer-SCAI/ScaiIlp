@@ -5,10 +5,12 @@
 #include "solver_exit_code.hpp"
 #include "utility.hpp"
 
+#include <boost/chrono.hpp>
 #include <stdexcept>
 #include <string>
 
 #include <windows.h> // for SetErrorMode
+#include <psapi.h> // GetProcessMemoryInfo
 
 #if WITH_MIMALLOC == 1
 #pragma warning(push)
@@ -159,16 +161,33 @@ static ILPSolutionData solve_ilp(const ILPData& p_data, CommunicationChild& p_co
 }
 
 
+// Returns peak memory usage in megabytes.
+static double peak_memory_usage()
+{
+    PROCESS_MEMORY_COUNTERS memory;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &memory, sizeof(memory)))
+        return static_cast<unsigned long long>(memory.PeakWorkingSetSize) * 0x1p-20;
+    return 0.;
+}
+
+
 static SolverExitCode solve_ilp(const std::string& p_shared_memory_name)
 {
     try
     {
+        using Seconds   = boost::chrono::duration<double>;
+        using UserClock = boost::chrono::process_user_cpu_clock;
+        auto start_time = UserClock::now();
+
         ILPData data;
 
         CommunicationChild communicator(p_shared_memory_name);
         communicator.read_ilp_data(&data);
 
         auto solution_data = solve_ilp(data, communicator);
+
+        solution_data.peak_memory  = peak_memory_usage();
+        solution_data.cpu_time_sec = Seconds(UserClock::now() - start_time).count();
 
         communicator.write_solution_data(solution_data);
 

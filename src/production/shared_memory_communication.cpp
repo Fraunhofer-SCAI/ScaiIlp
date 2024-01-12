@@ -19,7 +19,9 @@ namespace ilp_solver
     {
         *v_serializer << p_solution_data.solution_status
                       << p_solution_data.objective
-                      << p_solution_data.solution;
+                      << p_solution_data.solution
+                      << p_solution_data.cpu_time_sec
+                      << p_solution_data.peak_memory;
     }
 
 
@@ -27,7 +29,9 @@ namespace ilp_solver
     {
         *v_deserializer >> r_solution_data->solution_status
                         >> r_solution_data->objective
-                        >> r_solution_data->solution;
+                        >> r_solution_data->solution
+                        >> r_solution_data->cpu_time_sec
+                        >> r_solution_data->peak_memory;
     }
 
 

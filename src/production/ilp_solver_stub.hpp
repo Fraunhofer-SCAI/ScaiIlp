@@ -17,6 +17,8 @@ namespace ilp_solver
             std::vector<double>       get_solution  () const override;
             double                    get_objective () const override;
             SolutionStatus            get_status    () const override;
+            double                    get_external_cpu_time_sec()    const override { return d_ilp_solution_data.cpu_time_sec; };
+            double                    get_external_peak_memory_mb() const override { return d_ilp_solution_data.peak_memory; }
 
             void                      reset_solution()       override;
 

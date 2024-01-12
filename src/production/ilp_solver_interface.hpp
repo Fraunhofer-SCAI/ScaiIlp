@@ -104,6 +104,12 @@ namespace ilp_solver
             // Obtain the current status of the solver.
             virtual SolutionStatus            get_status    () const = 0;
 
+            // Obtain external CPU time in seconds, if an external process was used.
+            virtual double                    get_external_cpu_time_sec() const { return 0; };
+
+            // Obtain external peak memory usage in megabytes, if an external process was used.
+            virtual double                    get_external_peak_memory_mb() const { return 0; };
+
             // Delete all information about previous solutions while keeping the model and settings.
             virtual void                      reset_solution()       = 0;
 

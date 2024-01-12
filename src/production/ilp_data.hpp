@@ -101,13 +101,12 @@ namespace ilp_solver
     struct ILPSolutionData
     {
         std::vector<double> solution;
-        double objective;
-        SolutionStatus solution_status;
+        double              objective{std::numeric_limits<double>::quiet_NaN()};
+        SolutionStatus      solution_status{SolutionStatus::NO_SOLUTION};
+        double              cpu_time_sec{};
+        double              peak_memory{};
 
-        ILPSolutionData()
-            : objective(std::numeric_limits<double>::quiet_NaN()),
-              solution_status(SolutionStatus::NO_SOLUTION)
-            {}
+        ILPSolutionData() = default;
 
         explicit ILPSolutionData(ObjectiveSense p_objective_sense)
             : objective(p_objective_sense == ObjectiveSense::MINIMIZE ? std::numeric_limits<double>::max()

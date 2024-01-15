@@ -206,24 +206,4 @@ namespace ilp_solver
         Serializer serializer(d_result_address);
         serialize_result(&serializer, p_solution_data);
     }
-
-
-    /*********************************
-    * Convert between UTF8 and UTF16 *
-    *********************************/
-#pragma warning(push)
-#pragma warning(disable : 4996) // silence C++17 conformance warning
-    std::wstring utf8_to_utf16(const std::string& p_utf8_string)
-    {
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-        return converter.from_bytes(p_utf8_string);
-    }
-
-
-    std::string utf16_to_utf8(const std::wstring& p_utf16_string)
-    {
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-        return converter.to_bytes(p_utf16_string);
-    }
-#pragma warning(pop)
 }

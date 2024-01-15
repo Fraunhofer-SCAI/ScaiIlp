@@ -6,6 +6,7 @@
 #include "utility.hpp"
 
 #include <boost/chrono.hpp>
+#include <boost/nowide/convert.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -206,7 +207,7 @@ SolverExitCode my_main (int argc, wchar_t* argv[])
     if (argc != 2)
         return SolverExitCode::command_line_error;
     const auto shared_memory_name = std::wstring(argv[1]);
-    return solve_ilp(utf16_to_utf8(shared_memory_name));
+    return solve_ilp(boost::nowide::narrow(shared_memory_name));
 }
 
 

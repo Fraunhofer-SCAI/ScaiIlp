@@ -70,31 +70,31 @@ namespace ilp_solver
     }
 
 
-    static void* deserialize_ilp_data(Deserializer* v_deserializer, ILPData* r_data)
+    static void* deserialize_ilp_data(ViewDeserializer& v_deserializer, ILPDataView& r_data)
     {
-        *v_deserializer >> r_data->matrix.d_values
-                        >> r_data->matrix.d_indices
-                        >> r_data->matrix.d_num_cols
-                        >> r_data->objective
-                        >> r_data->variable_lower
-                        >> r_data->variable_upper
-                        >> r_data->constraint_lower
-                        >> r_data->constraint_upper
-                        >> r_data->variable_type
-                        >> r_data->objective_sense
-                        >> r_data->start_solution
-                        >> r_data->num_threads
-                        >> r_data->deterministic
-                        >> r_data->log_level
-                        >> r_data->presolve
-                        >> r_data->max_seconds
-                        >> r_data->max_nodes
-                        >> r_data->max_solutions
-                        >> r_data->max_abs_gap
-                        >> r_data->max_rel_gap
-                        >> r_data->cutoff;
+        v_deserializer >> r_data.matrix.d_values
+                       >> r_data.matrix.d_indices
+                       >> r_data.matrix.d_num_cols
+                       >> r_data.objective
+                       >> r_data.variable_lower
+                       >> r_data.variable_upper
+                       >> r_data.constraint_lower
+                       >> r_data.constraint_upper
+                       >> r_data.variable_type
+                       >> r_data.objective_sense
+                       >> r_data.start_solution
+                       >> r_data.num_threads
+                       >> r_data.deterministic
+                       >> r_data.log_level
+                       >> r_data.presolve
+                       >> r_data.max_seconds
+                       >> r_data.max_nodes
+                       >> r_data.max_solutions
+                       >> r_data.max_abs_gap
+                       >> r_data.max_rel_gap
+                       >> r_data.cutoff;
 
-        return v_deserializer->current_address();
+        return v_deserializer.current_address();
     }
 
 
@@ -198,10 +198,12 @@ namespace ilp_solver
         {}
 
 
-    void CommunicationChild::read_ilp_data(ILPData* r_data)
+    ILPDataView CommunicationChild::read_ilp_data()
     {
-        Deserializer deserializer(d_address);
-        d_result_address = deserialize_ilp_data(&deserializer, r_data);
+        ViewDeserializer deserializer(d_address);
+        ILPDataView  data;
+        d_result_address = deserialize_ilp_data(deserializer, data);
+        return data;
     }
 
 

@@ -37,7 +37,7 @@ class SolverException : public std::exception {};
 using ilp_solver::ILPSolverInterface;
 
 
-static void add_variables(ILPSolverInterface* v_solver, const ILPData& p_data)
+static void add_variables(ILPSolverInterface* v_solver, const ILPDataView& p_data)
 {
     const auto num_variables = isize(p_data.variable_type);
 
@@ -58,7 +58,7 @@ static void add_variables(ILPSolverInterface* v_solver, const ILPData& p_data)
 }
 
 
-static void add_constraints(ILPSolverInterface* v_solver, const ILPData& p_data)
+static void add_constraints(ILPSolverInterface* v_solver, const ILPDataView& p_data)
 {
     const auto num_constraints = isize(p_data.matrix.d_values);
 
@@ -74,21 +74,21 @@ static void add_constraints(ILPSolverInterface* v_solver, const ILPData& p_data)
 }
 
 
-static void generate_ilp(ILPSolverInterface* v_solver, const ILPData& p_data)
+static void generate_ilp(ILPSolverInterface* v_solver, const ILPDataView& p_data)
 {
     add_variables(v_solver, p_data);
     add_constraints(v_solver, p_data);
 }
 
 
-static void set_solver_preparation_parameters(ILPSolverInterface* v_solver, const ILPData& p_data)
+static void set_solver_preparation_parameters(ILPSolverInterface* v_solver, const ILPDataView& p_data)
 {
     if (!p_data.start_solution.empty())
         v_solver->set_start_solution(p_data.start_solution);
 }
 
 
-static void set_solver_parameters(ILPSolverInterface* v_solver, const ILPData& p_data)
+static void set_solver_parameters(ILPSolverInterface* v_solver, const ILPDataView& p_data)
 {
     v_solver->set_num_threads       (p_data.num_threads);
     v_solver->set_deterministic_mode(p_data.deterministic);
@@ -126,7 +126,7 @@ static ILPSolutionData solution_data(const ILPSolverInterface& p_solver)
 
 
 // Throws ModelException, SolverException or std::bad_alloc
-static ILPSolutionData solve_ilp(const ILPData& p_data, CommunicationChild& p_communicator)
+static ILPSolutionData solve_ilp(const ILPDataView& p_data, CommunicationChild& p_communicator)
 {
     auto solver = ilp_solver::create_solver_cbc();
 
@@ -181,10 +181,8 @@ static SolverExitCode solve_ilp(const std::string& p_shared_memory_name)
         using UserClock = boost::chrono::process_user_cpu_clock;
         auto start_time = UserClock::now();
 
-        ILPData data;
-
         CommunicationChild communicator(p_shared_memory_name);
-        communicator.read_ilp_data(&data);
+        auto data = communicator.read_ilp_data();
 
         auto solution_data = solve_ilp(data, communicator);
 

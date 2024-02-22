@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <span>
 #include <vector>
 
 namespace ilp_solver
@@ -144,8 +145,39 @@ struct ILPData
     double max_abs_gap   { c_default_max_abs_gap   };
     double max_rel_gap   { c_default_max_rel_gap   };
     double cutoff        { c_default_cutoff        };
+};
 
-    ILPData() = default;
+
+// Same as ILPData, but inner containers are non-owning.
+struct ILPDataView
+{
+    struct Matrix
+    {
+        std::vector<std::span<double>> d_values;
+        std::vector<std::span<int>>    d_indices;
+        int                            d_num_cols;
+    };
+
+    Matrix                  matrix;
+    std::span<double>       objective;
+    std::span<double>       variable_lower;
+    std::span<double>       variable_upper;
+    std::span<double>       constraint_lower;
+    std::span<double>       constraint_upper;
+    std::span<VariableType> variable_type;
+    std::span<double>       start_solution;
+    ObjectiveSense          objective_sense{ObjectiveSense::MINIMIZE};
+
+    int    num_threads   { c_default_num_threads   };
+    bool   deterministic { c_default_deterministic };
+    int    log_level     { c_default_log_level     };
+    bool   presolve      { c_default_presolve      };
+    double max_seconds   { c_default_max_seconds   };
+    int    max_nodes     { c_default_max_nodes     };
+    int    max_solutions { c_default_max_solutions };
+    double max_abs_gap   { c_default_max_abs_gap   };
+    double max_rel_gap   { c_default_max_rel_gap   };
+    double cutoff        { c_default_cutoff        };
 };
 
 

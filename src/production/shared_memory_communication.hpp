@@ -38,7 +38,7 @@ namespace ilp_solver
         public:
             explicit CommunicationChild(const std::string& p_shared_memory_name);
 
-            void read_ilp_data(ILPData* r_data);
+            ILPDataView read_ilp_data();
             void write_solution_data(const ILPSolutionData& p_solution_data);
 
         private:

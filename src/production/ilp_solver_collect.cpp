@@ -131,9 +131,19 @@ namespace ilp_solver
 
                 v_outstream << "    " << name << ' ' << "OBJ             " << obj << '\n';
 
-                for (int j = 0; j < isize(p_data.matrix); ++j)
+                for (int j = 0; j < isize(p_data.matrix.d_indices); ++j)
                 {
-                    v_outstream << "    " << name << ' ' << p_names[j] << ' ' << p_data.matrix[j][i] << '\n';
+                    double value = 0.;
+                    for (int k = 0; k < isize(p_data.matrix.d_indices[j]); ++k)
+                    {
+                        if (p_data.matrix.d_indices[j][k] == i)
+                        {
+                            value = p_data.matrix.d_values[j][k];
+                            break;
+                        }
+                    }
+
+                    v_outstream << "    " << name << ' ' << p_names[j] << ' ' << value << '\n';
                 }
             }
             return "BOUNDS\n" + std::move(bounds).str();
@@ -179,19 +189,19 @@ namespace ilp_solver
         {
             if (!p_row_indices)
             {
-                assert (p_row_values->size() == d_ilp_data.matrix.size());
+                assert(p_row_values->size() == d_ilp_data.matrix.d_values.size());
                 d_ilp_data.matrix.append_column(*p_row_values);
             }
             else
             {
-                assert (p_row_values->size() == p_row_indices->size());
-                assert (p_row_indices->size() <= d_ilp_data.matrix.size());
+                assert(p_row_values->size() == p_row_indices->size());
+                assert(p_row_indices->size() <= d_ilp_data.matrix.d_values.size());
                 d_ilp_data.matrix.append_column(*p_row_indices, *p_row_values);
             }
         }
         else
         {
-            assert( !p_row_indices );
+            assert(!p_row_indices);
             d_ilp_data.matrix.append_column(IndexArray(), ValueArray());
         }
 
@@ -214,9 +224,7 @@ namespace ilp_solver
         {
             assert(p_col_values.size() == p_col_indices->size());
             assert(p_col_indices->size() <= d_ilp_data.objective.size());
-
-            const auto n_cols = isize(d_ilp_data.objective);
-            d_ilp_data.matrix.append_row(n_cols, *p_col_indices, p_col_values);
+            d_ilp_data.matrix.append_row(*p_col_indices, p_col_values);
         }
 
         d_ilp_data.constraint_lower.push_back(p_lower_bound);

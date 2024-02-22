@@ -60,15 +60,16 @@ static void add_variables(ILPSolverInterface* v_solver, const ILPData& p_data)
 
 static void add_constraints(ILPSolverInterface* v_solver, const ILPData& p_data)
 {
-    const auto num_constraints = isize(p_data.matrix);
+    const auto num_constraints = isize(p_data.matrix.d_values);
 
     for (auto i = 0; i < num_constraints; ++i)
     {
-        const auto& row = p_data.matrix[i];
-        const auto lower = p_data.constraint_lower[i];
-        const auto upper = p_data.constraint_upper[i];
+        const auto& values  = p_data.matrix.d_values[i];
+        const auto& indices = p_data.matrix.d_indices[i];
+        const auto  lower   = p_data.constraint_lower[i];
+        const auto  upper   = p_data.constraint_upper[i];
 
-        v_solver->add_constraint(row, lower, upper);
+        v_solver->add_constraint(indices, values, lower, upper);
     }
 }
 

@@ -11,7 +11,27 @@
 
 namespace ilp_solver
 {
-struct ILPData
+// Shared POD base of ILPData and ILPDataView.
+struct ILPDataBase
+{
+    ObjectiveSense objective_sense{ObjectiveSense::MINIMIZE};
+
+    // Defaults will be overwritten in ilp_solver_collect,
+    // but are initialized to the same constants to be sure.
+    int    num_threads   { c_default_num_threads   };
+    bool   deterministic { c_default_deterministic };
+    int    log_level     { c_default_log_level     };
+    bool   presolve      { c_default_presolve      };
+    double max_seconds   { c_default_max_seconds   };
+    int    max_nodes     { c_default_max_nodes     };
+    int    max_solutions { c_default_max_solutions };
+    double max_abs_gap   { c_default_max_abs_gap   };
+    double max_rel_gap   { c_default_max_rel_gap   };
+    double cutoff        { c_default_cutoff        };
+};
+
+
+struct ILPData : public ILPDataBase
 {
     // Internally, a vector of rows/constraints is stored. The size of the outer vector is the number of constraints.
     // The inner vectors store only non-zero entries (sparse matrix).
@@ -131,25 +151,11 @@ struct ILPData
     std::vector<double>       constraint_upper;
     std::vector<VariableType> variable_type;
     std::vector<double>       start_solution;
-    ObjectiveSense            objective_sense{ObjectiveSense::MINIMIZE};
-
-    // Defaults will be overwritten in ilp_solver_collect,
-    // but are initialized to the same constants to be sure.
-    int    num_threads   { c_default_num_threads   };
-    bool   deterministic { c_default_deterministic };
-    int    log_level     { c_default_log_level     };
-    bool   presolve      { c_default_presolve      };
-    double max_seconds   { c_default_max_seconds   };
-    int    max_nodes     { c_default_max_nodes     };
-    int    max_solutions { c_default_max_solutions };
-    double max_abs_gap   { c_default_max_abs_gap   };
-    double max_rel_gap   { c_default_max_rel_gap   };
-    double cutoff        { c_default_cutoff        };
 };
 
 
 // Same as ILPData, but inner containers are non-owning.
-struct ILPDataView
+struct ILPDataView : public ILPDataBase
 {
     struct Matrix
     {
@@ -166,18 +172,6 @@ struct ILPDataView
     std::span<double>       constraint_upper;
     std::span<VariableType> variable_type;
     std::span<double>       start_solution;
-    ObjectiveSense          objective_sense{ObjectiveSense::MINIMIZE};
-
-    int    num_threads   { c_default_num_threads   };
-    bool   deterministic { c_default_deterministic };
-    int    log_level     { c_default_log_level     };
-    bool   presolve      { c_default_presolve      };
-    double max_seconds   { c_default_max_seconds   };
-    int    max_nodes     { c_default_max_nodes     };
-    int    max_solutions { c_default_max_solutions };
-    double max_abs_gap   { c_default_max_abs_gap   };
-    double max_rel_gap   { c_default_max_rel_gap   };
-    double cutoff        { c_default_cutoff        };
 };
 
 

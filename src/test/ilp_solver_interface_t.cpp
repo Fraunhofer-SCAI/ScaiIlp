@@ -26,12 +26,6 @@ const bool LOGGING = true;
 
 namespace ilp_solver
 {
-    static_assert(sizeof(char8_t) == sizeof(char));
-    static std::string u8string_to_string(std::u8string_view p_string)
-    {
-        return std::string(p_string.begin(), p_string.end());
-    }
-
     static int round(double x)
     {
         return (int) (x+0.5);

@@ -107,7 +107,7 @@ namespace ilp_solver
     }
 
 
-    static size_t determine_required_size(const ILPData& p_data)
+    static std::size_t determine_required_size(const ILPData& p_data)
     {
         Serializer serializer(nullptr);
         serialize_ilp_data(&serializer, p_data, dummy_solution(p_data));

@@ -31,7 +31,7 @@ class Serializer
         Serializer(const Serializer&) = delete;
         Serializer& operator= (const Serializer&) = delete;
 
-        size_t required_bytes() const
+        std::size_t required_bytes() const
         {
             return d_current_address - d_start_address;
         }
@@ -100,7 +100,7 @@ Deserializer& operator>>(Deserializer& p_deserializer, Deserializable& p_deseria
 
 
 // Increases p_num_bytes to the next multiple of sizeof(std::max_align_t)
-constexpr size_t num_bytes_with_padding(size_t p_num_bytes)
+constexpr std::size_t num_bytes_with_padding(std::size_t p_num_bytes)
 {
     const auto alignment = sizeof(std::max_align_t);
     --p_num_bytes;

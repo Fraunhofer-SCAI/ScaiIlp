@@ -70,7 +70,7 @@ namespace ilp_solver
     }
 
 
-    static void* deserialize_ilp_data(ViewDeserializer& v_deserializer, ILPDataView& r_data)
+    static void* deserialize_ilp_data(Deserializer& v_deserializer, ILPDataView& r_data)
     {
         v_deserializer >> r_data.matrix.d_values
                        >> r_data.matrix.d_indices
@@ -200,7 +200,7 @@ namespace ilp_solver
 
     ILPDataView CommunicationChild::read_ilp_data()
     {
-        ViewDeserializer deserializer(d_address);
+        Deserializer deserializer(d_address);
         ILPDataView  data;
         d_result_address = deserialize_ilp_data(deserializer, data);
         return data;

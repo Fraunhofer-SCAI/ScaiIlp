@@ -4,6 +4,8 @@
 
 #include <boost/utility.hpp>
 #include <type_traits>
+#include <cstddef>
+#include <span>
 #include <vector>
 
 template<typename T>
@@ -130,6 +132,19 @@ ViewDeserializer& operator>>(ViewDeserializer& p_deserializer, Deserializable& p
 * Implementation *
 *****************/
 
+
+// Increases p_num_bytes to the next multiple of sizeof(std::max_align_t)
+constexpr size_t num_bytes_with_padding(size_t p_num_bytes)
+{
+    const auto alignment = sizeof(std::max_align_t);
+    --p_num_bytes;
+    return p_num_bytes - (p_num_bytes % alignment) + alignment;
+}
+
+static_assert(num_bytes_with_padding(4) == sizeof(std::max_align_t));
+static_assert(num_bytes_with_padding(8) == sizeof(std::max_align_t));
+
+
 // (De-) Serialization of a POD type
 // =================================
 template<POD T>
@@ -141,7 +156,7 @@ void Serializer::serialize(const T& p_value)
         auto address = static_cast<T*>(static_cast<void*>(d_current_address));
         *address = p_value;
     }
-    d_current_address += num_bytes;
+    d_current_address += num_bytes_with_padding(num_bytes);
 }
 
 
@@ -151,7 +166,7 @@ void Deserializer::deserialize(T* r_value)
     const auto num_bytes = sizeof(T);
     auto address = static_cast<T*>(static_cast<void*>(d_current_address));
     *r_value = *address;
-    d_current_address += num_bytes;
+    d_current_address += num_bytes_with_padding(num_bytes);
 }
 
 
@@ -161,7 +176,7 @@ void ViewDeserializer::deserialize(T& r_value)
     const auto num_bytes = sizeof(T);
     auto       address   = static_cast<T*>(static_cast<void*>(d_current_address));
     r_value              = *address;
-    d_current_address += num_bytes;
+    d_current_address += num_bytes_with_padding(num_bytes);
 }
 
 
@@ -175,7 +190,7 @@ void Serializer::serialize(const std::vector<T>& p_vector)
     const auto num_bytes = size*sizeof(T);
     if (!d_simulate)
         std::memcpy(d_current_address, p_vector.data(), num_bytes);
-    d_current_address += num_bytes;
+    d_current_address += num_bytes_with_padding(num_bytes);
 }
 
 
@@ -187,7 +202,7 @@ void Deserializer::deserialize(std::vector<T>* r_vector)
     const auto num_bytes = size*sizeof(T);
     r_vector->resize(size);
     std::memcpy(r_vector->data(), d_current_address, num_bytes);
-    d_current_address += num_bytes;
+    d_current_address += num_bytes_with_padding(num_bytes);
 }
 
 
@@ -199,7 +214,7 @@ void ViewDeserializer::deserialize(std::span<T>& r_span)
     const auto num_bytes = size*sizeof(T);
     const auto start     = static_cast<T*>(static_cast<void*>(d_current_address));
     r_span               = std::span<T>(start, size);
-    d_current_address += num_bytes;
+    d_current_address += num_bytes_with_padding(num_bytes);
 }
 
 

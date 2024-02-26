@@ -41,6 +41,12 @@ namespace ilp_solver
         explicit SolverExeException(const std::string& p_what) : std::runtime_error("External ILP Solver: " + p_what){};
     };
 
+    class InvalidStartSolutionException : public std::logic_error
+    {
+    public:
+        explicit InvalidStartSolutionException() : std::logic_error("Invalid start solution given to ILP solver."){};
+    };
+
     // This class is the basic interface fulfilled by all ScaiILP solver classes.
     // Please derive a new solver implementation from ILPSolverImpl instead of this class, to avoid redundant work.
     class ILPSolverInterface
@@ -89,6 +95,7 @@ namespace ilp_solver
 
             // Set a starting solution.
             // Depending on the solver, it may be checked whether the solution is actually valid or not.
+            // May throw InvalidStartSolutionException if the solver does not accept the given solution.
             virtual void set_start_solution  (ValueArray p_solution) = 0;
 
             // [Minimize | Maximize] the currently given objective function under the given constraints.

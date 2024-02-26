@@ -126,6 +126,8 @@ namespace ilp_solver
         assert( isize(p_solution) == get_num_variables() );
         // Set the current best solution of Cbc to the given solution, check for feasibility, but not for better objective value.
         d_model.setBestSolution(p_solution.data(), isize(p_solution), COIN_DBL_MAX, true);
+        if (d_model.bestSolution() == nullptr)
+            throw InvalidStartSolutionException();
     }
 
 

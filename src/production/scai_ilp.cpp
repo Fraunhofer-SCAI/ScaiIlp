@@ -134,7 +134,7 @@ static ILPSolutionData solve_ilp(const ILPDataView& p_data, CommunicationChild& 
     struct SolverDeleter
     {
         explicit SolverDeleter(ILPSolverInterface* p_solver) : solver(p_solver) {}
-        ~SolverDeleter()                                               { ilp_solver::destroy_solver(solver); }
+        ~SolverDeleter() { ilp_solver::destroy_solver(solver); }
 
         ILPSolverInterface* solver;
     } solver_deleter(solver);
@@ -149,8 +149,9 @@ static ILPSolutionData solve_ilp(const ILPDataView& p_data, CommunicationChild& 
             p_communicator.write_solution_data(*p_solution);
         }); // Save interim results in case the solver crashes.
     }
-    catch (const std::bad_alloc&) { throw; }
-    catch (...)                   { throw ModelException(); }
+    catch (const std::bad_alloc&)                { throw; }
+    catch (const InvalidStartSolutionException&) { throw; }
+    catch (...)                                  { throw ModelException(); }
 
     try
     {
@@ -193,10 +194,11 @@ static SolverExitCode solve_ilp(const std::string& p_shared_memory_name)
 
         return SolverExitCode::ok;
     }
-    catch (const std::bad_alloc&)   { return SolverExitCode::out_of_memory;       }
-    catch (const ModelException&)   { return SolverExitCode::model_error;         }
-    catch (const SolverException&)  { return SolverExitCode::solver_error;        }
-    catch (...)                     { return SolverExitCode::shared_memory_error; }
+    catch (const std::bad_alloc&)                { return SolverExitCode::out_of_memory;          }
+    catch (const InvalidStartSolutionException&) { return SolverExitCode::invalid_start_solution; }
+    catch (const ModelException&)                { return SolverExitCode::model_error;            }
+    catch (const SolverException&)               { return SolverExitCode::solver_error;           }
+    catch (...)                                  { return SolverExitCode::shared_memory_error;    }
 }
 
 

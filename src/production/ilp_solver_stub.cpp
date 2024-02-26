@@ -78,8 +78,10 @@ static std::string exit_code_to_message(SolverExitCode p_exit_code)
         return "Failed solving (solver error).";
     case SolverExitCode::forced_termination:
         return "Unexpected exit code \"forced termination\"."; // If forced termination by stub occurs, we do not
-                                                                // call exit_code_to_message. So the exit code is
-                                                                // unexpected here.
+                                                               // call exit_code_to_message. So the exit code is
+                                                               // unexpected here.
+    case SolverExitCode::invalid_start_solution:
+        return "Unexpected exit code \"invalid start solution\".";
     default:
         return "Unknown exit code " + std::to_string(static_cast<int>(p_exit_code)) + ".";
     }
@@ -192,7 +194,9 @@ void ILPSolverStub::solve_impl()
     {
         throw SolverExeException("Unknown Error.");
     }
-
+    // This is a logic error and not a runtime_error and should be rethrown here as such.
+    if (exit_code == SolverExitCode::invalid_start_solution)
+        throw InvalidStartSolutionException();
     if (exit_code != SolverExitCode::ok && (d_throw_on_all_crashes || !exit_code_should_be_ignored_silently(exit_code)))
         throw SolverExeException(exit_message);
 }

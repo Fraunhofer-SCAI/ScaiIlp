@@ -148,6 +148,9 @@ static ILPSolutionData solve_ilp(const ILPDataView& p_data, CommunicationChild& 
         {
             p_communicator.write_solution_data(*p_solution);
         }); // Save interim results in case the solver crashes.
+        // If the solver never finds a solution better than the start solution, above callback is never called.
+        // So, we manually ensure that at least the start solution is communicated back to the calling process.
+        p_communicator.write_solution_data(solution_data(*solver));
     }
     catch (const std::bad_alloc&)                { throw; }
     catch (const InvalidStartSolutionException&) { throw; }

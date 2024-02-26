@@ -36,6 +36,9 @@ class SolverException : public std::exception {};
 
 using ilp_solver::ILPSolverInterface;
 
+using Seconds   = boost::chrono::duration<double>;
+using UserClock = boost::chrono::process_user_cpu_clock;
+
 
 static void add_variables(ILPSolverInterface* v_solver, const ILPDataView& p_data)
 {
@@ -113,13 +116,25 @@ static void solve_ilp(ILPSolverInterface* v_solver, ObjectiveSense p_objective_s
 }
 
 
-static ILPSolutionData solution_data(const ILPSolverInterface& p_solver)
+// Returns peak memory usage in megabytes.
+static double peak_memory_usage()
+{
+    PROCESS_MEMORY_COUNTERS memory;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &memory, sizeof(memory)))
+        return static_cast<unsigned long long>(memory.PeakWorkingSetSize) * 0x1p-20;
+    return 0.;
+}
+
+
+static ILPSolutionData solution_data(const ILPSolverInterface& p_solver, UserClock::time_point p_start_time)
 {
     ILPSolutionData solution_data;
 
     solution_data.solution        = p_solver.get_solution();
     solution_data.objective       = p_solver.get_objective();
     solution_data.solution_status = p_solver.get_status();
+    solution_data.peak_memory     = peak_memory_usage();
+    solution_data.cpu_time_sec    = Seconds(UserClock::now() - p_start_time).count();
 
     return solution_data;
 }
@@ -128,7 +143,8 @@ static ILPSolutionData solution_data(const ILPSolverInterface& p_solver)
 // Throws ModelException, SolverException or std::bad_alloc
 static ILPSolutionData solve_ilp(const ILPDataView& p_data, CommunicationChild& p_communicator)
 {
-    auto solver = ilp_solver::create_solver_cbc();
+    const auto start_time = UserClock::now();
+    auto       solver     = ilp_solver::create_solver_cbc();
 
     // RAII for deleting solver
     struct SolverDeleter
@@ -150,7 +166,7 @@ static ILPSolutionData solve_ilp(const ILPDataView& p_data, CommunicationChild& 
         }); // Save interim results in case the solver crashes.
         // If the solver never finds a solution better than the start solution, above callback is never called.
         // So, we manually ensure that at least the start solution is communicated back to the calling process.
-        p_communicator.write_solution_data(solution_data(*solver));
+        p_communicator.write_solution_data(solution_data(*solver, start_time));
     }
     catch (const std::bad_alloc&)                { throw; }
     catch (const InvalidStartSolutionException&) { throw; }
@@ -159,21 +175,10 @@ static ILPSolutionData solve_ilp(const ILPDataView& p_data, CommunicationChild& 
     try
     {
         solve_ilp(solver, p_data.objective_sense);
-
-        return solution_data(*solver);
+        return solution_data(*solver, start_time);
     }
     catch (const std::bad_alloc&) { throw; }
     catch (...)                   { throw SolverException(); }
-}
-
-
-// Returns peak memory usage in megabytes.
-static double peak_memory_usage()
-{
-    PROCESS_MEMORY_COUNTERS memory;
-    if (GetProcessMemoryInfo(GetCurrentProcess(), &memory, sizeof(memory)))
-        return static_cast<unsigned long long>(memory.PeakWorkingSetSize) * 0x1p-20;
-    return 0.;
 }
 
 
@@ -181,19 +186,9 @@ static SolverExitCode solve_ilp(const std::string& p_shared_memory_name)
 {
     try
     {
-        using Seconds   = boost::chrono::duration<double>;
-        using UserClock = boost::chrono::process_user_cpu_clock;
-        auto start_time = UserClock::now();
-
         CommunicationChild communicator(p_shared_memory_name);
         auto data = communicator.read_ilp_data();
-
-        auto solution_data = solve_ilp(data, communicator);
-
-        solution_data.peak_memory  = peak_memory_usage();
-        solution_data.cpu_time_sec = Seconds(UserClock::now() - start_time).count();
-
-        communicator.write_solution_data(solution_data);
+        communicator.write_solution_data(solve_ilp(data, communicator));
 
         return SolverExitCode::ok;
     }

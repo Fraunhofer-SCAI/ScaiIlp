@@ -81,7 +81,7 @@ static std::string exit_code_to_message(SolverExitCode p_exit_code)
                                                                // call exit_code_to_message. So the exit code is
                                                                // unexpected here.
     case SolverExitCode::invalid_start_solution:
-        return "Unexpected exit code \"invalid start solution\".";
+        return "Invalid start solution.";
     default:
         return "Unknown exit code " + std::to_string(static_cast<int>(p_exit_code)) + ".";
     }

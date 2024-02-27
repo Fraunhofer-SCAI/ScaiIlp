@@ -140,7 +140,7 @@ static ILPSolutionData solution_data(const ILPSolverInterface& p_solver, UserClo
 }
 
 
-// Throws ModelException, SolverException or std::bad_alloc
+// Throws ModelException, InvalidStartSolutionException, SolverException or std::bad_alloc
 static ILPSolutionData solve_ilp(const ILPDataView& p_data, CommunicationChild& p_communicator)
 {
     const auto start_time = UserClock::now();

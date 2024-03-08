@@ -25,6 +25,8 @@
     <WITH_MIMALLOC>true</WITH_MIMALLOC>
     <MIMALLOC_DIR>$(optsoft)\mimalloc-2.0.9</MIMALLOC_DIR>
     <MIMALLOC_OVERRIDE_DIR>$(MIMALLOC_DIR)\out\msvc-$(PlatformTarget)\$(Configuration)</MIMALLOC_OVERRIDE_DIR>
+    <!--Enable Assertions in Release Mode. (Condition makes this changeable via command line parameter.)-->
+    <RELEASE_ASSERTIONS Condition="'$(RELEASE_ASSERTIONS)'==''">false</RELEASE_ASSERTIONS>
   </PropertyGroup>
   <PropertyGroup>
     <OutDir>$(SolutionDir)$(Configuration)_$(PlatformTarget)\</OutDir>
@@ -45,7 +47,7 @@
       <PreprocessorDefinitions Condition="'$(WITH_MIMALLOC)' == 'true'">WITH_MIMALLOC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_MIMALLOC)' != 'true'">WITH_MIMALLOC=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)' == 'Debug'">_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)' != 'Debug'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)' != 'Debug' AND '$(RELEASE_ASSERTIONS)' == 'false'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(BOOST_LIB_TOOLSET)' != ''">BOOST_LIB_TOOLSET="$(BOOST_LIB_TOOLSET)";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;WINVER=0x0601;_ITERATOR_DEBUG_LEVEL=0;WIN32;BOOST_FILESYSTEM_VERSION=4;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -107,6 +109,9 @@
     </BuildMacro>
     <BuildMacro Include="MIMALLOC_DIR">
       <Value>$(MIMALLOC_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="RELEASE_ASSERTIONS">
+      <Value>$(RELEASE_ASSERTIONS)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

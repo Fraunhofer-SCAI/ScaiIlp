@@ -212,5 +212,6 @@ SolverExitCode my_main (int argc, wchar_t* argv[])
 
 int wmain(int argc, wchar_t* argv[])
 {
+    assert(false);
     return static_cast<int>(my_main (argc, argv));
 }

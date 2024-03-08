@@ -59,7 +59,7 @@ static std::string exit_code_to_message(SolverExitCode p_exit_code)
     case SolverExitCode::uncaught_exception_2:
         return "Uncaught exception, likely out of memory (C++ exception).";
     case SolverExitCode::uncaught_exception_3:
-        return "Uncaught exception, likely out of memory (stack buffer overflow Windows 10).";
+        return "Uncaught exception, likely a failed assert or out of memory (stack buffer overflow Windows 10).";
     case SolverExitCode::uncaught_exception_4:
         return "Uncaught exception, the heap was most likely filled or corrupted.";
     case SolverExitCode::uncaught_exception_5:

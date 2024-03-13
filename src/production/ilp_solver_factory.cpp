@@ -38,9 +38,9 @@ extern "C" ILPSolverInterface* __stdcall create_solver_scip()
 }
 
 
-extern "C" ILPSolverInterface* __stdcall create_solver_stub(const char* p_executable_basename, int p_crash_mode)
+extern "C" ILPSolverInterface* __stdcall create_solver_stub(const char* p_executable_basename, bool p_throw_on_all_crashes)
 {
-    return new ILPSolverStub(p_executable_basename, p_crash_mode);
+    return new ILPSolverStub(p_executable_basename, p_throw_on_all_crashes);
 }
 
 

@@ -28,14 +28,11 @@ extern "C"
         ILPSolverInterface* __stdcall create_solver_gurobi();
 
 
-// Possible values for the Parameter p_crash_mode of create_solver_stub:
-#define SCAIILP_SOLVER_STUB_IGNORE_KNOWN_CRASHES 0
-#define SCAIILP_SOLVER_STUB_THROW_ON_ALL_CRASHES 1
 extern "C"
 #if (WITH_CBC == 1)
     __declspec(dllexport)
 #endif
-        ILPSolverInterface* __stdcall create_solver_stub(const char* p_executable_basename, int p_crash_mode);
+        ILPSolverInterface* __stdcall create_solver_stub(const char* p_executable_basename, bool p_throw_on_all_crashes);
 
 
 extern "C" __declspec(dllexport) void __stdcall destroy_solver(ILPSolverInterface* p_solver);

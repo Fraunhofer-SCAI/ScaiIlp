@@ -7,6 +7,10 @@
     <BOOST_DIR>$(optsoft)\boost_$(BOOST_VERSION)_0_$(BOOST_LIB_TOOLSET)_idl0_$(PlatformTarget)</BOOST_DIR>
     <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc142_full</PTHREAD_DIR>
     <PTHREAD_LIB_PATH>$(PTHREAD_DIR)\$(PlatformTarget)-v142-$(Configuration)</PTHREAD_LIB_PATH>
+    <WITH_HIGHS>true</WITH_HIGHS>
+    <HIGHS_DIR>$(optsoft)\HiGHS_1.7.1\$(PlatformTarget)-Clang-$(Configuration)</HIGHS_DIR>
+    <HIGHS_INCLUDE_PATH>$(HIGHS_DIR)\include\highs</HIGHS_INCLUDE_PATH>
+    <HIGHS_LIB_PATH>$(HIGHS_DIR)\lib</HIGHS_LIB_PATH>
     <WITH_OSI>true</WITH_OSI>
     <WITH_CBC>true</WITH_CBC>
     <COIN_DIR>$(optsoft)\Cbc-2.10.10\vc143_$(Configuration)_$(PlatformTarget)</COIN_DIR>
@@ -44,6 +48,7 @@
       <PreprocessorDefinitions Condition="'$(WITH_CBC)' == 'true'">WITH_CBC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_SCIP)' == 'true'">WITH_SCIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' == 'true'">WITH_GUROBI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_HIGHS)' == 'true'">WITH_HIGHS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_MIMALLOC)' == 'true'">WITH_MIMALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)' == 'Debug'">_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)' != 'Debug' AND '$(RELEASE_ASSERTIONS)' == 'false'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -102,6 +107,9 @@
     </BuildMacro>
     <BuildMacro Include="PTHREAD_DIR">
       <Value>$(PTHREAD_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="WITH_HIGHS">
+      <Value>$(WITH_HIGHS)</Value>
     </BuildMacro>
     <BuildMacro Include="WITH_OSI">
       <Value>$(WITH_OSI)</Value>

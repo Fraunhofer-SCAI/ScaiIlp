@@ -33,6 +33,13 @@ namespace impl
 
 
     extern "C"
+#if defined(WITH_HIGHS) && (_WIN64 == 1)
+        __declspec(dllexport)
+#endif
+            ILPSolverInterface* __stdcall create_solver_highs();
+
+
+    extern "C"
 #ifdef WITH_CBC
         __declspec(dllexport)
 #endif
@@ -61,6 +68,11 @@ inline ScopedILPSolver create_solver_scip()
 inline ScopedILPSolver create_solver_gurobi()
 {
     return ScopedILPSolver(impl::create_solver_gurobi());
+}
+
+inline ScopedILPSolver create_solver_highs()
+{
+    return ScopedILPSolver(impl::create_solver_highs());
 }
 
 inline ScopedILPSolver create_solver_stub(const char* p_executable_basename, bool p_throw_on_all_crashes)

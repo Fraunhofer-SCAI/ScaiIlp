@@ -2,6 +2,7 @@
 
 #include "ilp_solver_cbc.hpp"
 #include "ilp_solver_gurobi.hpp"
+#include "ilp_solver_highs.hpp"
 #include "ilp_solver_scip.hpp"
 #include "ilp_solver_stub.hpp"
 
@@ -27,6 +28,15 @@ extern "C" ILPSolverInterface* __stdcall create_solver_gurobi()
 #endif
 }
 
+
+extern "C" ILPSolverInterface* __stdcall create_solver_highs()
+{
+#if (WITH_HIGHS == 1) && (_WIN64 == 1)
+    return new ILPSolverHighs();
+#else
+    return nullptr;
+#endif
+}
 
 extern "C" ILPSolverInterface* __stdcall create_solver_scip()
 {

@@ -559,6 +559,9 @@ namespace
 #if defined(WITH_GUROBI) && (_WIN64 == 1)
         std::pair{create_solver_gurobi, "Gurobi"},
 #endif
+#if defined(WITH_HIGHS) && (_WIN64 == 1)
+        std::pair{create_solver_highs, "HiGHS"},
+#endif
     };
 }
 

@@ -635,7 +635,7 @@ namespace ilp_solver
     ILPSolverInterface* __stdcall create_stub()
     {
         constexpr std::string_view solver_exe_name = "ScaiIlpExe.exe";
-        return create_solver_stub(solver_exe_name.data(), SCAIILP_SOLVER_STUB_IGNORE_KNOWN_CRASHES);
+        return create_solver_stub(solver_exe_name.data(), false /*throw on all crashes*/);
     }
 }
 

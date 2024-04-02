@@ -38,9 +38,9 @@ class Serializer
 
         void* current_address() const { return d_current_address; }
 
-        template<POD T> void serialize(const T& p_value);
-        template<POD T> void serialize(const std::vector<T>& p_vector);
-        template<POD T> void serialize(const std::vector<std::vector<T>>& p_vector_of_vectors);
+        template<POD T>      void serialize(const T& p_value);
+        template<POD T>      void serialize(const std::vector<T>& p_vector);
+        template<typename T> void serialize(const std::vector<std::vector<T>>& p_vector_of_vectors);
 
     private:
         const char* d_start_address;
@@ -60,11 +60,11 @@ class Deserializer
 
         void* current_address() const { return d_current_address; }
 
-        template<POD T> void deserialize(T& r_value);
-        template<POD T> void deserialize(std::vector<T>& r_vector);
-        template<POD T> void deserialize(std::span<T>& r_span);
-        template<POD T> void deserialize(std::vector<std::vector<T>>& r_vector_of_vectors);
-        template<POD T> void deserialize(std::vector<std::span<T>>& r_vector_of_spans);
+        template<POD T>      void deserialize(T& r_value);
+        template<POD T>      void deserialize(std::vector<T>& r_vector);
+        template<POD T>      void deserialize(std::span<T>& r_span);
+        template<POD T>      void deserialize(std::vector<std::span<T>>& r_vector_of_spans);
+        template<typename T> void deserialize(std::vector<std::vector<T>>& r_vector_of_vectors);
 
     private:
         char* d_current_address;
@@ -176,7 +176,7 @@ void Deserializer::deserialize(std::span<T>& r_span)
 
 // (De-) Serialization of a vector of vectors
 // ==========================================
-template<POD T>
+template<typename T>
 void Serializer::serialize(const std::vector<std::vector<T>>& p_vector_of_vectors)
 {
     const auto size = isize(p_vector_of_vectors);
@@ -186,7 +186,7 @@ void Serializer::serialize(const std::vector<std::vector<T>>& p_vector_of_vector
 }
 
 
-template<POD T>
+template<typename T>
 void Deserializer::deserialize(std::vector<std::vector<T>>& r_vector_of_vectors)
 {
     int size;

@@ -433,19 +433,27 @@ namespace ilp_solver
         const std::vector<double> values_2{0., 1., 1.};
         p_solver->add_constraint_upper(values_2, 2);
 
+        // Check that an invalid solution raises an exception.
+        // This may not be implemented for all solvers, but it is for CBC and HiGHS.
+        // Normally the exception will be raised in set_start_solution.
+        // If the stub is used, it will be thrown after the solution is given to the solver in the external process
+        // which is invoked from maximize().
+        const std::vector<double> invalid_solution{1., 1., 2.};
+        BOOST_CHECK_THROW(p_solver->set_start_solution(invalid_solution); p_solver->maximize(), InvalidStartSolutionException);
+
         // x+y+2z = (x+z) + (y+z), i.e., optimum <= 4. Optimum is attained at (0,0,2), (1,1,1), (2,2,0)
-        std::vector<double> expected_solution{0., 0., 2.};
+        std::vector<double> valid_solution{0., 0., 2.};
 
         for (auto i = 0; i < 3; ++i)
         {
             p_solver->reset_solution();
-            // set_start_solution should throw InvalidStartSolutionException on failure.
-            BOOST_CHECK_NO_THROW(p_solver->set_start_solution(expected_solution));
+            // set_start_solution (or maximize - see comment above) should throw on failure.
+            BOOST_CHECK_NO_THROW(p_solver->set_start_solution(valid_solution); p_solver->maximize());
 
             // Iterate: (0,0,2) -> (1,1,1) -> (2,2,0)
-            expected_solution[0] += 1.0;
-            expected_solution[1] += 1.0;
-            expected_solution[2] -= 1.0;
+            valid_solution[0] += 1.0;
+            valid_solution[1] += 1.0;
+            valid_solution[2] -= 1.0;
         }
 
     }

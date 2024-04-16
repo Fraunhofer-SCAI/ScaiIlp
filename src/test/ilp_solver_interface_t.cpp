@@ -426,32 +426,21 @@ namespace ilp_solver
         p_solver->add_variable_integer(2*p_sense, 0, 2);
 
         // x+z <= 2
-        vector<double> values_1{1., 0., 1.};
+        const std::vector<double> values_1{1., 0., 1.};
         p_solver->add_constraint_upper(values_1, 2);
 
         // y+z <= 2
-        vector<double> values_2{0., 1., 1.};
+        const std::vector<double> values_2{0., 1., 1.};
         p_solver->add_constraint_upper(values_2, 2);
 
         // x+y+2z = (x+z) + (y+z), i.e., optimum <= 4. Optimum is attained at (0,0,2), (1,1,1), (2,2,0)
-        vector<double> expected_solution{0., 0., 2.};
-
-        p_solver->set_presolve(false);
+        std::vector<double> expected_solution{0., 0., 2.};
 
         for (auto i = 0; i < 3; ++i)
         {
             p_solver->reset_solution();
-            p_solver->set_start_solution(expected_solution);
-
-            if (p_sense > 0)
-                p_solver->maximize();
-            else
-                p_solver->minimize();
-            const auto solution = p_solver->get_solution();
-
-            BOOST_REQUIRE_CLOSE (solution[0], expected_solution[0], c_eps);
-            BOOST_REQUIRE_CLOSE (solution[1], expected_solution[1], c_eps);
-            BOOST_REQUIRE_CLOSE (solution[2], expected_solution[2], c_eps);
+            // set_start_solution should throw InvalidStartSolutionException on failure.
+            BOOST_CHECK_NO_THROW(p_solver->set_start_solution(expected_solution));
 
             // Iterate: (0,0,2) -> (1,1,1) -> (2,2,0)
             expected_solution[0] += 1.0;

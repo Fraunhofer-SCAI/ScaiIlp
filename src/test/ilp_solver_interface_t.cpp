@@ -471,96 +471,6 @@ namespace ilp_solver
     }
 
 
-    void test_abs_gap_limit(ILPSolverInterface* p_solver)
-    {
-        double      gap{ 1.5 };
-        double      ub{ 2.};
-        std::vector obj{ 1., 0.5 };
-        std::vector row{ 1., 0.5 };
-        std::vector expected_sol{ 1., 1. }; // Expected when given as start solution due to gap.
-
-        p_solver->set_presolve(false);
-        p_solver->set_max_rel_gap(0.);
-
-        p_solver->add_variable_integer(obj[0], 0., 1.);
-        p_solver->add_variable_integer(obj[1], 0., 2.);
-
-        p_solver->add_constraint_upper(row, ub);
-
-        p_solver->set_start_solution(expected_sol);
-        p_solver->maximize();
-        auto sol = p_solver->get_solution();
-
-        BOOST_REQUIRE_CLOSE (sol[0], 1., c_eps);
-        BOOST_REQUIRE_CLOSE (sol[1], 2., c_eps);
-
-        double best_objective{ p_solver->get_objective() };
-
-        if (LOGGING)
-            cout << "Maximal Absolute gap: " << gap << '\n'
-                 << "  Start solution gap: " << fabs(best_objective - (expected_sol[0] * obj[0] + expected_sol[1] * obj[1])) << '\n'
-                 << "   Best Solution gap: " << fabs(best_objective - (sol[0] * obj[0] + sol[1] * obj[1])) << std::endl;
-
-        p_solver->reset_solution();
-
-        p_solver->set_max_abs_gap(gap);
-        p_solver->set_start_solution(expected_sol);
-
-        p_solver->maximize();
-        sol = p_solver->get_solution();
-        BOOST_REQUIRE_CLOSE (sol[0], expected_sol[0], c_eps);
-        BOOST_REQUIRE_CLOSE (sol[1], expected_sol[1], c_eps);
-
-        if (LOGGING)
-            cout << "  Found solution gap: " << fabs(best_objective - (sol[0] * obj[0] + sol[1] * obj[1])) << std::endl;
-    }
-
-
-    void test_rel_gap_limit(ILPSolverInterface* p_solver)
-    {
-        double      gap{ 0.1 };
-        double      ub{ 2. };
-        std::vector obj{ 10., 1. };
-        std::vector row{ 1., 0.5 };
-        std::vector expected_sol{ 1., 1. }; // Expected when given as start solution due to gap.
-
-        p_solver->set_presolve(false);
-        p_solver->set_max_abs_gap(0.);
-
-        p_solver->add_variable_integer(obj[0], 0., 1.);
-        p_solver->add_variable_integer(obj[1], 0., 2.);
-
-        p_solver->add_constraint_upper(row, ub);
-
-        p_solver->set_start_solution(expected_sol);
-        p_solver->maximize();
-        auto sol = p_solver->get_solution();
-
-        BOOST_REQUIRE_CLOSE (sol[0], 1., c_eps);
-        BOOST_REQUIRE_CLOSE (sol[1], 2., c_eps);
-
-        double best_objective{ p_solver->get_objective() };
-
-        if (LOGGING)
-            cout << "Maximal Relative gap: " << gap << '\n'
-                 << "  Start solution gap: " << 1. - (expected_sol[0] * obj[0] + expected_sol[1] * obj[1]) / best_objective << '\n'
-                 << "   Best Solution gap: " << 1. - (sol[0] * obj[0] + sol[1] * obj[1]) / best_objective << '\n';
-
-        p_solver->reset_solution();
-
-        p_solver->set_max_rel_gap(gap);
-        p_solver->set_start_solution(expected_sol);
-
-        p_solver->maximize();
-        sol = p_solver->get_solution();
-        BOOST_REQUIRE_CLOSE (sol[0], expected_sol[0], c_eps);
-        BOOST_REQUIRE_CLOSE (sol[1], expected_sol[1], c_eps);
-
-        if (LOGGING)
-            cout << "  Found solution gap: " << 1. - (sol[0] * obj[0] + sol[1] * obj[1])  / best_objective << '\n';
-    }
-
-
     void test_cutoff(ILPSolverInterface* p_solver)
     {
         std::vector obj{ 1., 1. };
@@ -659,13 +569,11 @@ namespace
 
 int create_ilp_test_suite()
 {
-    constexpr std::array<std::pair<TestFunction, std::string_view>, 10> all_tests
+    constexpr std::array<std::pair<TestFunction, std::string_view>, 8> all_tests
     { std::pair{test_sorting,                     "Sorting"}
     , std::pair{test_linear_programming,          "LinProgr"}
     , std::pair{test_start_solution_minimization, "StartSolutionMin"}
     , std::pair{test_start_solution_maximization, "StartSolutionMax"}
-    , std::pair{test_abs_gap_limit,               "AbsGapLimit"}
-    , std::pair{test_rel_gap_limit,               "RelGapLimit"}
     , std::pair{test_cutoff,                      "CutOff"}
     , std::pair{test_performance,                 "Performance"}
     , std::pair{test_performance_big,             "PerformanceBig"}

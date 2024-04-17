@@ -3,8 +3,6 @@
 #include <cassert>
 #include <limits>
 
-using std::string;
-using std::vector;
 
 namespace ilp_solver
 {
@@ -24,112 +22,112 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverImpl::add_variable_boolean(double p_objective, const string& p_name)
+    void ILPSolverImpl::add_variable_boolean(double p_objective, const std::string& p_name)
     {
         add_variable_impl (VariableType::BINARY, p_objective, 0., 1., p_name);
     }
 
 
-    void ILPSolverImpl::add_variable_boolean(ValueArray p_row_values, double p_objective, const string& p_name)
+    void ILPSolverImpl::add_variable_boolean(ValueArray p_row_values, double p_objective, const std::string& p_name)
     {
         add_variable_impl (VariableType::BINARY, p_objective, 0., 1., p_name, p_row_values);
     }
 
 
-    void ILPSolverImpl::add_variable_boolean(IndexArray p_row_indices, ValueArray p_row_values, double p_objective, const string& p_name)
+    void ILPSolverImpl::add_variable_boolean(IndexArray p_row_indices, ValueArray p_row_values, double p_objective, const std::string& p_name)
     {
         assert(p_row_values.size() == p_row_indices.size());
         add_variable_impl (VariableType::BINARY, p_objective, 0., 1., p_name, p_row_values, p_row_indices);
     }
 
 
-    void ILPSolverImpl::add_variable_integer(double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_variable_integer(double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name)
     {
         add_variable_impl (VariableType::INTEGER, p_objective, p_lower_bound, p_upper_bound, p_name);
     }
 
 
-    void ILPSolverImpl::add_variable_integer(ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_variable_integer(ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name)
     {
         add_variable_impl (VariableType::INTEGER, p_objective, p_lower_bound, p_upper_bound, p_name, p_row_values);
     }
 
 
-    void ILPSolverImpl::add_variable_integer(IndexArray p_row_indices, ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_variable_integer(IndexArray p_row_indices, ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name)
     {
         assert(p_row_values.size() == p_row_indices.size());
         add_variable_impl (VariableType::INTEGER, p_objective, p_lower_bound, p_upper_bound, p_name, p_row_values, p_row_indices);
     }
 
 
-    void ILPSolverImpl::add_variable_continuous(double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_variable_continuous(double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name)
     {
         add_variable_impl (VariableType::CONTINUOUS, p_objective, p_lower_bound, p_upper_bound, p_name);
     }
 
 
-    void ILPSolverImpl::add_variable_continuous(ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_variable_continuous(ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name)
     {
         add_variable_impl (VariableType::CONTINUOUS, p_objective, p_lower_bound, p_upper_bound, p_name, p_row_values);
     }
 
 
-    void ILPSolverImpl::add_variable_continuous(IndexArray p_row_indices, ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_variable_continuous(IndexArray p_row_indices, ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name)
     {
         assert(p_row_values.size() == p_row_indices.size());
         add_variable_impl (VariableType::CONTINUOUS, p_objective, p_lower_bound, p_upper_bound, p_name, p_row_values, p_row_indices);
     }
 
 
-    void ILPSolverImpl::add_constraint(ValueArray p_col_values, double p_lower_bound, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_constraint(ValueArray p_col_values, double p_lower_bound, double p_upper_bound, const std::string& p_name)
     {
         if ( p_upper_bound > c_pos_inf_bound && p_lower_bound < c_neg_inf_bound ) return;
         add_constraint_impl (p_lower_bound, p_upper_bound, p_col_values, p_name);
     }
 
 
-    void ILPSolverImpl::add_constraint(IndexArray p_col_indices, ValueArray p_col_values, double p_lower_bound, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_constraint(IndexArray p_col_indices, ValueArray p_col_values, double p_lower_bound, double p_upper_bound, const std::string& p_name)
     {
         if ( p_upper_bound > c_pos_inf_bound && p_lower_bound < c_neg_inf_bound ) return;
         add_constraint_impl (p_lower_bound, p_upper_bound, p_col_values, p_name, p_col_indices);
     }
 
 
-    void ILPSolverImpl::add_constraint_upper(ValueArray p_col_values, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_constraint_upper(ValueArray p_col_values, double p_upper_bound, const std::string& p_name)
     {
         if (p_upper_bound > c_pos_inf_bound) return;
         add_constraint_impl (c_neg_inf, p_upper_bound, p_col_values, p_name);
     }
 
 
-    void ILPSolverImpl::add_constraint_upper(IndexArray p_col_indices, ValueArray p_col_values, double p_upper_bound, const string& p_name)
+    void ILPSolverImpl::add_constraint_upper(IndexArray p_col_indices, ValueArray p_col_values, double p_upper_bound, const std::string& p_name)
     {
         if (p_upper_bound > c_pos_inf_bound) return;
         add_constraint_impl (c_neg_inf, p_upper_bound, p_col_values, p_name, p_col_indices);
     }
 
 
-    void ILPSolverImpl::add_constraint_lower(ValueArray p_col_values, double p_lower_bound, const string& p_name)
+    void ILPSolverImpl::add_constraint_lower(ValueArray p_col_values, double p_lower_bound, const std::string& p_name)
     {
         if (p_lower_bound < c_neg_inf_bound) return;
         add_constraint_impl (p_lower_bound, c_pos_inf, p_col_values, p_name);
     }
 
 
-    void ILPSolverImpl::add_constraint_lower(IndexArray p_col_indices, ValueArray p_col_values, double p_lower_bound, const string& p_name)
+    void ILPSolverImpl::add_constraint_lower(IndexArray p_col_indices, ValueArray p_col_values, double p_lower_bound, const std::string& p_name)
     {
         if (p_lower_bound < c_neg_inf_bound) return;
         add_constraint_impl (p_lower_bound, c_pos_inf, p_col_values, p_name, p_col_indices);
     }
 
 
-    void ILPSolverImpl::add_constraint_equality(ValueArray p_col_values, double p_value, const string& p_name)
+    void ILPSolverImpl::add_constraint_equality(ValueArray p_col_values, double p_value, const std::string& p_name)
     {
         add_constraint_impl (p_value, p_value, p_col_values, p_name);
     }
 
 
-    void ILPSolverImpl::add_constraint_equality(IndexArray p_col_indices, ValueArray p_col_values, double p_value, const string& p_name)
+    void ILPSolverImpl::add_constraint_equality(IndexArray p_col_indices, ValueArray p_col_values, double p_value, const std::string& p_name)
     {
         add_constraint_impl (p_value, p_value, p_col_values, p_name, p_col_indices);
     }

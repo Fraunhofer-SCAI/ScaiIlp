@@ -5,9 +5,6 @@
 #include <vector>
 
 
-using std::endl;
-using std::vector;
-
 const auto c_max_vector_size = 10;
 
 struct Data
@@ -21,10 +18,9 @@ struct Data
     double      value_double{};
     Enumeration value_enum{};
 
-    vector<int>                         vector_1_int;
-    vector< vector<double> >            vector_2_double;
-    vector< vector< vector<char> > >    vector_3_char;
-
+    std::vector<int>                            vector_1_int;
+    std::vector<std::vector<double>>            vector_2_double;
+    std::vector<std::vector<std::vector<char>>> vector_3_char;
 };
 
 
@@ -35,14 +31,14 @@ struct Result
     int         value_int{};
     Enumeration value_enum{};
 
-    vector<int>                  vector_1_int;
-    vector<vector<double>>       vector_2_double;
-    vector<vector<vector<char>>> vector_3_char;
+    std::vector<int>                            vector_1_int;
+    std::vector<std::vector<double>>            vector_2_double;
+    std::vector<std::vector<std::vector<char>>> vector_3_char;
 };
 
 
 template<class T>
-bool operator!=(const vector<T>& p_vector_1, const vector<T>& p_vector_2)
+bool operator!=(const std::vector<T>& p_vector_1, const std::vector<T>& p_vector_2)
 {
     if (p_vector_1.size() != p_vector_2.size())
         return true;
@@ -56,7 +52,7 @@ bool operator!=(const vector<T>& p_vector_1, const vector<T>& p_vector_2)
 
 
 template<class T>
-bool operator==(const vector<T>& p_vector_1, const vector<T>& p_vector_2)
+bool operator==(const std::vector<T>& p_vector_1, const std::vector<T>& p_vector_2)
 {
     return !(p_vector_1 != p_vector_2);
 }
@@ -318,7 +314,7 @@ void test_serialization()
     // Alice: Generate data and serialize it
     const auto data_alice = generate_random_data();
 
-    vector<char> memory;
+    std::vector<char> memory;
     const auto result_address_alice = serialize(data_alice, &memory);
 
     verify_zero(result_address_alice);   // result is zero unless Bob serialized his result

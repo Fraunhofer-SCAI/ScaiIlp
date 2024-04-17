@@ -13,8 +13,6 @@
 #include <optional>
 #include <algorithm>
 
-using std::string;
-using std::vector;
 
 namespace ilp_solver
 {

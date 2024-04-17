@@ -9,8 +9,6 @@
 #include <sstream>
 #include <vector>
 
-using std::string;
-using std::vector;
 
 namespace ilp_solver
 {

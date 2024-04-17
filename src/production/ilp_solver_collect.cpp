@@ -240,7 +240,7 @@ namespace ilp_solver
 
     void ILPSolverCollect::set_start_solution(ValueArray p_solution)
     {
-        d_ilp_data.start_solution = std::vector<double>(p_solution.begin(), p_solution.end());
+        d_ilp_data.start_solution.assign(p_solution.begin(), p_solution.end());
     }
 
 

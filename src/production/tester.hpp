@@ -15,4 +15,7 @@ namespace ilp_solver
     // Create/Destroy Functionality for the ExceptionTester, as we provide for ILPSolverInterface in ilp_solver_factory.
     extern "C" __declspec(dllexport) ExceptionTester* __stdcall create_exception_tester();
     extern "C" __declspec(dllexport) void             __stdcall destroy_exception_tester(ExceptionTester* p_exception);
+    // Tests if stub + ScaiIlpExe work at least for a very easy instance.
+    // Useful to check for broken installation, such as antivirus software preventing execution of ScaiIlpExe.
+    bool stub_tester();
 }

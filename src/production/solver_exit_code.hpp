@@ -42,7 +42,8 @@ enum class SolverExitCode
     model_error,
     solver_error,
     forced_termination,
-    invalid_start_solution
+    invalid_start_solution,
+    stub_tester_failed
 };
 
 static_assert (static_cast<int>(SolverExitCode::uncaught_exception_1) == 0x00000003);

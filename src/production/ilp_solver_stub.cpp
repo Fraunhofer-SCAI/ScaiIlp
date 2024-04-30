@@ -3,6 +3,7 @@
 #include "ilp_solver_interface.hpp"
 #include "shared_memory_communication.hpp"
 #include "solver_exit_code.hpp"
+#include "tester.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -82,6 +83,8 @@ static std::string exit_code_to_message(SolverExitCode p_exit_code)
                                                                // unexpected here.
     case SolverExitCode::invalid_start_solution:
         return "Invalid start solution.";
+    case SolverExitCode::stub_tester_failed:
+        return "stub_tester failed.";
     default:
         return "Unknown exit code " + std::to_string(static_cast<int>(p_exit_code)) + ".";
     }
@@ -197,7 +200,20 @@ void ILPSolverStub::solve_impl()
     // This is a logic error and not a runtime_error and should be rethrown here as such.
     if (exit_code == SolverExitCode::invalid_start_solution)
         throw InvalidStartSolutionException();
-    if (exit_code != SolverExitCode::ok && (d_throw_on_all_crashes || !exit_code_should_be_ignored_silently(exit_code)))
+    // if exit_code is a candidate to be ignored silently
+    if (!d_throw_on_all_crashes && exit_code_should_be_ignored_silently(exit_code))
+    {
+        // if the stub works at least on a very simple LP, really ignore it
+        if (stub_tester())
+            exit_code = SolverExitCode::ok;
+        // otherwise installation is broken
+        else
+        {
+            exit_code    = SolverExitCode::stub_tester_failed;
+            exit_message = exit_code_to_message(exit_code);
+        }
+    }
+    if (exit_code != SolverExitCode::ok)
         throw SolverExeException(exit_message);
 }
 

@@ -38,7 +38,7 @@ namespace ilp_solver
     class SolverExeException : public std::runtime_error
     {
     public:
-        explicit SolverExeException(const std::string& p_what) : std::runtime_error("External ILP Solver: " + p_what){};
+        explicit SolverExeException(const std::string& p_what) : std::runtime_error("ScaiIlpExe.exe: " + p_what){};
     };
 
     class InvalidStartSolutionException : public std::logic_error

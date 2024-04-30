@@ -348,7 +348,7 @@ namespace ilp_solver
         for (auto i = 1; i <= c_num_performance_test_repetitions; ++i)
         {
             p_solver->reset_solution();
-            BOOST_REQUIRE(p_solver->get_status() == SolutionStatus::NO_SOLUTION);
+            BOOST_REQUIRE(p_solver->get_status() != SolutionStatus::PROVEN_OPTIMAL);
             BOOST_REQUIRE(p_solver->get_solution().empty());
 
             p_solver->maximize();

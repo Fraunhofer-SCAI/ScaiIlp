@@ -142,7 +142,6 @@ void ILPSolverStub::reset_solution()
 
 void ILPSolverStub::solve_impl()
 {
-    SolverExitCode exit_code{};
     std::string    exit_message{};
 
     try
@@ -172,19 +171,19 @@ void ILPSolverStub::solve_impl()
         {
             proc.terminate(); // boost::process seems not to support to set the exit code by terminate().
                               // Note that terminate(error_code&) does not set the exit code either, but has a different purpose.
-            exit_code = SolverExitCode::forced_termination; // Don't read the exit code, but set it manually to the fixed desired value.
+            d_exit_code = SolverExitCode::forced_termination; // Don't read the exit code, but set it manually to the fixed desired value.
             exit_message = std::format("Failed solving by timeout. (limit:{} timeout:{})", d_ilp_data.max_seconds,
                                        wait_max_seconds);
         }
         else
         {
-            exit_code    = SolverExitCode(proc.exit_code());
-            exit_message = exit_code_to_message(exit_code);
+            d_exit_code  = SolverExitCode(proc.exit_code());
+            exit_message = exit_code_to_message(d_exit_code);
         }
 
         if (d_ilp_data.log_level)
-            std::cout << "External Solver messages: \"" << exit_message
-                      << "\" (Exit Code " << static_cast<int>(exit_code) << ")\n";
+            std::cout << "External Solver messages: \"" << exit_message << "\" (Exit Code "
+                      << static_cast<int>(d_exit_code) << ")\n";
 
         communicator.read_solution_data(&d_ilp_solution_data);
     }
@@ -198,22 +197,22 @@ void ILPSolverStub::solve_impl()
         throw SolverExeException("Unknown Error.");
     }
     // This is a logic error and not a runtime_error and should be rethrown here as such.
-    if (exit_code == SolverExitCode::invalid_start_solution)
+    if (d_exit_code == SolverExitCode::invalid_start_solution)
         throw InvalidStartSolutionException();
     // if exit_code is a candidate to be ignored silently
-    if (!d_throw_on_all_crashes && exit_code_should_be_ignored_silently(exit_code))
+    if (!d_throw_on_all_crashes && exit_code_should_be_ignored_silently(d_exit_code))
     {
         // if the stub works at least on a very simple LP, really ignore it
         if (stub_tester())
-            exit_code = SolverExitCode::ok;
+            d_exit_code = SolverExitCode::ok;
         // otherwise installation is broken
         else
         {
-            exit_code    = SolverExitCode::stub_tester_failed;
-            exit_message = exit_code_to_message(exit_code);
+            d_exit_code  = SolverExitCode::stub_tester_failed;
+            exit_message = exit_code_to_message(d_exit_code);
         }
     }
-    if (exit_code != SolverExitCode::ok)
+    if (d_exit_code != SolverExitCode::ok)
         throw SolverExeException(exit_message);
 }
 

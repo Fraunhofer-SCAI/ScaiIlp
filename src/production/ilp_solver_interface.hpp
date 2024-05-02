@@ -1,5 +1,7 @@
 #pragma once
 
+#include "solver_exit_code.hpp"
+
 #include <functional>
 #include <span>
 #include <stdexcept>
@@ -116,6 +118,9 @@ namespace ilp_solver
 
             // Obtain external peak memory usage in megabytes, if an external process was used.
             virtual double                    get_external_peak_memory_mb() const { return 0; };
+
+            // Obtain the external exit code of the solver.
+            virtual SolverExitCode            get_external_exit_code() const { return SolverExitCode::ok; };
 
             // Delete all information about previous solutions while keeping the model and settings.
             virtual void                      reset_solution()       = 0;

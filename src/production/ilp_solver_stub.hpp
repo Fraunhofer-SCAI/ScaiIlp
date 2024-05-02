@@ -19,12 +19,14 @@ namespace ilp_solver
             SolutionStatus            get_status    () const override;
             double                    get_external_cpu_time_sec()    const override { return d_ilp_solution_data.cpu_time_sec; };
             double                    get_external_peak_memory_mb() const override { return d_ilp_solution_data.peak_memory; }
+            SolverExitCode            get_external_exit_code() const override { return d_exit_code; };
 
             void                      reset_solution()       override;
 
         private:
-            std::string d_executable_basename;
-            bool        d_throw_on_all_crashes;
+            const std::string d_executable_basename;
+            const bool        d_throw_on_all_crashes;
+            SolverExitCode    d_exit_code;
 
             ILPSolutionData d_ilp_solution_data;
 

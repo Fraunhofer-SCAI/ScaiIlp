@@ -39,6 +39,11 @@ using ilp_solver::ILPSolverInterface;
 using Seconds   = boost::chrono::duration<double>;
 using UserClock = boost::chrono::process_user_cpu_clock;
 
+// 0 never crash on purpose
+// 1 crash on large LPs
+// 2 always crash
+constexpr int c_test_crash = 1;
+
 
 static void add_variables(ILPSolverInterface* v_solver, const ILPDataView& p_data)
 {
@@ -187,10 +192,13 @@ static SolverExitCode solve_ilp(const std::string& p_shared_memory_name)
     try
     {
         CommunicationChild communicator(p_shared_memory_name);
-        auto data = communicator.read_ilp_data();
+        auto               data = communicator.read_ilp_data();
         communicator.write_solution_data(solve_ilp(data, communicator));
 
-        return SolverExitCode::ok;
+        if constexpr (/*(*/ c_test_crash == 1 /* && large lp) */ || c_test_crash == 2)
+            return SolverExitCode::out_of_memory; // test behaviour of Caller when ScaiIlpExe crashes
+        else
+            return SolverExitCode::ok;
     }
     catch (const std::bad_alloc&)                { return SolverExitCode::out_of_memory;          }
     catch (const InvalidStartSolutionException&) { return SolverExitCode::invalid_start_solution; }

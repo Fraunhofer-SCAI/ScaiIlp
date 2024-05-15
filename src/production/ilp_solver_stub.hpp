@@ -30,6 +30,12 @@ namespace ilp_solver
 
             ILPSolutionData d_ilp_solution_data;
 
+            // Runs d_executable_basename.exe.
+            // Puts its exit code in d_exit_code.
+            // If d_exit_code indicates a severe error or d_throw_on_all_crashes==true, in addition SolverExeException is thrown.
+            // If d_exit_code indicates a known CBC problem that should be ignored silently, we test if the stub works at least with a tiny LP (function stub_tester).
+            // - If that works, we keep d_exit_code, but do not throw.
+            // - If that does not work, we change d_error_code and report that stub_tester does not work either.
             void solve_impl() override;
     };
 }

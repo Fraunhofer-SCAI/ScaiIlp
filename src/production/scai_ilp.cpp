@@ -43,9 +43,11 @@ using UserClock = boost::chrono::process_user_cpu_clock;
 // 1 crash on large LPs
 // 2 always crash
 // This is constexpr, but constexpr results in compiler warnings (which are treated as errors) when c_test_crash>0
-int c_test_crash = 0;
-constexpr auto c_test_exit_code = SolverExitCode::out_of_memory; // results in warning if only large LPs fail
-// constexpr auto c_test_exit_code = SolverExitCode::missing_dll; // always results in error
+int c_test_crash = 2;
+constexpr auto c_test_exit_code
+//= SolverExitCode::out_of_memory; // results in warning if only large LPs fail
+//= SolverExitCode::missing_dll; // always results in error
+= SolverExitCode::forced_termination; // special case
 
 static void add_variables(ILPSolverInterface* v_solver, const ILPDataView& p_data)
 {
@@ -199,11 +201,19 @@ static SolverExitCode solve_ilp(const std::string& p_shared_memory_name)
 
         // test behavior of Caller when ScaiIlpExe crashes
         constexpr auto c_size_of_stub_tester = 2;
-        if ((c_test_crash == 1 && data.matrix.d_num_cols > c_size_of_stub_tester) || c_test_crash == 2)
+        if ((c_test_crash == 1 && data.matrix.d_num_cols > c_size_of_stub_tester || c_test_crash == 2) && c_test_exit_code!=SolverExitCode::forced_termination)
             return c_test_exit_code;
 
         // do the computation
         communicator.write_solution_data(solve_ilp(data, communicator));
+
+        // test timeouts
+        if ((c_test_crash == 1 && data.matrix.d_num_cols > c_size_of_stub_tester || c_test_crash == 2)
+            && c_test_exit_code == SolverExitCode::forced_termination)
+        {
+            std::this_thread::sleep_for(std::chrono::hours(8));
+        }
+
         return SolverExitCode::ok;
     }
     catch (const std::bad_alloc&)                { return SolverExitCode::out_of_memory;          }

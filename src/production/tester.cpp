@@ -34,9 +34,9 @@ namespace ilp_solver
     }
 
 
-    bool stub_tester()
+    bool stub_tester(const std::string& p_executable_basename)
     {
-        auto solver = create_solver_stub("stub_tester", true);
+        auto solver = create_solver_stub(p_executable_basename.c_str(), true);
 
         // max x+y, -1 <= x, y <= 1
         solver->add_variable_continuous(1, -1, 1);

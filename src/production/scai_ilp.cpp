@@ -196,7 +196,7 @@ static SolverExitCode solve_ilp(const std::string& p_shared_memory_name)
         communicator.write_solution_data(solve_ilp(data, communicator));
 
         if constexpr (/*(*/ c_test_crash == 1 /* && large lp) */ || c_test_crash == 2)
-            return SolverExitCode::out_of_memory; // test behaviour of Caller when ScaiIlpExe crashes
+            return SolverExitCode::out_of_memory; // test behavior of Caller when ScaiIlpExe crashes
         else
             return SolverExitCode::ok;
     }

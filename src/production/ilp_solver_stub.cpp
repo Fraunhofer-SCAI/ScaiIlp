@@ -203,7 +203,7 @@ void ILPSolverStub::solve_impl()
     if (!d_throw_on_all_crashes && exit_code_should_be_ignored_silently(d_exit_code))
     {
         // if the stub works at least on a very simple LP, really ignore it
-        if (stub_tester())
+        if (stub_tester(d_executable_basename))
             d_exit_code = SolverExitCode::ok;
         // otherwise installation is broken
         else

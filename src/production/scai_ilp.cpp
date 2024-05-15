@@ -43,7 +43,7 @@ using UserClock = boost::chrono::process_user_cpu_clock;
 // 1 crash on large LPs
 // 2 always crash
 // This is constexpr, but constexpr results in compiler warnings (which are treated as errors) when c_test_crash>0
-int c_test_crash = 2;
+int c_test_crash = 0;
 constexpr auto c_test_exit_code
 //= SolverExitCode::out_of_memory; // results in warning if only large LPs fail
 //= SolverExitCode::missing_dll; // always results in error

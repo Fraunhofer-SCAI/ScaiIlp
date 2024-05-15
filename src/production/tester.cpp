@@ -36,33 +36,38 @@ namespace ilp_solver
 
     bool stub_tester(const std::string& p_executable_basename)
     {
-        auto solver = create_solver_stub(p_executable_basename.c_str(), true);
+        try
+        {
+            auto solver = create_solver_stub(p_executable_basename.c_str(), true);
 
-        // max x+y, -1 <= x, y <= 1
-        solver->add_variable_continuous(1, -1, 1);
-        solver->add_variable_continuous(1, -1, 1);
+            // max x+y, -1 <= x, y <= 1
+            solver->add_variable_continuous(1, -1, 1);
+            solver->add_variable_continuous(1, -1, 1);
 
-        // x+2y <= 2
-        vector<double> values_1{1, 2};
-        solver->add_constraint_upper(values_1, 2);
+            // x+2y <= 2
+            vector<double> values_1{1, 2};
+            solver->add_constraint_upper(values_1, 2);
 
-        // 2x+y <= 2
-        vector<double> values_2{2, 1};
-        solver->add_constraint_upper(values_2, 2);
+            // 2x+y <= 2
+            vector<double> values_2{2, 1};
+            solver->add_constraint_upper(values_2, 2);
 
-        vector<double> expected_solution{2. / 3., 2. / 3.};
+            solver->maximize();
+            const auto solution = solver->get_solution();
 
-        auto equal_eps = [](double p_value_1, double p_value_2) { return fabs(p_value_1 - p_value_2) <= c_eps; };
+            vector<double> expected_solution{2. / 3., 2. / 3.};
+            auto equal_eps = [](double p_value_1, double p_value_2) { return fabs(p_value_1 - p_value_2) <= c_eps; };
 
-        solver->maximize();
-        const auto solution = solver->get_solution();
+            if (solver->get_status() != SolutionStatus::PROVEN_OPTIMAL)
+                return false;
+            if (!equal_eps(solution[0], expected_solution[0]) || !equal_eps(solution[1], expected_solution[1]))
+                return false;
 
-        if (solver->get_status() != SolutionStatus::PROVEN_OPTIMAL)
+            return true;
+        }
+        catch (...)
+        {
             return false;
-
-        if (!equal_eps(solution[0], expected_solution[0]) || !equal_eps(solution[1], expected_solution[1]))
-            return false;
-
-        return true;
+        }
     }
 }

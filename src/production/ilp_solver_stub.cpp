@@ -199,20 +199,20 @@ void ILPSolverStub::solve_impl()
     // This is a logic error and not a runtime_error and should be rethrown here as such.
     if (d_exit_code == SolverExitCode::invalid_start_solution)
         throw InvalidStartSolutionException();
+
     // if exit_code is a candidate to be ignored silently
     if (!d_throw_on_all_crashes && exit_code_should_be_ignored_silently(d_exit_code))
     {
-        // if the stub works at least on a very simple LP, really ignore it
-        if (stub_tester(d_executable_basename))
-            d_exit_code = SolverExitCode::ok;
-        // otherwise installation is broken
-        else
+        // if the stub does not work even on a very simple LP, the installation is broken
+        if (!stub_tester(d_executable_basename))
         {
             d_exit_code  = SolverExitCode::stub_tester_failed;
             exit_message = exit_code_to_message(d_exit_code);
+            throw SolverExeException(exit_message);
         }
+        // otherwise, we keep d_exit_code, but do not throw
     }
-    if (d_exit_code != SolverExitCode::ok)
+    else if (d_exit_code != SolverExitCode::ok)
         throw SolverExeException(exit_message);
 }
 

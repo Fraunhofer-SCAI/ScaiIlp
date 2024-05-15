@@ -39,6 +39,7 @@ namespace ilp_solver
         try
         {
             auto solver = create_solver_stub(p_executable_basename.c_str(), true);
+            solver->set_max_seconds(5);
 
             // max x+y, -1 <= x, y <= 1
             solver->add_variable_continuous(1, -1, 1);

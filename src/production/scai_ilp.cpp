@@ -34,7 +34,7 @@ using namespace ilp_solver;
 class ModelException : public std::exception {};
 class SolverException : public std::exception {};
 
-using ilp_solver::ILPSolverInterface;
+using ilp_solver::ScopedILPSolver;
 
 using Seconds   = boost::chrono::duration<double>;
 using UserClock = boost::chrono::process_user_cpu_clock;
@@ -48,7 +48,7 @@ constexpr auto c_test_exit_code
 //= SolverExitCode::missing_dll; // always results in error
 = SolverExitCode::forced_termination; // special case
 
-static void add_variables(ILPSolverInterface* v_solver, const ILPDataView& p_data)
+static void add_variables(ScopedILPSolver& v_solver, const ILPDataView& p_data)
 {
     const auto num_variables = isize(p_data.variable_type);
 
@@ -69,7 +69,7 @@ static void add_variables(ILPSolverInterface* v_solver, const ILPDataView& p_dat
 }
 
 
-static void add_constraints(ILPSolverInterface* v_solver, const ILPDataView& p_data)
+static void add_constraints(ScopedILPSolver& v_solver, const ILPDataView& p_data)
 {
     const auto num_constraints = isize(p_data.matrix.d_values);
 
@@ -85,21 +85,21 @@ static void add_constraints(ILPSolverInterface* v_solver, const ILPDataView& p_d
 }
 
 
-static void generate_ilp(ILPSolverInterface* v_solver, const ILPDataView& p_data)
+static void generate_ilp(ScopedILPSolver& v_solver, const ILPDataView& p_data)
 {
     add_variables(v_solver, p_data);
     add_constraints(v_solver, p_data);
 }
 
 
-static void set_solver_preparation_parameters(ILPSolverInterface* v_solver, const ILPDataView& p_data)
+static void set_solver_preparation_parameters(ScopedILPSolver& v_solver, const ILPDataView& p_data)
 {
     if (!p_data.start_solution.empty())
         v_solver->set_start_solution(p_data.start_solution);
 }
 
 
-static void set_solver_parameters(ILPSolverInterface* v_solver, const ILPDataView& p_data)
+static void set_solver_parameters(ScopedILPSolver& v_solver, const ILPDataView& p_data)
 {
     v_solver->set_num_threads       (p_data.num_threads);
     v_solver->set_deterministic_mode(p_data.deterministic);
@@ -115,7 +115,7 @@ static void set_solver_parameters(ILPSolverInterface* v_solver, const ILPDataVie
 }
 
 
-static void solve_ilp(ILPSolverInterface* v_solver, ObjectiveSense p_objective_sense)
+static void solve_ilp(ScopedILPSolver& v_solver, ObjectiveSense p_objective_sense)
 {
     if (p_objective_sense == ObjectiveSense::MINIMIZE)
         v_solver->minimize();
@@ -134,13 +134,13 @@ static double peak_memory_usage()
 }
 
 
-static ILPSolutionData solution_data(const ILPSolverInterface& p_solver, UserClock::time_point p_start_time)
+static ILPSolutionData solution_data(const ScopedILPSolver& p_solver, UserClock::time_point p_start_time)
 {
     ILPSolutionData solution_data;
 
-    solution_data.solution        = p_solver.get_solution();
-    solution_data.objective       = p_solver.get_objective();
-    solution_data.solution_status = p_solver.get_status();
+    solution_data.solution        = p_solver->get_solution();
+    solution_data.objective       = p_solver->get_objective();
+    solution_data.solution_status = p_solver->get_status();
     solution_data.peak_memory     = peak_memory_usage();
     solution_data.cpu_time_sec    = Seconds(UserClock::now() - p_start_time).count();
 
@@ -154,15 +154,6 @@ static ILPSolutionData solve_ilp(const ILPDataView& p_data, CommunicationChild& 
     const auto start_time = UserClock::now();
     auto       solver     = ilp_solver::create_solver_cbc();
 
-    // RAII for deleting solver
-    struct SolverDeleter
-    {
-        explicit SolverDeleter(ILPSolverInterface* p_solver) : solver(p_solver) {}
-        ~SolverDeleter() { ilp_solver::destroy_solver(solver); }
-
-        ILPSolverInterface* solver;
-    } solver_deleter(solver);
-
     try
     {
         generate_ilp(solver, p_data);
@@ -174,7 +165,7 @@ static ILPSolutionData solve_ilp(const ILPDataView& p_data, CommunicationChild& 
         }); // Save interim results in case the solver crashes.
         // If the solver never finds a solution better than the start solution, above callback is never called.
         // So, we manually ensure that at least the start solution is communicated back to the calling process.
-        p_communicator.write_solution_data(solution_data(*solver, start_time));
+        p_communicator.write_solution_data(solution_data(solver, start_time));
     }
     catch (const std::bad_alloc&)                { throw; }
     catch (const InvalidStartSolutionException&) { throw; }
@@ -183,7 +174,7 @@ static ILPSolutionData solve_ilp(const ILPDataView& p_data, CommunicationChild& 
     try
     {
         solve_ilp(solver, p_data.objective_sense);
-        return solution_data(*solver, start_time);
+        return solution_data(solver, start_time);
     }
     catch (const std::bad_alloc&) { throw; }
     catch (...)                   { throw SolverException(); }

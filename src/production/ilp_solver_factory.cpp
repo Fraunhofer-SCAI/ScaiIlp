@@ -6,7 +6,7 @@
 #include "ilp_solver_stub.hpp"
 
 
-namespace ilp_solver
+namespace ilp_solver::impl
 {
 extern "C" ILPSolverInterface* __stdcall create_solver_cbc()
 {

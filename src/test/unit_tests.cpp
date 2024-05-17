@@ -4,7 +4,7 @@
 #define BOOST_TEST_MAIN
 
 
-#include "ilp_solver_exception.hpp"
+#include "tester.hpp"
 #include "ilp_solver_factory.hpp"
 #include "ilp_solver_interface.hpp"
 

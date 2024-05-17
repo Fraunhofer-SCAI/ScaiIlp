@@ -64,22 +64,8 @@ namespace ilp_solver
 
 
     using TestFunction    = void(*)(ILPSolverInterface*);
-    using FactoryFunction = ILPSolverInterface* (__stdcall *)(void);
-    using StubFunction    = ILPSolverInterface* (__stdcall *)(const char*);
+    using FactoryFunction = ScopedILPSolver (__stdcall *)(void);
 
-    void execute_test_and_destroy_solver(ILPSolverInterface* p_solver, TestFunction p_test)
-    {
-        try
-        {
-            p_test(p_solver);
-        }
-        catch (...)
-        {
-            destroy_solver(p_solver);
-            throw;
-        }
-        destroy_solver(p_solver);
-    }
 
 
     void test_sorting(ILPSolverInterface* p_solver)
@@ -632,7 +618,7 @@ namespace ilp_solver
     }
 
 
-    ILPSolverInterface* __stdcall create_stub()
+    ScopedILPSolver __stdcall create_stub()
     {
         constexpr std::string_view solver_exe_name = "ScaiIlpExe.exe";
         return create_solver_stub(solver_exe_name.data(), false /*throw on all crashes*/);
@@ -694,18 +680,18 @@ int create_ilp_test_suite()
         for (auto& [test, test_name] : all_tests)
         {
             // We need an object to pass to make_test_case, and it needs copy-by-value (solver and test are merely pointers anyway.).
-            auto lambda = [solver, test]() { execute_test_and_destroy_solver(solver(), test); };
+            auto lambda = [solver, test]() { test(solver().get()); };
             // Since we use a functor and a name, we avoid using one of the macros and create a test case directly.
             suite->add( boost::unit_test::make_test_case(lambda, (std::string(solver_name) + '_' + test_name.data()).c_str(), __FILE__, __LINE__) );
         }
 
         auto mps_path   = [](ILPSolverInterface* p_solver) -> void {test_mps_output(p_solver, std::string(all_solvers[global_current_index++].second) + "_unittest.mps");};
-        auto mps_lambda = [solver, mps_path]() { execute_test_and_destroy_solver(solver(), mps_path); };
+        auto mps_lambda = [solver, mps_path]() { mps_path(solver().get()); };
         suite->add( boost::unit_test::make_test_case(mps_lambda, (std::string(solver_name) + "_MPSOut").c_str(), __FILE__, __LINE__) );
 
         if (solver_name.rfind("Stub") != std::string::npos)
         {
-            auto lambda = [solver]() { execute_test_and_destroy_solver(solver(), test_bad_alloc); };
+            auto lambda = [solver]() { test_bad_alloc(solver().get()); };
             suite->add( boost::unit_test::make_test_case(lambda, (std::string(solver_name) + "_BadAlloc").c_str(), __FILE__, __LINE__) );
         }
 

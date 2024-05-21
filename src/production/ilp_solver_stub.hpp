@@ -26,7 +26,7 @@ namespace ilp_solver
         private:
             const std::string d_executable_basename;
             const bool        d_throw_on_all_crashes;
-            SolverExitCode    d_exit_code;
+            SolverExitCode    d_exit_code{SolverExitCode::ok};
 
             ILPSolutionData d_ilp_solution_data;
 

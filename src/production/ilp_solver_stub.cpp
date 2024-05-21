@@ -177,7 +177,7 @@ void ILPSolverStub::solve_impl()
         }
         else
         {
-            d_exit_code  = SolverExitCode(proc.exit_code());
+            d_exit_code = SolverExitCode(proc.exit_code());
             exit_message = exit_code_to_message(d_exit_code);
         }
 
@@ -204,10 +204,10 @@ void ILPSolverStub::solve_impl()
     if (!d_throw_on_all_crashes && exit_code_should_be_ignored_silently(d_exit_code))
     {
         // if the stub does not work even on a very simple LP, the installation is broken
-        if (!stub_tester(d_executable_basename))
+        if (auto stub_tester_exit_code = stub_tester(d_executable_basename); stub_tester_exit_code != SolverExitCode::ok)
         {
             d_exit_code  = SolverExitCode::stub_tester_failed;
-            exit_message = exit_code_to_message(d_exit_code);
+            exit_message = std::format("{} ({})", exit_code_to_message(d_exit_code), exit_code_to_message(stub_tester_exit_code));
             throw SolverExeException(exit_message);
         }
         // otherwise, we keep d_exit_code, but do not throw

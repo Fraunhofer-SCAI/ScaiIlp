@@ -34,11 +34,11 @@ namespace ilp_solver
     }
 
 
-    bool stub_tester(const std::string& p_executable_basename)
+    SolverExitCode stub_tester(const std::string& p_executable_basename)
     {
+        auto solver = create_solver_stub(p_executable_basename.c_str(), true);
         try
         {
-            auto solver = create_solver_stub(p_executable_basename.c_str(), true);
             solver->set_max_seconds(5);
 
             // max x+y, -1 <= x, y <= 1
@@ -60,15 +60,15 @@ namespace ilp_solver
             auto equal_eps = [](double p_value_1, double p_value_2) { return fabs(p_value_1 - p_value_2) <= c_eps; };
 
             if (solver->get_status() != SolutionStatus::PROVEN_OPTIMAL)
-                return false;
+                return SolverExitCode::stub_tester_failed;
             if (!equal_eps(solution[0], expected_solution[0]) || !equal_eps(solution[1], expected_solution[1]))
-                return false;
+                return SolverExitCode::stub_tester_failed;
 
-            return true;
+            return solver->get_external_exit_code();
         }
         catch (...)
         {
-            return false;
+            return solver->get_external_exit_code();
         }
     }
 }

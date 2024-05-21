@@ -139,7 +139,7 @@ struct ILPData : public ILPDataBase
 
         std::vector<std::vector<double>> d_values;  // For each row: non-zero values.
         std::vector<std::vector<int>>    d_indices; // For each row: column indices of the non-zero values.
-        int                              d_num_cols;
+        int                              d_num_cols{0};
 
     };
 

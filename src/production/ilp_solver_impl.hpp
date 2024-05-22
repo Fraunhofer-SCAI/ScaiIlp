@@ -49,7 +49,7 @@ namespace ilp_solver
             void set_max_seconds(double p_seconds) override final;
         protected:
             ILPSolverImpl() = default;
-            double d_max_seconds; // Stored separately because solver input may transform the seconds.
+            double d_max_seconds{}; // Stored separately because solver input may transform the seconds.
 
         private:
             // If there is anything that needs to be done before a solve, overwrite prepare_impl.

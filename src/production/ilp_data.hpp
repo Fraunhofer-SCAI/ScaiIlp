@@ -161,7 +161,7 @@ struct ILPDataView : public ILPDataBase
     {
         std::vector<std::span<double>> d_values;
         std::vector<std::span<int>>    d_indices;
-        int                            d_num_cols;
+        int                            d_num_cols{0};
     };
 
     Matrix                  matrix;

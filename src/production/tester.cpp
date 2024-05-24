@@ -36,9 +36,10 @@ namespace ilp_solver
 
     SolverExitCode stub_tester(const std::string& p_executable_basename)
     {
-        auto solver = create_solver_stub(p_executable_basename.c_str(), true);
+        ilp_solver::ScopedILPSolver solver;
         try
         {
+            solver = create_solver_stub(p_executable_basename.c_str(), true);
             solver->set_max_seconds(5);
 
             // max x+y, -1 <= x, y <= 1
@@ -68,6 +69,8 @@ namespace ilp_solver
         }
         catch (...)
         {
+            if (!solver || solver->get_external_exit_code() == SolverExitCode::ok)
+                return SolverExitCode::stub_tester_failed;
             return solver->get_external_exit_code();
         }
     }

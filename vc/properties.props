@@ -36,16 +36,11 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(BOOST_INCLUDE_PATH);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(WITH_OSI)' == 'true'">WITH_OSI=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_OSI)' != 'true'">WITH_OSI=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_CBC)' == 'true'">WITH_CBC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_CBC)' != 'true'">WITH_CBC=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_SCIP)' == 'true'">WITH_SCIP=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_SCIP)' != 'true'">WITH_SCIP=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' == 'true'">WITH_GUROBI=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' != 'true'">WITH_GUROBI=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_MIMALLOC)' == 'true'">WITH_MIMALLOC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_MIMALLOC)' != 'true'">WITH_MIMALLOC=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_OSI)' == 'true'">WITH_OSI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_CBC)' == 'true'">WITH_CBC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_SCIP)' == 'true'">WITH_SCIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' == 'true'">WITH_GUROBI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_MIMALLOC)' == 'true'">WITH_MIMALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)' == 'Debug'">_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)' != 'Debug' AND '$(RELEASE_ASSERTIONS)' == 'false'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(BOOST_LIB_TOOLSET)' != ''">BOOST_LIB_TOOLSET="$(BOOST_LIB_TOOLSET)";%(PreprocessorDefinitions)</PreprocessorDefinitions>

@@ -13,7 +13,7 @@
 #include <windows.h> // for SetErrorMode
 #include <psapi.h> // GetProcessMemoryInfo
 
-#if WITH_MIMALLOC == 1
+#ifdef WITH_MIMALLOC
 #pragma warning(push)
 #pragma warning(disable : 28251) // inconsistent annotation
 #pragma warning(disable : 4559)  // redefinition with __declspec(restrict)

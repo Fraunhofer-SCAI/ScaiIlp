@@ -12,28 +12,28 @@ namespace ilp_solver
 namespace impl
 {
     extern "C"
-#if (WITH_CBC == 1)
+#ifdef WITH_CBC
         __declspec(dllexport)
 #endif
             ILPSolverInterface* __stdcall create_solver_cbc();
 
 
     extern "C"
-#if (WITH_SCIP == 1)
+#ifdef WITH_SCIP
         __declspec(dllexport)
 #endif
             ILPSolverInterface* __stdcall create_solver_scip();
 
 
     extern "C"
-#if (WITH_GUROBI == 1) && (_WIN64 == 1)
+#if defined(WITH_GUROBI) && (_WIN64 == 1)
         __declspec(dllexport)
 #endif
             ILPSolverInterface* __stdcall create_solver_gurobi();
 
 
     extern "C"
-#if (WITH_CBC == 1)
+#ifdef WITH_CBC
         __declspec(dllexport)
 #endif
             ILPSolverInterface* __stdcall create_solver_stub(const char* p_executable_basename, bool p_throw_on_all_crashes);

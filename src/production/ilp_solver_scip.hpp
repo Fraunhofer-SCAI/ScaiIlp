@@ -1,6 +1,6 @@
 #pragma once
 
-#if WITH_SCIP == 1
+#ifdef WITH_SCIP
 
 #include "ilp_solver_impl.hpp"
 

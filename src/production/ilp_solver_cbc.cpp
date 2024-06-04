@@ -1,4 +1,4 @@
-#if WITH_CBC == 1
+#ifdef WITH_CBC
 
 // Link with the required CBC Libraries.
 #pragma comment(lib, "libCbc.lib")

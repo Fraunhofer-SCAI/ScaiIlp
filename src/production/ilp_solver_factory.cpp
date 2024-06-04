@@ -10,7 +10,7 @@ namespace ilp_solver::impl
 {
 extern "C" ILPSolverInterface* __stdcall create_solver_cbc()
 {
-#if WITH_CBC == 1
+#ifdef WITH_CBC
     return new ILPSolverCbc();
 #else
     return nullptr;
@@ -20,7 +20,7 @@ extern "C" ILPSolverInterface* __stdcall create_solver_cbc()
 
 extern "C" ILPSolverInterface* __stdcall create_solver_gurobi()
 {
-#if (WITH_GUROBI == 1) && (_WIN64 == 1)
+#if defined(WITH_GUROBI) && (_WIN64 == 1)
     return new ILPSolverGurobi();
 #else
     return nullptr;
@@ -30,7 +30,7 @@ extern "C" ILPSolverInterface* __stdcall create_solver_gurobi()
 
 extern "C" ILPSolverInterface* __stdcall create_solver_scip()
 {
-#if WITH_SCIP == 1
+#ifdef WITH_SCIP
     return new ILPSolverSCIP();
 #else
     return nullptr;

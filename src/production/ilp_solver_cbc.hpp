@@ -1,10 +1,12 @@
 #pragma once
 
-#if WITH_CBC == 1
+#ifdef WITH_CBC
 
-static_assert(WITH_OSI == 1,
+#ifndef WITH_OSI
+static_assert(false,
     "CBC requires the Osi-Interface and the CoinUtils contained therein. "
-    "Please set WITH_OSI=1 or deactivate CBC with WITH_CBC=0.");
+    "Please define WITH_OSI or deactivate CBC by not defining WITH_CBC.");
+#endif
 
 #include "ilp_solver_osi_model.hpp" // Including this also links with the required COIN Libraries.
 

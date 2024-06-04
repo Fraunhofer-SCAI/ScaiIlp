@@ -1,4 +1,4 @@
-#if (WITH_GUROBI == 1) && (_WIN64 == 1)
+#if defined(WITH_GUROBI) && (_WIN64 == 1)
 
 #include "ilp_solver_gurobi.hpp"
 #include "utility.hpp"

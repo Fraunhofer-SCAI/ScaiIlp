@@ -1,4 +1,4 @@
-#if WITH_OSI == 1
+#ifdef WITH_OSI
 
 // Link with the CoinUtils and Osi Libraries.
 #pragma comment(lib, "libCoinUtils.lib")

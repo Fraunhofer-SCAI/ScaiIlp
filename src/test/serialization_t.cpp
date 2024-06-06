@@ -14,12 +14,12 @@ struct Data
 {
     enum class Enumeration { ENUM1, ENUM2, ENUM3 };
 
-    bool        value_bool;
-    char        value_char;
-    int         value_int;
-    float       value_float;
-    double      value_double;
-    Enumeration value_enum;
+    bool        value_bool{};
+    char        value_char{};
+    int         value_int{};
+    float       value_float{};
+    double      value_double{};
+    Enumeration value_enum{};
 
     vector<int>                         vector_1_int;
     vector< vector<double> >            vector_2_double;
@@ -32,12 +32,12 @@ struct Result
 {
     enum class Enumeration { ENUM1, ENUM2, ENUM_NO_RESULT };
 
-    int value_int;
-    Enumeration value_enum;
+    int         value_int{};
+    Enumeration value_enum{};
 
-    vector<int>                         vector_1_int;
-    vector< vector<double> >            vector_2_double;
-    vector< vector< vector<char> > >    vector_3_char;
+    vector<int>                  vector_1_int;
+    vector<vector<double>>       vector_2_double;
+    vector<vector<vector<char>>> vector_3_char;
 };
 
 

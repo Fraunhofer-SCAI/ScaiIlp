@@ -125,16 +125,14 @@ namespace ilp_solver
     /******************************
     * Communication of the parent *
     ******************************/
-    static windows_shared_memory* determine_free_shared_memory_name(size_t p_size, std::string* r_shared_memory_name)
+    static std::unique_ptr<windows_shared_memory> determine_free_shared_memory_name(size_t p_size, std::string* r_shared_memory_name)
     {
-        windows_shared_memory* shared_memory = nullptr;
         for (auto trial = 1; trial <= c_num_shared_memory_name_trials; ++trial)
         {
             *r_shared_memory_name = c_shared_memory_base_name + std::to_string(trial);
             try
             {
-                shared_memory = new windows_shared_memory(create_only, r_shared_memory_name->c_str(), read_write, p_size);
-                break;
+                return std::make_unique<windows_shared_memory>(create_only, r_shared_memory_name->c_str(), read_write, p_size);
             }
             catch (const interprocess_exception& p_e)
             {
@@ -142,22 +140,7 @@ namespace ilp_solver
                     throw;
             }
         }
-        return shared_memory;
-    }
-
-
-    CommunicationParent::CommunicationParent()
-        : d_shared_memory(nullptr),
-          d_mapped_region(nullptr),
-          d_address(nullptr),
-          d_result_address(nullptr)
-        {}
-
-
-    CommunicationParent::~CommunicationParent()
-    {
-        delete d_shared_memory;
-        delete d_mapped_region;
+        return {};
     }
 
 
@@ -165,7 +148,7 @@ namespace ilp_solver
     {
         std::string shared_memory_name;
         d_shared_memory = determine_free_shared_memory_name(p_size, &shared_memory_name);
-        d_mapped_region = new mapped_region(*d_shared_memory, read_write);
+        d_mapped_region = std::make_unique<mapped_region>(*d_shared_memory, read_write);
         d_address = d_mapped_region->get_address();
         return shared_memory_name;
     }

@@ -634,22 +634,16 @@ namespace
     // and we somehow need to get a different file path per solver.
     int global_current_index{0};
 
-    constexpr int num_solvers = 2 * (WITH_CBC) + (WITH_SCIP)
-#if _WIN64 == 1
-                              + (WITH_GUROBI)
-#endif
-    ;
-
-    constexpr std::array<std::pair<FactoryFunction, std::string_view>, num_solvers> all_solvers
+    static const std::vector<std::pair<FactoryFunction, std::string_view>> all_solvers
     {
-#if WITH_CBC == 1
+#ifdef WITH_CBC
         std::pair{create_solver_cbc,    "CBC"},
         std::pair{create_stub,          "CBCStub"},
 #endif
-#if WITH_SCIP == 1
+#ifdef WITH_SCIP
         std::pair{create_solver_scip,   "SCIP"},
 #endif
-#if (WITH_GUROBI == 1) && (_WIN64 == 1)
+#if defined(WITH_GUROBI) && (_WIN64 == 1)
         std::pair{create_solver_gurobi, "Gurobi"},
 #endif
     };

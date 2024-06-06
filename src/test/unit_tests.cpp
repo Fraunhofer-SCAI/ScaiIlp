@@ -10,11 +10,6 @@
 
 #include <boost/nowide/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
-#include <functional>
-#include <string>
-#include <vector>
-
-const auto c_solver_exe_name = "ScaiIlpExe.exe";
 
 int main(int p_argc, char* p_argv[])
 {

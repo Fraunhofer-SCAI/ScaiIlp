@@ -5,14 +5,12 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <iostream>
 #include <string>
 #include <string_view>
-
-#define NOMINMAX
-#include <windows.h>    // for GetTickCount
 
 using std::cout;
 using std::endl;
@@ -38,18 +36,18 @@ namespace ilp_solver
     }
 
 
-    static std::pair<int, int> generate_random_problem(ILPSolverInterface* p_solver, int p_num_variables, int p_num_constraints)
+    static std::pair<long long, long long> generate_random_problem(ILPSolverInterface* p_solver, int p_num_variables, int p_num_constraints)
     {
         srand(3);
         static constexpr double variable_scaling = 10.0;
         static const double   constraint_scaling = p_num_variables * variable_scaling;
 
-        const auto start_time = GetTickCount();
+        const auto start_time = std::chrono::steady_clock::now();
 
         for (auto j = 0; j < p_num_variables; ++j)
             p_solver->add_variable_integer(rand_double(), variable_scaling*rand_double(), variable_scaling*(1.0 + rand_double()));
 
-        const auto middle_time = GetTickCount();
+        const auto middle_time = std::chrono::steady_clock::now();
 
         std::vector<double> constraint_vector(p_num_variables);
 
@@ -58,8 +56,11 @@ namespace ilp_solver
             std::generate(std::begin(constraint_vector), std::end(constraint_vector), []() { return rand_double(); });
             p_solver->add_constraint(constraint_vector, constraint_scaling*rand_double(), constraint_scaling*(1.0 + rand_double()));
         }
-        const auto end_time = GetTickCount();
-        return {middle_time - start_time, end_time - middle_time};
+        const auto end_time = std::chrono::steady_clock::now();
+
+        const auto time_variables   = std::chrono::duration_cast<std::chrono::milliseconds>(middle_time - start_time).count();
+        const auto time_constraints = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - middle_time).count();
+        return {time_variables, time_constraints};
     }
 
 
@@ -330,7 +331,7 @@ namespace ilp_solver
 
         vector<double> expected_solution{2./3., 2./3.};
 
-        const auto start_time = GetTickCount();
+        const auto start_time = std::chrono::steady_clock::now();
         for (auto i = 1; i <= c_num_performance_test_repetitions; ++i)
         {
             p_solver->reset_solution();
@@ -343,10 +344,13 @@ namespace ilp_solver
             BOOST_REQUIRE_CLOSE(solution[0], expected_solution[0], c_eps);
             BOOST_REQUIRE_CLOSE(solution[1], expected_solution[1], c_eps);
         }
-        const auto end_time = GetTickCount();
+        const auto end_time = std::chrono::steady_clock::now();
 
         if (LOGGING)
-            cout << "Test for multiple solves took " << end_time - start_time << " ms" << endl;
+        {
+            const auto time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            cout << "Test for multiple solves took " << time << " ms" << endl;
+        }
     }
 
 
@@ -354,7 +358,7 @@ namespace ilp_solver
     {
         static constexpr int c_num_constraints{ 50 };
         static constexpr int c_num_variables  { 50000 };
-        const auto start_time = GetTickCount();
+        const auto           start_time = std::chrono::steady_clock::now();
 
         auto [var_time, cons_time] = generate_random_problem(p_solver, c_num_variables, c_num_constraints);
 
@@ -362,7 +366,7 @@ namespace ilp_solver
         BOOST_REQUIRE_EQUAL( p_solver->get_num_constraints(), c_num_constraints );
         BOOST_REQUIRE_EQUAL( p_solver->get_num_variables(),   c_num_variables );
 
-        const auto middle_time = GetTickCount();
+        const auto middle_time = std::chrono::steady_clock::now();
         p_solver->set_max_seconds(0.001);
         p_solver->minimize();
 
@@ -370,20 +374,23 @@ namespace ilp_solver
         BOOST_REQUIRE_EQUAL(p_solver->get_num_constraints(), c_num_constraints);
         BOOST_REQUIRE_EQUAL(p_solver->get_num_variables(),   c_num_variables);
 
-        const auto end_time = GetTickCount();
+        const auto end_time = std::chrono::steady_clock::now();
 
         if (LOGGING)
-            cout << "Test for creating a big problem took " << end_time - start_time << " ms.\n"
+        {
+            const auto time_creating = std::chrono::duration_cast<std::chrono::milliseconds>(middle_time - start_time).count();
+            const auto time_solving = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - middle_time).count();
+            cout << "Test for creating a big problem took " << time_creating << " ms.\n"
                  << "\t" <<  var_time              << " for creating the variables.\n"
                  << "\t" << cons_time              << " for creating the constraints.\n"
-                 << "\t" << end_time - middle_time << " for finalizing the problem." << endl;
-
+                 << "\t" << time_solving << " for finalizing the problem." << endl;
+        }
     }
 
 
     void test_performance_zero(ILPSolverInterface* p_solver)
     {
-        const auto start_time = GetTickCount();
+        const auto start_time = std::chrono::steady_clock::now();
         for(int i = 0; i < 1000; i++)
             p_solver->add_variable_integer(1., 0., 2.);
         p_solver->add_variable_integer(-1., 0., 2.);
@@ -400,11 +407,14 @@ namespace ilp_solver
         p_solver->minimize();
         const auto objective = p_solver->get_objective();
 
-        const auto end_time = GetTickCount();
+        const auto end_time = std::chrono::steady_clock::now();
         BOOST_REQUIRE_CLOSE( objective, -1., c_eps );
 
         if (LOGGING)
-            cout << "Test for zero-pruning took " << end_time - start_time << " ms" << endl;
+        {
+            const auto time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            cout << "Test for zero-pruning took " <<  time << " ms" << endl;
+        }
     }
 
 

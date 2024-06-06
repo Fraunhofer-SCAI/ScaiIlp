@@ -7,6 +7,7 @@
 
 #include <boost/chrono.hpp>
 #include <boost/nowide/convert.hpp>
+#include <chrono>
 #include <stdexcept>
 #include <string>
 

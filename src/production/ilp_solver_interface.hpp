@@ -190,6 +190,6 @@ namespace ilp_solver
             // May be unsupported by some solvers.
             virtual void set_interim_results    (std::function<void (ILPSolutionData*)> p_interim_function) = 0;
 
-            virtual ~ILPSolverInterface() noexcept {}
+            virtual ~ILPSolverInterface() = default;
     };
 }

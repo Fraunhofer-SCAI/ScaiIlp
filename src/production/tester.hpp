@@ -11,7 +11,7 @@ namespace ilp_solver
     struct ExceptionTester
     {
         virtual void throw_exception(const std::string& p_message) const = 0;
-        virtual ~ExceptionTester() {}
+        virtual ~ExceptionTester() = default;
     };
 
     // Create/Destroy Functionality for the ExceptionTester, as we provide for ILPSolverInterface in ilp_solver_factory.

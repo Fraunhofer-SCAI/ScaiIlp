@@ -17,7 +17,7 @@ namespace ilp_solver
     typedef struct _GRBenv GRBenv;
 
 
-    class ILPSolverGurobi : public ILPSolverImpl
+    class ILPSolverGurobi final : public ILPSolverImpl
     {
         public:
             ILPSolverGurobi();

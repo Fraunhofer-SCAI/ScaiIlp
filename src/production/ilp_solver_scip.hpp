@@ -20,7 +20,7 @@ namespace ilp_solver
     typedef SCIP_Vartype SCIP_VARTYPE;
 
     // Final Implementation of SCIP inside ScaiILP.
-    class ILPSolverSCIP : public ILPSolverImpl
+    class ILPSolverSCIP final : public ILPSolverImpl
     {
     public:
 

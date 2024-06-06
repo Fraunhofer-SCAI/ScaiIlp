@@ -28,10 +28,12 @@ struct ILPDataBase
     double max_abs_gap   { c_default_max_abs_gap   };
     double max_rel_gap   { c_default_max_rel_gap   };
     double cutoff        { c_default_cutoff        };
+
+    virtual ~ILPDataBase() = default;
 };
 
 
-struct ILPData : public ILPDataBase
+struct ILPData final : public ILPDataBase
 {
     // Internally, a vector of rows/constraints is stored. The size of the outer vector is the number of constraints.
     // The inner vectors store only non-zero entries (sparse matrix).
@@ -155,7 +157,7 @@ struct ILPData : public ILPDataBase
 
 
 // Same as ILPData, but inner containers are non-owning.
-struct ILPDataView : public ILPDataBase
+struct ILPDataView final : public ILPDataBase
 {
     struct Matrix
     {

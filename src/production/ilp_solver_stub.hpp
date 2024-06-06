@@ -9,7 +9,7 @@ namespace ilp_solver
 {
     // Receives data about the ILP, writes it into shared memory,
     // and starts a new solver process that solves the ILP.
-    class ILPSolverStub : public ILPSolverCollect
+    class ILPSolverStub final : public ILPSolverCollect
     {
         public:
             ILPSolverStub(const std::string& p_executable_basename, bool p_throw_on_all_crashes);

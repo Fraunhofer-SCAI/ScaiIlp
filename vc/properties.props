@@ -27,11 +27,15 @@
     <MIMALLOC_OVERRIDE_DIR>$(MIMALLOC_DIR)\out\msvc-$(PlatformTarget)\$(Configuration)</MIMALLOC_OVERRIDE_DIR>
     <!--Enable Assertions in Release Mode. (Condition makes this changeable via command line parameter.)-->
     <RELEASE_ASSERTIONS Condition="'$(RELEASE_ASSERTIONS)'==''">false</RELEASE_ASSERTIONS>
+    <!--Enable Code Analysis.  (Condition makes this changeable via command line parameter.)-->
+    <CODE_ANALYSIS Condition="'$(CODE_ANALYSIS)'==''">true</CODE_ANALYSIS>
   </PropertyGroup>
   <PropertyGroup>
     <OutDir>$(SolutionDir)$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(ProjectDir)$(Configuration)_$(PlatformTarget)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <RunCodeAnalysis>$(CODE_ANALYSIS)</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>$(ROOT)..\code-analysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -56,7 +60,28 @@
       <SupportJustMyCode>false</SupportJustMyCode>
       <IntrinsicFunctions Condition="'$(Configuration)' == 'Debug'">false</IntrinsicFunctions>
       <IntrinsicFunctions Condition="'$(Configuration)' != 'Debug'">true</IntrinsicFunctions>
-      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <!--Enable Warnings: 4265= class has virtual functions, but its non-trivial destructor is not virtual
+                           4355= 'this' used in base member initializer list
+                           4484= method matches base ref class method, but is not marked 'virtual', 'new' or 'override'
+                           4643= Forward declaration in namespace std is not permitted by the C++ Standard.
+                           4654= Code placed before include of precompiled header line will be ignored.
+                           4668= 'symbol' is not defined as a preprocessor macro
+                           4800= implicit conversion to bool
+                           5024= move constructor was implicitly defined as deleted
+                           5026= move constructor was implicitly defined as deleted
+                           5038= data member initialization order
+                           5204= class has virtual functions, but its trivial destructor is not virtual
+                           5259= explicit specialization requires 'template <>'
+                           5263= calling 'std::move' on a temporary object prevents copy elision
+                           5264= const variable not used
+                           5266= 'const' qualifier on return type has no effect
+                           -->
+      <AdditionalOptions>/utf-8 /w34265 /w34355 /w34484 /w34643 /w34654 /w34668 /w34800 /w35024 /w35026 /w35038 /w35204 /w35259 /w35263 /w35264 /w35266 %(AdditionalOptions)</AdditionalOptions>
+
+      <!--Code Analysis: Disable analysis and warnings for external code -->
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
+      <ExternalWarningLevel>Level2</ExternalWarningLevel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding Condition="'$(Configuration)' == 'Debug'">false</EnableCOMDATFolding>
@@ -107,6 +132,9 @@
     </BuildMacro>
     <BuildMacro Include="RELEASE_ASSERTIONS">
       <Value>$(RELEASE_ASSERTIONS)</Value>
+    </BuildMacro>
+    <BuildMacro Include="CODE_ANALYSIS">
+      <Value>$(CODE_ANALYSIS)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

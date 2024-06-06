@@ -4,10 +4,9 @@
 
 #include "ilp_solver_impl.hpp"
 
-#include "CoinModel.hpp"
+#include <CoinModel.hpp>
 
 #include <string>
-#include <vector>
 
 class OsiSolverInterface;
 

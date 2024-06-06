@@ -6,7 +6,7 @@
 
 #pragma warning(push)
 #pragma warning(disable : 4309) // silence warning in CBC concerning truncations of constant values in 64 bit.
-#include "OsiSolverInterface.hpp"
+#include <OsiSolverInterface.hpp>
 #pragma warning(pop)
 
 

@@ -7,6 +7,7 @@
 #include <CoinModel.hpp>
 
 #include <string>
+#include <vector>
 
 class OsiSolverInterface;
 
@@ -41,8 +42,13 @@ namespace ilp_solver
                                    OptionalIndexArray p_row_indices = {}) override;
 
             void add_constraint_impl (double p_lower_bound, double p_upper_bound,
-                ValueArray p_col_values, [[maybe_unused]] const std::string& p_name = "",
-                OptionalIndexArray p_col_indices = {}) override;
+                                      ValueArray p_col_values, [[maybe_unused]] const std::string& p_name = "",
+                                      OptionalIndexArray p_col_indices = {}) override;
+
+            void set_sparse_tmp_vec(ValueArray p_col_values);
+
+            std::vector<double> d_tmp_values;
+            std::vector<int>    d_tmp_indices;
     };
 }
 

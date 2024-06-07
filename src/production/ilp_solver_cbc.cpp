@@ -11,11 +11,8 @@
 #include "utility.hpp"
 
 #include <CglTreeInfo.hpp> // Needed to deal with the probing_info memory leak in Cbc
-#pragma warning(push)
-#pragma warning(disable : 5033) // silence warning in CBC concerning the deprecated keyword 'register'
 #include <CoinMessageHandler.hpp>
 #include <OsiSolverInterface.hpp>
-#pragma warning(pop)
 
 #include <algorithm>
 

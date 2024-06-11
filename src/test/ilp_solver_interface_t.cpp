@@ -294,15 +294,12 @@ namespace ilp_solver
         std::cout.setstate(std::ios_base::failbit);
         test_linear_programming(p_solver);
         std::cout.clear();
-
+        boost::filesystem::path path{p_path};
+        boost::filesystem::remove(path);
         p_solver->print_mps_file(p_path);
-
-        boost::filesystem::path path{ p_path };
         BOOST_REQUIRE(boost::filesystem::is_regular_file(path));
-
         auto size{ boost::filesystem::file_size(path) };
         BOOST_REQUIRE(size > 0);
-
         if (LOGGING)
         {
             std::cout << "Successfully wrote mps-File to " << boost::filesystem::absolute(path).generic_string() << ".\n"

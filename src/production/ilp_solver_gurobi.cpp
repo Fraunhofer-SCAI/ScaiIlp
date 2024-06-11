@@ -57,7 +57,8 @@ namespace ilp_solver
 
     ILPSolverGurobi::~ILPSolverGurobi()
     {
-        call_gurobi( d_model, GRBfreemodel, d_model );
+        // Do not use `call_gurobi` and ignore errors so that this destructor does not throw.
+        GRBfreemodel(d_model);
         GRBfreeenv(d_env);
     }
 
@@ -129,7 +130,9 @@ namespace ilp_solver
     void ILPSolverGurobi::set_start_solution(ValueArray p_solution)
     {
         assert(isize(p_solution) == d_num_vars);
+        // #TODO: Passing any start solution as a VarHintVal seems wrong.
         call_gurobi( d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_VARHINTVAL, 0, d_num_vars, const_cast<double*>(p_solution.data()));
+        // #TODO: Check feasibility of the solution and possibly throw InvalidStartSolutionException.
         call_gurobi( d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_START,      0, d_num_vars, const_cast<double*>(p_solution.data()));
     }
 
@@ -286,7 +289,7 @@ namespace ilp_solver
             update_index_vector(d_indices, num);
             indices = const_cast<int*>(d_indices.data());
 
-            assert( isize(*p_col_values) == num );
+            assert( isize(p_col_values) == num );
         }
 
         if (p_lower_bound == p_upper_bound)

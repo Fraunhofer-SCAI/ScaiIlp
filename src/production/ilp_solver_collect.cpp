@@ -3,6 +3,7 @@
 #include "utility.hpp"
 
 #include <cassert>
+#include <format>
 #include <fstream>
 #include <span>
 #include <sstream>
@@ -28,12 +29,10 @@ int ILPSolverCollect::get_num_variables() const
 
 namespace
 {
-    std::string to_name(int p_num, char p_type, int p_alignment = 15)
+    // Return string prefixed with p_type, followed by p_num left aligned and padded to 10 chars with spaces.
+    std::string to_name(int p_num, char p_type)
     {
-        std::string name{p_type};
-        name += std::to_string(p_num);
-        name.resize(p_alignment, ' ');
-        return name;
+        return std::format("{}{:<10}", p_type, p_num);
     }
 
 

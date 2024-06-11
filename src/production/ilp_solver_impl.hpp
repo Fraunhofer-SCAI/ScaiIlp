@@ -19,6 +19,14 @@ enum class ObjectiveSense { MINIMIZE, MAXIMIZE };
 // Can not be called in the constructor of ILPSolverImpl since the virtual functions are not yet overridden.
 void set_default_parameters(ILPSolverInterface* p_solver);
 
+
+// Convenience function to replace all spaces by '_' in the given string.
+// Some solvers print the names of constraints and variables to MPS files.
+// There, spaces are problematic, so implementations may use this function
+// to sanitize the names before passing them to the solver.
+std::string replace_spaces(const std::string& p_name);
+
+
 // This is the base class for any solver not using some kind of Osi-modeling or full interface.
 // It implements some methods of ILPSolverInterface by introducing fewer private virtual methods,
 // collecting multiple cases at once.
@@ -58,13 +66,14 @@ private:
     // Useful e.g. for cached problems etc.
     // The default version does nothing.
     virtual void prepare_impl();
-    virtual void add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
-                                    const std::string& p_name = "", OptionalValueArray p_row_values = {}, OptionalIndexArray p_row_indices = {}) = 0;
-    virtual void add_constraint_impl (double p_lower_bound, double p_upper_bound, ValueArray p_col_values,
-                                        const std::string& p_name = "", OptionalIndexArray p_col_indices = {}) = 0;
-    virtual void solve_impl() = 0;
-    virtual void set_objective_sense_impl(ObjectiveSense p_sense) = 0;
-    virtual void set_max_seconds_impl(double p_seconds) = 0;
+    virtual void add_variable_impl(VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
+                                   const std::string& p_name = "", OptionalValueArray p_row_values = {},
+                                   OptionalIndexArray p_row_indices = {})                                   = 0;
+    virtual void add_constraint_impl(double p_lower_bound, double p_upper_bound, ValueArray p_col_values,
+                                     const std::string& p_name = "", OptionalIndexArray p_col_indices = {}) = 0;
+    virtual void solve_impl()                                                                               = 0;
+    virtual void set_objective_sense_impl(ObjectiveSense p_sense)                                           = 0;
+    virtual void set_max_seconds_impl(double p_seconds)                                                     = 0;
 };
 
 } // namespace ilp_solver

@@ -241,7 +241,7 @@ void ILPSolverHighs::add_variable_impl(VariableType p_type, double p_objective, 
     ASSERT_OK(d_highs.changeColIntegrality(new_col_idx, highs_type));
     // HiGHS returns an error for empty names.
     if (!p_name.empty())
-        ASSERT_OK(d_highs.passColName(new_col_idx, p_name));
+        ASSERT_OK(d_highs.passColName(new_col_idx, replace_spaces(p_name)));
 }
 
 
@@ -261,7 +261,7 @@ void ILPSolverHighs::add_constraint_impl(double p_lower_bound, double p_upper_bo
     }
     // HiGHS returns an error for empty names.
     if (!p_name.empty())
-        ASSERT_OK(d_highs.passRowName(d_highs.getNumRow() - 1, p_name));
+        ASSERT_OK(d_highs.passRowName(d_highs.getNumRow() - 1, replace_spaces(p_name)));
 }
 
 

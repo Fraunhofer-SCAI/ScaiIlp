@@ -10,9 +10,6 @@
 
 #include <OsiSolverInterface.hpp>
 
-#include <optional>
-#include <algorithm>
-
 
 namespace ilp_solver
 {
@@ -55,8 +52,7 @@ namespace ilp_solver
                                                const std::string& p_name, OptionalValueArray p_row_values, OptionalIndexArray p_row_indices)
     {
         // Spaces are problematic when printing to mps.
-        auto name = p_name;
-        std::ranges::replace(name, ' ', '_');
+        auto        name     = replace_spaces(p_name);
         const char* name_ptr = name.empty() ? nullptr : name.c_str();
         // OSI has no special case for binary variables.
         const bool is_integer_or_binary = (p_type != VariableType::CONTINUOUS);
@@ -84,8 +80,7 @@ namespace ilp_solver
                                                  const std::string& p_name, OptionalIndexArray p_col_indices)
     {
         // Spaces are problematic when printing to mps.
-        auto name = p_name;
-        std::ranges::replace(name, ' ', '_');
+        auto        name     = replace_spaces(p_name);
         const char* name_ptr = name.empty() ? nullptr : name.c_str();
 
         if (p_col_indices)

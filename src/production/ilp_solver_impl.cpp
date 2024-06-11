@@ -1,5 +1,6 @@
 #include "ilp_solver_impl.hpp"
 
+#include <algorithm>
 #include <cassert>
 
 
@@ -19,6 +20,14 @@ void set_default_parameters(ILPSolverInterface* p_solver)
     p_solver->set_max_abs_gap(c_default_max_abs_gap);
     p_solver->set_max_rel_gap(c_default_max_rel_gap);
     p_solver->set_cutoff(c_default_cutoff);
+}
+
+
+std::string replace_spaces(const std::string& p_name)
+{
+    auto name = p_name;
+    std::ranges::replace(name, ' ', '_');
+    return name;
 }
 
 

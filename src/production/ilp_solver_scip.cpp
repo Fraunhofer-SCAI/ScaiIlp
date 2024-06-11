@@ -302,9 +302,8 @@ namespace ilp_solver
     void ILPSolverSCIP::add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
         const std::string& p_name, OptionalValueArray p_row_values, OptionalIndexArray p_row_indices)
     {
-        SCIP_VAR* var;
-        const char* name = p_name.c_str();
-
+        SCIP_VAR*    var;
+        auto         name = replace_spaces(p_name);
         SCIP_VARTYPE type = (p_type == VariableType::INTEGER)    ? SCIP_VARTYPE_INTEGER
                           : (p_type == VariableType::CONTINUOUS) ? SCIP_VARTYPE_CONTINUOUS : SCIP_VARTYPE_BINARY;
         // Creates a variable of type p_type with corresponding objectives and bounds.
@@ -312,7 +311,8 @@ namespace ilp_solver
         //     initial:   true  (the column belonging to var is present in the initial root LP.)
         //     removable: false (the column belonging to var is not removable from the LP.)
         //     User Data pointers.
-        call_scip( SCIPcreateVar, d_scip, &var, name, p_lower_bound, p_upper_bound, p_objective, type, TRUE, FALSE, nullptr, nullptr, nullptr, nullptr, nullptr );
+        call_scip(SCIPcreateVar, d_scip, &var, name.c_str(), p_lower_bound, p_upper_bound, p_objective, type, TRUE,
+                  FALSE, nullptr, nullptr, nullptr, nullptr, nullptr);
         call_scip( SCIPaddVar, d_scip, var );
         d_cols.push_back(var); // We need to store the variables seperately to access them later on.
 
@@ -346,12 +346,11 @@ namespace ilp_solver
     void ILPSolverSCIP::add_constraint_impl (double p_lower_bound, double p_upper_bound,
         ValueArray p_col_values, const std::string& p_name, OptionalIndexArray p_col_indices)
     {
-        SCIP_CONS* cons;
-        SCIP_VAR**  vars;
+        SCIP_CONS*             cons;
+        SCIP_VAR**             vars;
         std::vector<SCIP_VAR*> tmp;
-        int size{0};
-
-        const char* name = p_name.c_str();
+        int                    size{0};
+        auto                   name = replace_spaces(p_name);
 
         // If we have no indices given, we need to have a coefficient for every variable in the problem.
         if (!p_col_indices)
@@ -388,9 +387,9 @@ namespace ilp_solver
         //    dynamic:        false (the constraint is not subject to aging.)
         //    removable:      false (the constraint may not be removed during aging or cleanup.)
         //    stickingatnode: false (the constraint should not be kept at the node where it was added.)
-        call_scip( SCIPcreateConsLinear, d_scip, &cons, name, size, vars, const_cast<double*>(p_col_values.data()),
-                p_lower_bound, p_upper_bound, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE );
-        call_scip( SCIPaddCons, d_scip, cons );
+        call_scip(SCIPcreateConsLinear, d_scip, &cons, name.c_str(), size, vars, const_cast<double*>(p_col_values.data()),
+                  p_lower_bound, p_upper_bound, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE);
+        call_scip(SCIPaddCons, d_scip, cons);
         d_rows.push_back(cons);
     }
 }

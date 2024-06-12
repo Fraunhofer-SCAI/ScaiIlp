@@ -144,17 +144,15 @@ namespace ilp_solver
 
     void ILPSolverCbc::set_log_level(int p_level)
     {
-        int level = std::clamp(p_level, 0, 4);          // log level must be between 0 and 4
+        int level = std::clamp(p_level, 0, 4); // log level must be between 0 and 4
         d_model.messageHandler()->setLogLevel(level);
     }
 
 
     void ILPSolverCbc::set_presolve(bool p_presolve)
     {
-        if (p_presolve)
-            d_model.setTypePresolve(1);
-        else
-            d_model.setTypePresolve(0);
+        // Possible values are 0="no", 1="ordinary presolve", 2="integer presolve (dodgy)".
+        d_model.setTypePresolve(p_presolve ? 1 : 0);
     }
 
 

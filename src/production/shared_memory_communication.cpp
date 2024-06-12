@@ -5,7 +5,7 @@
 #include <codecvt>      // for std::codecvt_utf8_utf16
 
 
-using namespace boost::interprocess;
+namespace ip = boost::interprocess;
 
 constexpr auto c_shared_memory_base_name = "ScaiIlpSolver";
 constexpr auto c_num_shared_memory_name_trials = 10000;
@@ -125,18 +125,18 @@ namespace ilp_solver
     /******************************
     * Communication of the parent *
     ******************************/
-    static std::unique_ptr<windows_shared_memory> determine_free_shared_memory_name(size_t p_size, std::string* r_shared_memory_name)
+    static std::unique_ptr<ip::windows_shared_memory> determine_free_shared_memory_name(size_t p_size, std::string* r_shared_memory_name)
     {
         for (auto trial = 1; trial <= c_num_shared_memory_name_trials; ++trial)
         {
             *r_shared_memory_name = c_shared_memory_base_name + std::to_string(trial);
             try
             {
-                return std::make_unique<windows_shared_memory>(create_only, r_shared_memory_name->c_str(), read_write, p_size);
+                return std::make_unique<ip::windows_shared_memory>(ip::create_only, r_shared_memory_name->c_str(), ip::read_write, p_size);
             }
-            catch (const interprocess_exception& p_e)
+            catch (const ip::interprocess_exception& p_e)
             {
-                if (p_e.get_error_code() != error_code_t::already_exists_error || trial == c_num_shared_memory_name_trials)
+                if (p_e.get_error_code() != ip::error_code_t::already_exists_error || trial == c_num_shared_memory_name_trials)
                     throw;
             }
         }
@@ -148,7 +148,7 @@ namespace ilp_solver
     {
         std::string shared_memory_name;
         d_shared_memory = determine_free_shared_memory_name(p_size, &shared_memory_name);
-        d_mapped_region = std::make_unique<mapped_region>(*d_shared_memory, read_write);
+        d_mapped_region = std::make_unique<ip::mapped_region>(*d_shared_memory, ip::read_write);
         d_address = d_mapped_region->get_address();
         return shared_memory_name;
     }
@@ -174,8 +174,8 @@ namespace ilp_solver
     * Communication of the child *
     *****************************/
     CommunicationChild::CommunicationChild(const std::string& p_shared_memory_name)
-        : d_shared_memory(open_only, p_shared_memory_name.c_str(), read_write),
-          d_mapped_region(d_shared_memory, read_write),
+        : d_shared_memory(ip::open_only, p_shared_memory_name.c_str(), ip::read_write),
+          d_mapped_region(d_shared_memory, ip::read_write),
           d_address(d_mapped_region.get_address()),
           d_result_address(nullptr)
         {}

@@ -1,5 +1,7 @@
 #include "ilp_solver_impl.hpp"
 
+#include "utility.hpp"
+
 #include <algorithm>
 #include <cassert>
 
@@ -28,6 +30,21 @@ std::string replace_spaces(const std::string& p_name)
     auto name = p_name;
     std::ranges::replace(name, ' ', '_');
     return name;
+}
+
+
+void SparseVec::init_from_dense(ValueArray p_dense_values)
+{
+    d_indices.clear();
+    d_values.clear();
+    for (int index = 0; index < isize(p_dense_values); ++index)
+    {
+        if (auto value = p_dense_values[index]; value != 0.)
+        {
+            d_indices.push_back(index);
+            d_values.push_back(value);
+        }
+    }
 }
 
 

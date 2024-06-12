@@ -4,6 +4,7 @@
 
 #include <optional>
 #include <string>
+#include <vector>
 
 // The implementation serves to avoid redundant code duplication.
 namespace ilp_solver
@@ -25,6 +26,22 @@ void set_default_parameters(ILPSolverInterface* p_solver);
 // There, spaces are problematic, so implementations may use this function
 // to sanitize the names before passing them to the solver.
 std::string replace_spaces(const std::string& p_name);
+
+
+// Helper struct to be used in implementations that have to convert dense vectors to sparse vectors.
+class SparseVec
+{
+public:
+    // Set d_indices and d_values to correspond to the given dense values.
+    void        init_from_dense(ValueArray p_dense_values);
+    auto        size() const { return d_indices.size(); }
+    const auto& indices() const { return d_indices; }
+    const auto& values() const { return d_values; }
+
+private:
+    std::vector<int>    d_indices{};
+    std::vector<double> d_values{};
+};
 
 
 // This is the base class for any solver not using some kind of Osi-modeling or full interface.

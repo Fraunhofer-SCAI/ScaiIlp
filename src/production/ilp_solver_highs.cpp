@@ -30,21 +30,6 @@ ILPSolverHighs::ILPSolverHighs()
 }
 
 
-void ILPSolverHighs::set_sparse_tmp_vec(ValueArray p_col_values)
-{
-    d_tmp_indices.clear();
-    d_tmp_values.clear();
-    for (int col_idx = 0; col_idx < isize(p_col_values); ++col_idx)
-    {
-        if (auto value = p_col_values[col_idx]; value != 0.)
-        {
-            d_tmp_indices.push_back(col_idx);
-            d_tmp_values.push_back(value);
-        }
-    }
-}
-
-
 int ILPSolverHighs::get_num_constraints() const
 {
     return d_highs.getNumRow();
@@ -223,9 +208,9 @@ void ILPSolverHighs::add_variable_impl(VariableType p_type, double p_objective, 
         }
         else // Coefficients given as dense vector.
         {
-            set_sparse_tmp_vec(*p_row_values);
-            ASSERT_OK(d_highs.addCol(p_objective, p_lower_bound, p_upper_bound, isize(d_tmp_values),
-                                     d_tmp_indices.data(), d_tmp_values.data()));
+            d_sparse.init_from_dense(*p_row_values);
+            ASSERT_OK(d_highs.addCol(p_objective, p_lower_bound, p_upper_bound, isize(d_sparse),
+                                     d_sparse.indices().data(), d_sparse.values().data()));
         }
     }
     else // No coefficients given.
@@ -256,8 +241,9 @@ void ILPSolverHighs::add_constraint_impl(double p_lower_bound, double p_upper_bo
     }
     else // Dense value vector given.
     {
-        set_sparse_tmp_vec(p_col_values);
-        ASSERT_OK(d_highs.addRow(p_lower_bound, p_upper_bound, isize(d_tmp_values), d_tmp_indices.data(), d_tmp_values.data()));
+        d_sparse.init_from_dense(p_col_values);
+        ASSERT_OK(d_highs.addRow(p_lower_bound, p_upper_bound, isize(d_sparse), d_sparse.indices().data(),
+                                 d_sparse.values().data()));
     }
     // HiGHS returns an error for empty names.
     if (!p_name.empty())

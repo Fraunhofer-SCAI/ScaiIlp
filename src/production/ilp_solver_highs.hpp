@@ -17,7 +17,7 @@ class ILPSolverHighs final : public ILPSolverImpl
 {
 public:
     ILPSolverHighs();
-    // The Highs has a custom destructor, but no move constructor implemented.
+    // The Highs class has a custom destructor, but no move constructor implemented.
     ILPSolverHighs(ILPSolverHighs&&) = delete;
 
     int get_num_constraints() const override;
@@ -60,16 +60,10 @@ private:
     void set_objective_sense_impl(ObjectiveSense p_sense) override;
     void set_max_seconds_impl(double p_seconds) override;
 
-    // Convert the given dense vector to a sparse vector in the tmp members.
-    void set_sparse_tmp_vec(ValueArray p_col_values);
-
     // The Highs object holds the model, solution and all options.
     Highs d_highs{};
-
-    // Temporary vectors used to convert dense vectors to sparse vectors.
-    // See set_sparse_tmp_vec.
-    std::vector<int>    d_tmp_indices{};
-    std::vector<double> d_tmp_values{};
+    // Helper object for dense -> sparse conversions.
+    SparseVec d_sparse{};
 };
 
 } // namespace ilp_solver

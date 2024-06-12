@@ -68,8 +68,8 @@ namespace ilp_solver
         }
         else
         {
-            set_sparse_tmp_vec(*p_row_values);
-            d_cache.addCol(isize(d_tmp_values), d_tmp_indices.data(), d_tmp_values.data(),
+            d_sparse.init_from_dense(*p_row_values);
+            d_cache.addCol(isize(d_sparse), d_sparse.indices().data(), d_sparse.values().data(),
                            p_lower_bound, p_upper_bound, p_objective, name_ptr, is_integer_or_binary);
         }
         d_cache_changed = true;
@@ -90,26 +90,11 @@ namespace ilp_solver
         }
         else
         {
-            set_sparse_tmp_vec(p_col_values);
-            d_cache.addRow(isize(d_tmp_values), d_tmp_indices.data(), d_tmp_values.data(),
+            d_sparse.init_from_dense(p_col_values);
+            d_cache.addRow(isize(d_sparse), d_sparse.indices().data(), d_sparse.values().data(),
                            p_lower_bound, p_upper_bound, name_ptr);
         }
         d_cache_changed = true;
-    }
-
-
-    void ILPSolverOsiModel::set_sparse_tmp_vec(ValueArray p_col_values)
-    {
-        d_tmp_values.clear();
-        d_tmp_indices.clear();
-        for (int col_idx = 0; col_idx < isize(p_col_values); ++col_idx)
-        {
-            if (const auto value = p_col_values[col_idx]; value != 0.)
-            {
-                d_tmp_values.push_back(value);
-                d_tmp_indices.push_back(col_idx);
-            }
-        }
     }
 }
 

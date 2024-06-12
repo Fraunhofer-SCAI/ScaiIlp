@@ -45,10 +45,8 @@ namespace ilp_solver
                                       ValueArray p_col_values, [[maybe_unused]] const std::string& p_name = "",
                                       OptionalIndexArray p_col_indices = {}) override;
 
-            void set_sparse_tmp_vec(ValueArray p_col_values);
-
-            std::vector<double> d_tmp_values;
-            std::vector<int>    d_tmp_indices;
+            // Helper object for dense -> sparse conversions.
+            SparseVec d_sparse{};
     };
 }
 

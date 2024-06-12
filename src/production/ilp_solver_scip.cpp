@@ -178,6 +178,8 @@ namespace ilp_solver
 
         SCIP_SOL* sol;
         SCIP_Bool ignored{ false };
+        // #TODO: If one of the call_scip calls below throws, sol is not freed by SCIPaddSolFree and we leak memory.
+        //        -> Create an RAII wrapper with SCIPfreeSol.
         call_scip(SCIPcreateSol, d_scip, &sol, nullptr);
 
         // SCIP uses a double*, not a const double*.
@@ -185,7 +187,13 @@ namespace ilp_solver
         // so the const_cast should not violate actual const-ness.
         // Sadly, it is not avoidable since SCIP is not const-correct. (SCIP 6.0)
         call_scip(SCIPsetSolVals, d_scip, sol, isize(d_cols), d_cols.data(), const_cast<double*>(p_solution.data()));
+        SCIP_Bool feasible = TRUE;
+        call_scip(SCIPcheckSol, d_scip, sol, FALSE /*print reason*/, TRUE /*completely*/, TRUE /*check bounds*/,
+                  TRUE /*check integrality*/, TRUE /*check LP rows*/, &feasible);
         call_scip(SCIPaddSolFree, d_scip, &sol, &ignored);
+        // Test feasibility only after sol was freed by SCIPaddSolFree.
+        if (feasible != TRUE)
+            throw InvalidStartSolutionException();
     }
 
 

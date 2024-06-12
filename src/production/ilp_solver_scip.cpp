@@ -5,7 +5,8 @@
 
 #include <algorithm>
 #include <cassert>
-
+#include <functional>
+#include <memory>
 
 namespace ilp_solver
 {
@@ -44,7 +45,19 @@ namespace ilp_solver
                 default:                      throw std::runtime_error("SCIP produced an unknown error.");
             }
         };
-    }
+
+
+        // RAII wrapper for SCIP_SOL.
+        using ScopedSCIPSolution = std::unique_ptr<SCIP_SOL, std::function<void(SCIP_SOL*)>>;
+
+        ScopedSCIPSolution create_scoped_solution(SCIP* v_scip)
+        {
+            SCIP_SOL* sol;
+            call_scip(SCIPcreateSol, v_scip, &sol, nullptr);
+            auto deleter = [v_scip](SCIP_SOL* v_sol) { SCIPfreeSol(v_scip, &v_sol); };
+            return ScopedSCIPSolution(sol, deleter);
+        }
+    } // namespace
 
 
     ILPSolverSCIP::ILPSolverSCIP()
@@ -176,24 +189,19 @@ namespace ilp_solver
         if (SCIPgetStage(d_scip) == SCIP_STAGE_SOLVED)
             reset_solution();
 
-        SCIP_SOL* sol;
-        SCIP_Bool ignored{ false };
-        // #TODO: If one of the call_scip calls below throws, sol is not freed by SCIPaddSolFree and we leak memory.
-        //        -> Create an RAII wrapper with SCIPfreeSol.
-        call_scip(SCIPcreateSol, d_scip, &sol, nullptr);
-
         // SCIP uses a double*, not a const double*.
         // Internally, SCIP calls a single-variable setter for every variable with a by-value pass of the corresponding double,
         // so the const_cast should not violate actual const-ness.
         // Sadly, it is not avoidable since SCIP is not const-correct. (SCIP 6.0)
-        call_scip(SCIPsetSolVals, d_scip, sol, isize(d_cols), d_cols.data(), const_cast<double*>(p_solution.data()));
+        auto sol = create_scoped_solution(d_scip);
+        call_scip(SCIPsetSolVals, d_scip, sol.get(), isize(d_cols), d_cols.data(), const_cast<double*>(p_solution.data()));
         SCIP_Bool feasible = TRUE;
-        call_scip(SCIPcheckSol, d_scip, sol, FALSE /*print reason*/, TRUE /*completely*/, TRUE /*check bounds*/,
+        call_scip(SCIPcheckSol, d_scip, sol.get(), FALSE /*print reason*/, TRUE /*completely*/, TRUE /*check bounds*/,
                   TRUE /*check integrality*/, TRUE /*check LP rows*/, &feasible);
-        call_scip(SCIPaddSolFree, d_scip, &sol, &ignored);
-        // Test feasibility only after sol was freed by SCIPaddSolFree.
         if (feasible != TRUE)
             throw InvalidStartSolutionException();
+        SCIP_Bool ignored{false};
+        call_scip(SCIPaddSol, d_scip, sol.get(), &ignored);
     }
 
 

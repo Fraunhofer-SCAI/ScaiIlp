@@ -247,6 +247,7 @@ namespace ilp_solver
         call_scip(SCIPsetIntParam, d_scip, "presolving/maxrounds", (p_presolve) ? -1 : 0); // -1 is default, 0 is off.
 
         // Disable/Enable Heuristics.
+        // #TODO: What does this have to do with presolve?
         if (p_presolve) call_scip(SCIPsetHeuristics, d_scip, SCIP_PARAMSETTING_DEFAULT, TRUE);
         else            call_scip(SCIPsetHeuristics, d_scip, SCIP_PARAMSETTING_OFF,     TRUE);
     }

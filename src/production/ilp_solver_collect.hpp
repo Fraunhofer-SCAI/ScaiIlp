@@ -3,7 +3,8 @@
 #include "ilp_data.hpp"
 #include "ilp_solver_impl.hpp"
 
-#include <memory>
+#include <functional>
+#include <string>
 
 namespace ilp_solver
 {

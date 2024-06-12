@@ -2,8 +2,6 @@
 
 #include "serialization.hpp"
 
-#include <codecvt>      // for std::codecvt_utf8_utf16
-
 
 namespace ip = boost::interprocess;
 

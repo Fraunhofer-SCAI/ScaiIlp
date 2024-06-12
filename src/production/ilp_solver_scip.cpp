@@ -9,8 +9,8 @@
 
 namespace ilp_solver
 {
-    #include "scip/scip.h"
-    #include "scip/scipdefplugins.h"
+    #include <scip/scip.h>
+    #include <scip/scipdefplugins.h>
 
     namespace
     {
@@ -62,11 +62,12 @@ namespace ilp_solver
     ILPSolverSCIP::~ILPSolverSCIP()
     {
         // Variables and Constraints need to be released separately.
+        // Do not use `call_scip` and ignore errors so that this destructor does not throw.
         for (auto& p : d_cols)
-            call_scip(SCIPreleaseVar, d_scip, &p);
+            SCIPreleaseVar(d_scip, &p);
         for (auto& p : d_rows)
-            call_scip(SCIPreleaseCons, d_scip, &p);
-        call_scip(SCIPfree, &d_scip);
+            SCIPreleaseCons(d_scip, &p);
+        SCIPfree(&d_scip);
     }
 
 
@@ -159,7 +160,7 @@ namespace ilp_solver
 
         // "frees all solution process data including presolving and transformed problem,
         //  only original problem is kept"
-        // This may be overkill, but I have not found another method that actually resetted solution data.
+        // This may be overkill, but I have not found another method that actually reset solution data.
         // Seems unnecessarily slow though.
         call_scip(SCIPfreeTransform, d_scip);
 
@@ -314,7 +315,7 @@ namespace ilp_solver
         call_scip(SCIPcreateVar, d_scip, &var, name.c_str(), p_lower_bound, p_upper_bound, p_objective, type, TRUE,
                   FALSE, nullptr, nullptr, nullptr, nullptr, nullptr);
         call_scip( SCIPaddVar, d_scip, var );
-        d_cols.push_back(var); // We need to store the variables seperately to access them later on.
+        d_cols.push_back(var); // We need to store the variables separately to access them later on.
 
         auto n = isize(d_rows); // num_constraints.
 

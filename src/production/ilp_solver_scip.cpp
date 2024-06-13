@@ -5,7 +5,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <functional>
 #include <memory>
 
 namespace ilp_solver
@@ -48,14 +47,12 @@ namespace ilp_solver
 
 
         // RAII wrapper for SCIP_SOL.
-        using ScopedSCIPSolution = std::unique_ptr<SCIP_SOL, std::function<void(SCIP_SOL*)>>;
-
-        ScopedSCIPSolution create_scoped_solution(SCIP* v_scip)
+        auto create_scoped_solution(SCIP* v_scip)
         {
             SCIP_SOL* sol;
             call_scip(SCIPcreateSol, v_scip, &sol, nullptr);
             auto deleter = [v_scip](SCIP_SOL* v_sol) { SCIPfreeSol(v_scip, &v_sol); };
-            return ScopedSCIPSolution(sol, deleter);
+            return std::unique_ptr<SCIP_SOL, decltype(deleter)>(sol, deleter);
         }
     } // namespace
 

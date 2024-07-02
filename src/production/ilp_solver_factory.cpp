@@ -31,7 +31,7 @@ extern "C" ILPSolverInterface* __stdcall create_solver_gurobi()
 
 extern "C" ILPSolverInterface* __stdcall create_solver_highs()
 {
-#if (WITH_HIGHS == 1) && (_WIN64 == 1)
+#if defined(WITH_HIGHS) && (_WIN64 == 1)
     return new ILPSolverHighs();
 #else
     return nullptr;

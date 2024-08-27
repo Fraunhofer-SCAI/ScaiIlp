@@ -3,6 +3,7 @@
 #include "ilp_solver_interface.hpp"
 #include "shared_memory_communication.hpp"
 #include "solver_exit_code.hpp"
+#include "tester.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -59,7 +60,7 @@ static std::string exit_code_to_message(SolverExitCode p_exit_code)
     case SolverExitCode::uncaught_exception_2:
         return "Uncaught exception, likely out of memory (C++ exception).";
     case SolverExitCode::uncaught_exception_3:
-        return "Uncaught exception, likely out of memory (stack buffer overflow Windows 10).";
+        return "Uncaught exception, likely a failed assert or out of memory (stack buffer overflow Windows 10).";
     case SolverExitCode::uncaught_exception_4:
         return "Uncaught exception, the heap was most likely filled or corrupted.";
     case SolverExitCode::uncaught_exception_5:
@@ -78,8 +79,12 @@ static std::string exit_code_to_message(SolverExitCode p_exit_code)
         return "Failed solving (solver error).";
     case SolverExitCode::forced_termination:
         return "Unexpected exit code \"forced termination\"."; // If forced termination by stub occurs, we do not
-                                                                // call exit_code_to_message. So the exit code is
-                                                                // unexpected here.
+                                                               // call exit_code_to_message. So the exit code is
+                                                               // unexpected here.
+    case SolverExitCode::invalid_start_solution:
+        return "Invalid start solution.";
+    case SolverExitCode::stub_tester_failed:
+        return "stub_tester failed.";
     default:
         return "Unknown exit code " + std::to_string(static_cast<int>(p_exit_code)) + ".";
     }
@@ -137,7 +142,6 @@ void ILPSolverStub::reset_solution()
 
 void ILPSolverStub::solve_impl()
 {
-    SolverExitCode exit_code{};
     std::string    exit_message{};
 
     try
@@ -157,23 +161,29 @@ void ILPSolverStub::solve_impl()
                                                                       boost::process::std_err > boost::process::null);
         // Wait hopefully long enough. Kill child if time limit is exceeded. See comment on c_timeout_factor.
         const auto wait_max_seconds = (1.0 + c_relative_overtime) * d_ilp_data.max_seconds + c_absolute_overtime_seconds;
+// boost::child::wait_for/wait_until have been deprecated, because they may be unreliable.
+// However, it seems that they are only problematic on posix based systems and not on windows.
+// See https://www.boost.org/doc/libs/1_83_0/doc/html/boost_process/v2.html#boost_process.v2.introduction.unreliable
+// So we just ignore the deprecation warning.
+#pragma warning(disable : 4996)
         if (!proc.wait_for(seconds_to_millisecods(wait_max_seconds)))
+#pragma warning(default : 4996)
         {
             proc.terminate(); // boost::process seems not to support to set the exit code by terminate().
                               // Note that terminate(error_code&) does not set the exit code either, but has a different purpose.
-            exit_code = SolverExitCode::forced_termination; // Don't read the exit code, but set it manually to the fixed desired value.
+            d_exit_code = SolverExitCode::forced_termination; // Don't read the exit code, but set it manually to the fixed desired value.
             exit_message = std::format("Failed solving by timeout. (limit:{} timeout:{})", d_ilp_data.max_seconds,
                                        wait_max_seconds);
         }
         else
         {
-            exit_code    = SolverExitCode(proc.exit_code());
-            exit_message = exit_code_to_message(exit_code);
+            d_exit_code = SolverExitCode(proc.exit_code());
+            exit_message = exit_code_to_message(d_exit_code);
         }
 
         if (d_ilp_data.log_level)
-            std::cout << "External Solver messages: \"" << exit_message
-                      << "\" (Exit Code " << static_cast<int>(exit_code) << ")\n";
+            std::cout << "External Solver messages: \"" << exit_message << "\" (Exit Code "
+                      << static_cast<int>(d_exit_code) << ")\n";
 
         communicator.read_solution_data(&d_ilp_solution_data);
     }
@@ -186,8 +196,23 @@ void ILPSolverStub::solve_impl()
     {
         throw SolverExeException("Unknown Error.");
     }
+    // This is a logic error and not a runtime_error and should be rethrown here as such.
+    if (d_exit_code == SolverExitCode::invalid_start_solution)
+        throw InvalidStartSolutionException();
 
-    if (exit_code != SolverExitCode::ok && (d_throw_on_all_crashes || !exit_code_should_be_ignored_silently(exit_code)))
+    // if exit_code is a candidate to be ignored silently
+    if (!d_throw_on_all_crashes && exit_code_should_be_ignored_silently(d_exit_code))
+    {
+        // if the stub does not work even on a very simple LP, the installation is broken
+        if (auto stub_tester_exit_code = stub_tester(d_executable_basename); stub_tester_exit_code != SolverExitCode::ok)
+        {
+            d_exit_code  = SolverExitCode::stub_tester_failed;
+            exit_message = std::format("{} ({})", exit_code_to_message(d_exit_code), exit_code_to_message(stub_tester_exit_code));
+            throw SolverExeException(exit_message);
+        }
+        // otherwise, we keep d_exit_code, but do not throw
+    }
+    else if (d_exit_code != SolverExitCode::ok)
         throw SolverExeException(exit_message);
 }
 

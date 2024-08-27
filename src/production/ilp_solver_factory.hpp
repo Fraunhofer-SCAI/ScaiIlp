@@ -2,41 +2,82 @@
 
 #include "ilp_solver_interface.hpp"
 
+#include <memory>
+
 // List of all solvers usable from the .dll.
 // For new solvers, please follow the declarations below.
 
 namespace ilp_solver
 {
-extern "C"
-#if (WITH_CBC == 1)
-    __declspec(dllexport)
+namespace impl
+{
+    extern "C"
+#ifdef WITH_CBC
+        __declspec(dllexport)
 #endif
-        ILPSolverInterface* __stdcall create_solver_cbc();
+            ILPSolverInterface* __stdcall create_solver_cbc();
 
 
-extern "C"
-#if (WITH_SCIP == 1)
-    __declspec(dllexport)
+    extern "C"
+#ifdef WITH_SCIP
+        __declspec(dllexport)
 #endif
-        ILPSolverInterface* __stdcall create_solver_scip();
+            ILPSolverInterface* __stdcall create_solver_scip();
 
 
-extern "C"
-#if (WITH_GUROBI == 1) && (_WIN64 == 1)
-    __declspec(dllexport)
+    extern "C"
+#if defined(WITH_GUROBI) && (_WIN64 == 1)
+        __declspec(dllexport)
 #endif
-        ILPSolverInterface* __stdcall create_solver_gurobi();
+            ILPSolverInterface* __stdcall create_solver_gurobi();
 
 
-// Possible values for the Parameter p_crash_mode of create_solver_stub:
-#define SCAIILP_SOLVER_STUB_IGNORE_KNOWN_CRASHES 0
-#define SCAIILP_SOLVER_STUB_THROW_ON_ALL_CRASHES 1
-extern "C"
-#if (WITH_CBC == 1)
-    __declspec(dllexport)
+    extern "C"
+#if defined(WITH_HIGHS) && (_WIN64 == 1)
+        __declspec(dllexport)
 #endif
-        ILPSolverInterface* __stdcall create_solver_stub(const char* p_executable_basename, int p_crash_mode);
+            ILPSolverInterface* __stdcall create_solver_highs();
 
 
-extern "C" __declspec(dllexport) void __stdcall destroy_solver(ILPSolverInterface* p_solver);
+    extern "C"
+#ifdef WITH_CBC
+        __declspec(dllexport)
+#endif
+            ILPSolverInterface* __stdcall create_solver_stub(const char* p_executable_basename, bool p_throw_on_all_crashes);
+
+
+    extern "C" __declspec(dllexport) void __stdcall destroy_solver(ILPSolverInterface* p_solver);
+} // namespace impl
+
+struct SolverDeleter
+{
+    void operator()(ILPSolverInterface* p_solver) { impl::destroy_solver(p_solver); }
+};
+using ScopedILPSolver = std::unique_ptr<ILPSolverInterface, SolverDeleter>;
+
+inline ScopedILPSolver create_solver_cbc()
+{
+    return ScopedILPSolver(impl::create_solver_cbc());
+}
+
+inline ScopedILPSolver create_solver_scip()
+{
+    return ScopedILPSolver(impl::create_solver_scip());
+}
+
+inline ScopedILPSolver create_solver_gurobi()
+{
+    return ScopedILPSolver(impl::create_solver_gurobi());
+}
+
+inline ScopedILPSolver create_solver_highs()
+{
+    return ScopedILPSolver(impl::create_solver_highs());
+}
+
+inline ScopedILPSolver create_solver_stub(const char* p_executable_basename, bool p_throw_on_all_crashes)
+{
+    return ScopedILPSolver(impl::create_solver_stub(p_executable_basename, p_throw_on_all_crashes));
+}
+
 } // namespace ilp_solver

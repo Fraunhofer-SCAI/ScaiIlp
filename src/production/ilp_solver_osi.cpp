@@ -1,13 +1,9 @@
-#if WITH_OSI == 1
+#ifdef WITH_OSI
 
 #include "ilp_solver_osi.hpp"
 #include "utility.hpp"
 
-
-#pragma warning(push)
-#pragma warning(disable : 4309) // silence warning in CBC concerning truncations of constant values in 64 bit.
-#include "OsiSolverInterface.hpp"
-#pragma warning(pop)
+#include <OsiSolverInterface.hpp>
 
 
 namespace ilp_solver

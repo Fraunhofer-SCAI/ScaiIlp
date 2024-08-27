@@ -2,11 +2,15 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <BOOST_VERSION>1_80</BOOST_VERSION>
+    <BOOST_VERSION>1_83</BOOST_VERSION>
     <BOOST_LIB_TOOLSET>vc143</BOOST_LIB_TOOLSET>
     <BOOST_DIR>$(optsoft)\boost_$(BOOST_VERSION)_0_$(BOOST_LIB_TOOLSET)_idl0_$(PlatformTarget)</BOOST_DIR>
     <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc142_full</PTHREAD_DIR>
     <PTHREAD_LIB_PATH>$(PTHREAD_DIR)\$(PlatformTarget)-v142-$(Configuration)</PTHREAD_LIB_PATH>
+    <WITH_HIGHS>false</WITH_HIGHS>
+    <HIGHS_DIR>$(optsoft)\HiGHS_1.7.1\$(PlatformTarget)-Clang-$(Configuration)</HIGHS_DIR>
+    <HIGHS_INCLUDE_PATH>$(HIGHS_DIR)\include\highs</HIGHS_INCLUDE_PATH>
+    <HIGHS_LIB_PATH>$(HIGHS_DIR)\lib</HIGHS_LIB_PATH>
     <WITH_OSI>true</WITH_OSI>
     <WITH_CBC>true</WITH_CBC>
     <COIN_DIR>$(optsoft)\Cbc-2.10.10\vc143_$(Configuration)_$(PlatformTarget)</COIN_DIR>
@@ -25,27 +29,31 @@
     <WITH_MIMALLOC>true</WITH_MIMALLOC>
     <MIMALLOC_DIR>$(optsoft)\mimalloc-2.0.9</MIMALLOC_DIR>
     <MIMALLOC_OVERRIDE_DIR>$(MIMALLOC_DIR)\out\msvc-$(PlatformTarget)\$(Configuration)</MIMALLOC_OVERRIDE_DIR>
+    <!--Enable Assertions in Release Mode. (Condition makes this changeable via command line parameter.)-->
+    <RELEASE_ASSERTIONS Condition="'$(RELEASE_ASSERTIONS)'==''">false</RELEASE_ASSERTIONS>
+    <!--Enable Code Analysis.  (Condition makes this changeable via command line parameter.)-->
+    <CODE_ANALYSIS Condition="'$(CODE_ANALYSIS)'==''">true</CODE_ANALYSIS>
   </PropertyGroup>
   <PropertyGroup>
     <OutDir>$(SolutionDir)$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(ProjectDir)$(Configuration)_$(PlatformTarget)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <RunCodeAnalysis>$(CODE_ANALYSIS)</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>$(ROOT)..\code-analysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(BOOST_INCLUDE_PATH);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(WITH_OSI)' == 'true'">WITH_OSI=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_OSI)' != 'true'">WITH_OSI=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_CBC)' == 'true'">WITH_CBC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_CBC)' != 'true'">WITH_CBC=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_SCIP)' == 'true'">WITH_SCIP=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_SCIP)' != 'true'">WITH_SCIP=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' == 'true'">WITH_GUROBI=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' != 'true'">WITH_GUROBI=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_MIMALLOC)' == 'true'">WITH_MIMALLOC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_MIMALLOC)' != 'true'">WITH_MIMALLOC=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_OSI)' == 'true'">WITH_OSI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_CBC)' == 'true'">WITH_CBC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_SCIP)' == 'true'">WITH_SCIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' == 'true'">WITH_GUROBI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_HIGHS)' == 'true'">WITH_HIGHS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_MIMALLOC)' == 'true'">WITH_MIMALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)' == 'Debug'">_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)' != 'Debug' AND '$(RELEASE_ASSERTIONS)' == 'false'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(BOOST_LIB_TOOLSET)' != ''">BOOST_LIB_TOOLSET="$(BOOST_LIB_TOOLSET)";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions>_WIN32;_WIN32_WINNT=0x0601;WINVER=0x0601;_ITERATOR_DEBUG_LEVEL=0;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;WINVER=0x0601;_ITERATOR_DEBUG_LEVEL=0;WIN32;BOOST_FILESYSTEM_VERSION=4;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level4</WarningLevel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -57,7 +65,28 @@
       <SupportJustMyCode>false</SupportJustMyCode>
       <IntrinsicFunctions Condition="'$(Configuration)' == 'Debug'">false</IntrinsicFunctions>
       <IntrinsicFunctions Condition="'$(Configuration)' != 'Debug'">true</IntrinsicFunctions>
-      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <!--Enable Warnings: 4265= class has virtual functions, but its non-trivial destructor is not virtual
+                           4355= 'this' used in base member initializer list
+                           4484= method matches base ref class method, but is not marked 'virtual', 'new' or 'override'
+                           4643= Forward declaration in namespace std is not permitted by the C++ Standard.
+                           4654= Code placed before include of precompiled header line will be ignored.
+                           4668= 'symbol' is not defined as a preprocessor macro
+                           4800= implicit conversion to bool
+                           5024= move constructor was implicitly defined as deleted
+                           5026= move constructor was implicitly defined as deleted
+                           5038= data member initialization order
+                           5204= class has virtual functions, but its trivial destructor is not virtual
+                           5259= explicit specialization requires 'template <>'
+                           5263= calling 'std::move' on a temporary object prevents copy elision
+                           5264= const variable not used
+                           5266= 'const' qualifier on return type has no effect
+                           -->
+      <AdditionalOptions>/utf-8 /w34265 /w34355 /w34484 /w34643 /w34654 /w34668 /w34800 /w35024 /w35026 /w35038 /w35204 /w35259 /w35263 /w35264 /w35266 %(AdditionalOptions)</AdditionalOptions>
+
+      <!--Code Analysis: Disable analysis and warnings for external code -->
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
+      <ExternalWarningLevel>Level2</ExternalWarningLevel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding Condition="'$(Configuration)' == 'Debug'">false</EnableCOMDATFolding>
@@ -78,6 +107,9 @@
     </BuildMacro>
     <BuildMacro Include="PTHREAD_DIR">
       <Value>$(PTHREAD_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="WITH_HIGHS">
+      <Value>$(WITH_HIGHS)</Value>
     </BuildMacro>
     <BuildMacro Include="WITH_OSI">
       <Value>$(WITH_OSI)</Value>
@@ -105,6 +137,12 @@
     </BuildMacro>
     <BuildMacro Include="MIMALLOC_DIR">
       <Value>$(MIMALLOC_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="RELEASE_ASSERTIONS">
+      <Value>$(RELEASE_ASSERTIONS)</Value>
+    </BuildMacro>
+    <BuildMacro Include="CODE_ANALYSIS">
+      <Value>$(CODE_ANALYSIS)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

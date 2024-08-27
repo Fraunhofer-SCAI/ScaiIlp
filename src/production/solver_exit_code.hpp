@@ -41,7 +41,9 @@ enum class SolverExitCode
     shared_memory_error,
     model_error,
     solver_error,
-    forced_termination
+    forced_termination,
+    invalid_start_solution,
+    stub_tester_failed
 };
 
 static_assert (static_cast<int>(SolverExitCode::uncaught_exception_1) == 0x00000003);

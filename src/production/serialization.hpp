@@ -4,22 +4,12 @@
 
 #include <boost/utility.hpp>
 #include <type_traits>
+#include <cstddef>
+#include <span>
 #include <vector>
 
 template<typename T>
-concept POD = requires
-{
-    std::is_pod_v<T>;
-};
-
-template<class T, template<typename...> typename Template>
-constexpr bool IsSpecialization = false;
-
-template<template<typename...> typename Template, typename... Types>
-constexpr bool IsSpecialization<Template<Types...>, Template> = true;
-
-template<typename T>
-concept POD_or_Vector = POD<T> || IsSpecialization<T, std::vector>;
+concept POD = std::is_pod_v<T>;
 
 /**********************************
 * Serializes plain old data types *
@@ -41,16 +31,16 @@ class Serializer
         Serializer(const Serializer&) = delete;
         Serializer& operator= (const Serializer&) = delete;
 
-        size_t required_bytes() const
+        std::size_t required_bytes() const
         {
             return d_current_address - d_start_address;
         }
 
         void* current_address() const { return d_current_address; }
 
-        template<POD T>           void serialize(const T& p_value);
-        template<POD T>           void serialize(const std::vector<T>& p_vector);
-        template<POD_or_Vector T> void serialize(const std::vector< std::vector<T> >& p_vector_of_vectors);
+        template<POD T>      void serialize(const T& p_value);
+        template<POD T>      void serialize(const std::vector<T>& p_vector);
+        template<typename T> void serialize(const std::vector<std::vector<T>>& p_vector_of_vectors);
 
     private:
         const char* d_start_address;
@@ -70,14 +60,15 @@ class Deserializer
 
         void* current_address() const { return d_current_address; }
 
-        template<POD T>           void deserialize(T* r_value);
-        template<POD T>           void deserialize(std::vector<T>* r_vector);
-        template<POD_or_Vector T> void deserialize(std::vector< std::vector<T> >* r_vector_of_vectors);
+        template<POD T>      void deserialize(T& r_value);
+        template<POD T>      void deserialize(std::vector<T>& r_vector);
+        template<POD T>      void deserialize(std::span<T>& r_span);
+        template<POD T>      void deserialize(std::vector<std::span<T>>& r_vector_of_spans);
+        template<typename T> void deserialize(std::vector<std::vector<T>>& r_vector_of_vectors);
 
     private:
         char* d_current_address;
 };
-
 
 /*****************************************************
 * Embedded DSL for serialization and deserialization *
@@ -98,7 +89,7 @@ Serializer& operator<<(Serializer& p_serializer, const Serializable& p_serializa
 template<typename Deserializable>
 Deserializer& operator>>(Deserializer& p_deserializer, Deserializable& p_deserializable)
 {
-    p_deserializer.deserialize(&p_deserializable);
+    p_deserializer.deserialize(p_deserializable);
     return p_deserializer;
 }
 
@@ -106,6 +97,19 @@ Deserializer& operator>>(Deserializer& p_deserializer, Deserializable& p_deseria
 /*****************
 * Implementation *
 *****************/
+
+
+// Increases p_num_bytes to the next multiple of sizeof(std::max_align_t)
+constexpr std::size_t num_bytes_with_padding(std::size_t p_num_bytes)
+{
+    const auto alignment = sizeof(std::max_align_t);
+    --p_num_bytes;
+    return p_num_bytes - (p_num_bytes % alignment) + alignment;
+}
+
+static_assert(num_bytes_with_padding(4) == sizeof(std::max_align_t));
+static_assert(num_bytes_with_padding(8) == sizeof(std::max_align_t));
+
 
 // (De-) Serialization of a POD type
 // =================================
@@ -118,17 +122,17 @@ void Serializer::serialize(const T& p_value)
         auto address = static_cast<T*>(static_cast<void*>(d_current_address));
         *address = p_value;
     }
-    d_current_address += num_bytes;
+    d_current_address += num_bytes_with_padding(num_bytes);
 }
 
 
 template<POD T>
-void Deserializer::deserialize(T* r_value)
+void Deserializer::deserialize(T& r_value)
 {
     const auto num_bytes = sizeof(T);
     auto address = static_cast<T*>(static_cast<void*>(d_current_address));
-    *r_value = *address;
-    d_current_address += num_bytes;
+    r_value = *address;
+    d_current_address += num_bytes_with_padding(num_bytes);
 }
 
 
@@ -142,26 +146,38 @@ void Serializer::serialize(const std::vector<T>& p_vector)
     const auto num_bytes = size*sizeof(T);
     if (!d_simulate)
         std::memcpy(d_current_address, p_vector.data(), num_bytes);
-    d_current_address += num_bytes;
+    d_current_address += num_bytes_with_padding(num_bytes);
 }
 
 
 template<POD T>
-void Deserializer::deserialize(std::vector<T>* r_vector)
+void Deserializer::deserialize(std::vector<T>& r_vector)
 {
     int size;
-    deserialize(&size);
+    deserialize(size);
     const auto num_bytes = size*sizeof(T);
-    r_vector->resize(size);
-    std::memcpy(r_vector->data(), d_current_address, num_bytes);
-    d_current_address += num_bytes;
+    r_vector.resize(size);
+    std::memcpy(r_vector.data(), d_current_address, num_bytes);
+    d_current_address += num_bytes_with_padding(num_bytes);
+}
+
+
+template<POD T>
+void Deserializer::deserialize(std::span<T>& r_span)
+{
+    int size;
+    deserialize(size);
+    const auto num_bytes = size*sizeof(T);
+    const auto start     = static_cast<T*>(static_cast<void*>(d_current_address));
+    r_span               = std::span<T>(start, size);
+    d_current_address += num_bytes_with_padding(num_bytes);
 }
 
 
 // (De-) Serialization of a vector of vectors
 // ==========================================
-template<POD_or_Vector T>
-void Serializer::serialize(const std::vector< std::vector<T> >& p_vector_of_vectors)
+template<typename T>
+void Serializer::serialize(const std::vector<std::vector<T>>& p_vector_of_vectors)
 {
     const auto size = isize(p_vector_of_vectors);
     serialize(size);
@@ -170,12 +186,23 @@ void Serializer::serialize(const std::vector< std::vector<T> >& p_vector_of_vect
 }
 
 
-template<POD_or_Vector T>
-void Deserializer::deserialize(std::vector< std::vector<T> >* r_vector_of_vectors)
+template<typename T>
+void Deserializer::deserialize(std::vector<std::vector<T>>& r_vector_of_vectors)
 {
     int size;
-    deserialize(&size);
-    r_vector_of_vectors->resize(size);
-    for (auto& vector: *r_vector_of_vectors)
-        deserialize(&vector);
+    deserialize(size);
+    r_vector_of_vectors.resize(size);
+    for (auto& vector: r_vector_of_vectors)
+        deserialize(vector);
+}
+
+
+template<POD T>
+void Deserializer::deserialize(std::vector<std::span<T>>& r_vector_of_spans)
+{
+    int size;
+    deserialize(size);
+    r_vector_of_spans = std::vector<std::span<T>>(size);
+    for (auto& span : r_vector_of_spans)
+        deserialize(span);
 }

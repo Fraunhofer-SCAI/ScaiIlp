@@ -1,6 +1,6 @@
 #pragma once
 
-#if WITH_OSI == 1
+#ifdef WITH_OSI
 
 #include "ilp_solver_osi_model.hpp"
 

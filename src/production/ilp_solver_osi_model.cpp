@@ -1,4 +1,4 @@
-#if WITH_OSI == 1
+#ifdef WITH_OSI
 
 // Link with the CoinUtils and Osi Libraries.
 #pragma comment(lib, "libCoinUtils.lib")
@@ -8,110 +8,11 @@
 #include "ilp_solver_osi_model.hpp"
 #include "utility.hpp"
 
-#pragma warning(push)
-#pragma warning(disable : 4309) // silence warning in CBC concerning truncations of constant values in 64 bit.
-#include "OsiSolverInterface.hpp"
-#pragma warning(pop)
+#include <OsiSolverInterface.hpp>
 
-#include <optional>
-#include <cassert>
-#include <algorithm>
-#include <numeric>
-
-using std::string;
-using std::vector;
-
-// States whether consecutive elements of each column are contiguous in memory.
-// (If not, consecutive elements of each row are contiguous in memory.)
-constexpr auto c_column_ordered = false;
-
-constexpr auto c_test_for_duplicate_index = false;
 
 namespace ilp_solver
 {
-    namespace
-    {
-
-        // Prune zeros before constructing a coin-packed vector.
-        // Takes pointers to the vectors or nullptrs as parameters.
-        // If p_values is a nullptr, does nothing and returns 0, nullptr and nullptr.
-        // If p_values is valid,
-        //     prunes all zeros from it and constructs a new value array if there were any,
-        //     and a new index array if there are any zeros or if p_indices == nullptr.
-        class ZeroPruner
-        {
-        public:
-            ZeroPruner (OptionalIndexArray p_indices, OptionalValueArray p_values);
-            ~ZeroPruner() noexcept;
-
-            int           size()    const { return d_num_indices; }
-            const double* values()  const { return d_values; }
-            const int*    indices() const { return d_indices; }
-        private:
-            static constexpr int c_owns_values{2};
-            static constexpr int c_owns_indices{1};
-
-            double* d_values      {nullptr};
-            int*    d_indices     {nullptr};
-            int     d_num_indices {0};
-            int     d_owns        {0};
-        };
-
-        ZeroPruner::ZeroPruner(OptionalIndexArray p_indices, OptionalValueArray p_values)
-        {
-            if (p_values) {
-                assert ((!p_indices) || (p_indices->size() == p_values->size()));
-
-                auto num_zeros{ static_cast<int>(std::count(p_values->begin(), p_values->end(), 0.)) };
-
-                if (num_zeros > 0)
-                {
-                    d_num_indices = isize(*p_values) - num_zeros;
-                    d_owns        = c_owns_values | c_owns_indices;
-                    d_values      = new double[d_num_indices];
-                    d_indices     = new int   [d_num_indices];
-
-                    for (int i = 0, j = 0; i < isize(*p_values); i++)
-                    {
-                        auto value = (*p_values)[i];
-                        // Construct the new arrays. If we have no indices, use the current index.
-                        if (value != 0.)
-                        {
-                            d_values [j]   = value;
-                            d_indices[j++] = (p_indices) ? (*p_indices)[i] : i;
-                        }
-                    }
-                }
-                else
-                {
-                    // const_cast is valid since we do not ever manipulate this data
-                    // and the getter-methods return const pointers again.
-                    d_values      = const_cast<double*>(p_values->data());
-                    d_num_indices = isize(*p_values);
-
-                    if (!p_indices)
-                    {
-                        d_owns    = c_owns_indices;
-                        d_indices = new int[d_num_indices];
-                        std::iota(d_indices, d_indices + d_num_indices, 0);
-                    }
-                    else
-                    {
-                        d_owns    = 0;
-                        d_indices = const_cast<int*>(p_indices->data());
-                    }
-                }
-            }
-        }
-
-        ZeroPruner::~ZeroPruner() noexcept
-        {
-            if (d_owns & c_owns_values)  delete[] d_values;
-            if (d_owns & c_owns_indices) delete[] d_indices;
-        }
-    }
-
-
     int ILPSolverOsiModel::get_num_constraints() const
     {
         return d_cache.numberRows();
@@ -150,20 +51,27 @@ namespace ilp_solver
     void ILPSolverOsiModel::add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
                                                const std::string& p_name, OptionalValueArray p_row_values, OptionalIndexArray p_row_indices)
     {
-        ZeroPruner pruner{p_row_indices, p_row_values};
-        assert (pruner.size() <= get_num_constraints());
-
+        // Spaces are problematic when printing to mps.
+        auto        name     = replace_spaces(p_name);
+        const char* name_ptr = name.empty() ? nullptr : name.c_str();
         // OSI has no special case for binary variables.
-        bool is_integer_or_binary{ (p_type == VariableType::CONTINUOUS) ? false : true };
-        if (!p_name.empty())
+        const bool is_integer_or_binary = (p_type != VariableType::CONTINUOUS);
+
+        if (!p_row_values)
         {
-            // Spaces are problematic when printing to mps.
-            auto name = p_name;
-            std::replace(name.begin(), name.end(), ' ', '_');
-            d_cache.addCol(pruner.size(), pruner.indices(), pruner.values(), p_lower_bound, p_upper_bound, p_objective, name.c_str(), is_integer_or_binary);
+            d_cache.addCol(0, nullptr, nullptr, p_lower_bound, p_upper_bound, p_objective, name_ptr, is_integer_or_binary);
+        }
+        else if (p_row_indices)
+        {
+            d_cache.addCol(isize(*p_row_values), p_row_indices->data(), p_row_values->data(),
+                           p_lower_bound, p_upper_bound, p_objective, name_ptr, is_integer_or_binary);
         }
         else
-            d_cache.addCol(pruner.size(), pruner.indices(), pruner.values(), p_lower_bound, p_upper_bound, p_objective, nullptr, is_integer_or_binary);
+        {
+            d_sparse.init_from_dense(*p_row_values);
+            d_cache.addCol(isize(d_sparse), d_sparse.indices().data(), d_sparse.values().data(),
+                           p_lower_bound, p_upper_bound, p_objective, name_ptr, is_integer_or_binary);
+        }
         d_cache_changed = true;
     }
 
@@ -171,17 +79,21 @@ namespace ilp_solver
     void ILPSolverOsiModel::add_constraint_impl (double p_lower_bound, double p_upper_bound, ValueArray p_col_values,
                                                  const std::string& p_name, OptionalIndexArray p_col_indices)
     {
-        ZeroPruner pruner{p_col_indices, p_col_values};
+        // Spaces are problematic when printing to mps.
+        auto        name     = replace_spaces(p_name);
+        const char* name_ptr = name.empty() ? nullptr : name.c_str();
 
-        if (!p_name.empty())
+        if (p_col_indices)
         {
-            // Spaces are problematic when printing to mps.
-            auto name = p_name;
-            std::replace(name.begin(), name.end(), ' ', '_');
-            d_cache.addRow(pruner.size(), pruner.indices(), pruner.values(), p_lower_bound, p_upper_bound, name.c_str());
+            d_cache.addRow(isize(p_col_values), p_col_indices->data(), p_col_values.data(),
+                           p_lower_bound, p_upper_bound, name_ptr);
         }
         else
-            d_cache.addRow(pruner.size(), pruner.indices(), pruner.values(), p_lower_bound, p_upper_bound);
+        {
+            d_sparse.init_from_dense(p_col_values);
+            d_cache.addRow(isize(d_sparse), d_sparse.indices().data(), d_sparse.values().data(),
+                           p_lower_bound, p_upper_bound, name_ptr);
+        }
         d_cache_changed = true;
     }
 }

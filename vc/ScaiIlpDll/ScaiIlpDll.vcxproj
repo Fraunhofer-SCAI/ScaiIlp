@@ -42,13 +42,13 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;ILPSOLVERDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(COIN_INCLUDE_PATHS);$(SCIP_INCLUDE_PATH);$(GUROBI_INCLUDE_PATH);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_WINDOWS;_USRDLL;ILPSOLVERDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(HIGHS_INCLUDE_PATH);$(COIN_INCLUDE_PATHS);$(SCIP_INCLUDE_PATH);$(GUROBI_INCLUDE_PATH);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(COIN_LIB_PATH);$(SCIP_LIB_PATH);$(GUROBI_LIB_PATH);$(PTHREAD_LIB_PATH);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(HIGHS_LIB_PATH);$(COIN_LIB_PATH);$(SCIP_LIB_PATH);$(GUROBI_LIB_PATH);$(PTHREAD_LIB_PATH);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;pthread.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
@@ -58,12 +58,12 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;ILPSOLVERDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(COIN_INCLUDE_PATHS);$(SCIP_INCLUDE_PATH);$(GUROBI_INCLUDE_PATH);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_WINDOWS;_USRDLL;ILPSOLVERDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(HIGHS_INCLUDE_PATH);$(COIN_INCLUDE_PATHS);$(SCIP_INCLUDE_PATH);$(GUROBI_INCLUDE_PATH);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(COIN_LIB_PATH);$(SCIP_LIB_PATH);$(GUROBI_LIB_PATH);$(PTHREAD_LIB_PATH);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(HIGHS_LIB_PATH);$(COIN_LIB_PATH);$(SCIP_LIB_PATH);$(GUROBI_LIB_PATH);$(PTHREAD_LIB_PATH);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;pthread.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
@@ -73,9 +73,10 @@
     <ClInclude Include="..\..\src\production\ilp_data.hpp" />
     <ClInclude Include="..\..\src\production\ilp_solver_cbc.hpp" />
     <ClInclude Include="..\..\src\production\ilp_solver_collect.hpp" />
-    <ClInclude Include="..\..\src\production\ilp_solver_exception.hpp" />
+    <ClInclude Include="..\..\src\production\tester.hpp" />
     <ClInclude Include="..\..\src\production\ilp_solver_factory.hpp" />
     <ClInclude Include="..\..\src\production\ilp_solver_gurobi.hpp" />
+    <ClInclude Include="..\..\src\production\ilp_solver_highs.hpp" />
     <ClInclude Include="..\..\src\production\ilp_solver_interface.hpp" />
     <ClInclude Include="..\..\src\production\ilp_solver_impl.hpp" />
     <ClInclude Include="..\..\src\production\ilp_solver_osi.hpp" />
@@ -92,9 +93,10 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\production\ilp_solver_cbc.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_collect.cpp" />
-    <ClCompile Include="..\..\src\production\ilp_solver_exception.cpp" />
+    <ClCompile Include="..\..\src\production\tester.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_factory.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_gurobi.cpp" />
+    <ClCompile Include="..\..\src\production\ilp_solver_highs.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_impl.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_osi.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_osi_model.cpp" />

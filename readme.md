@@ -11,8 +11,9 @@ Table of Contents
 
     1. Building Cbc for ScaiIlp
     2. Optional: Building pthreads-win32 with VS 2022
-    3. Building SCIP with VS 2022
-    4. Building ScaiIlp with VS 2022
+    3. Building HiGHS with VS 2022
+    4. Building SCIP with VS 2022
+    5. Building ScaiIlp with VS 2022
 
 3. Code Structure
 

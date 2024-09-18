@@ -30,7 +30,12 @@ Table of Contents
 ---------
 
 ScaiIlp can provide an interface to different ILP solvers.
-Currently, we support Cbc, SCIP, and Gurobi.
+
+Currently supported solvers are:
+* Cbc
+* HiGHS
+* SCIP
+* Gurobi
 
 
 1.2 License

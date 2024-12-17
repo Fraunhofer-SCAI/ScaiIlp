@@ -113,6 +113,7 @@ namespace ilp_solver
             virtual void set_log_level          (int p_level)          = 0;
 
             // Enables or disables preprocessing and presolve directives of the solver.
+            // May also enable or disable some heuristics.
             // May be unsupported by some solvers.
             // true:  on
             // false: off

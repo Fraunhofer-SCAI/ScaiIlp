@@ -38,13 +38,5 @@
     <Filter Include="production">
       <UniqueIdentifier>{5fdf6001-8865-416a-a291-6bc47ec7e573}</UniqueIdentifier>
     </Filter>
-    <Filter Include="binaries">
-      <UniqueIdentifier>{435216ea-7ea4-42bb-b1c3-0d9e019c621c}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="$(PTHREAD_DIR)\$(Platform)-$(PlatformToolset)-$(Configuration)\pthread.dll">
-      <Filter>binaries</Filter>
-    </CustomBuild>
   </ItemGroup>
 </Project>

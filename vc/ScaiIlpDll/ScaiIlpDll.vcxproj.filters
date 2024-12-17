@@ -17,6 +17,8 @@
     </ClInclude>
     <ClInclude Include="..\..\src\production\ilp_solver_exception.hpp" />
     <ClInclude Include="..\..\src\production\ilp_solver_impl.hpp" />
+    <ClInclude Include="..\..\src\production\ilp_solver_scip.hpp" />
+    <ClInclude Include="..\..\src\production\ilp_solver_gurobi.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\production\ilp_solver_cbc.cpp" />
@@ -28,15 +30,31 @@
     <ClCompile Include="..\..\src\production\ilp_solver_collect.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_exception.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_impl.cpp" />
+    <ClCompile Include="..\..\src\production\ilp_solver_scip.cpp" />
+    <ClCompile Include="..\..\src\production\ilp_solver_gurobi.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{a3ffe818-d172-4e28-be8e-85616dd6f112}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="binaries">
+      <UniqueIdentifier>{b3e55270-1854-4d12-9fe8-bb64693c889e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ScaiIlp.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="$(SCIP_DIR)\bin\scip.dll">
+      <Filter>binaries</Filter>
+    </CustomBuild>
+    <CustomBuild Include="$(GUROBI_DIR)\bin\gurobi80.dll">
+      <Filter>binaries</Filter>
+    </CustomBuild>
+    <CustomBuild Include="$(PTHREAD_DIR)\$(Platform)-$(PlatformToolset)-$(Configuration)\pthread.dll">
+      <Filter>binaries</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

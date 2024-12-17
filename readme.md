@@ -11,7 +11,8 @@ Table of Contents
 
     1. Building Cbc with VS 2017
     2. Optional: Building pthreads-win32 with VS 2017
-    3. Building ScaiIlp with VS 2017
+    3. Building SCIP with VS 2017
+    4. Building ScaiIlp with VS 2017
 
 3. Code Structure
 
@@ -28,7 +29,7 @@ Table of Contents
 ---------
 
 ScaiIlp can provide an interface to different ILP solvers.
-Currently, the only supported solver is Cbc, see section 2.1.
+Currently, we support Cbc, SCIP, and Gurobi.
 
 
 1.2 License
@@ -58,7 +59,8 @@ A: On the one hand, Osi is quite a complex interface. As it spreads over several
 
 ### Q: When should I use IlpSolverStub and ScaiIlpExe?
 
-A: Having the solver in a separate process insulates it from your program.
+A: IlpSolverStub is a wrapper for IlpSolverCbc.
+   It insulates it from your program.
    If the solver crashes, your program can survive this.
    On any crashes we know of, IlpSolverStub does silently the same as if the solver just found no
    solution.
@@ -128,10 +130,10 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
     * Right-click onto the project "libCbc" in the Solution Explorer and choose
     * "Properties" -> "Configuration Properties".
     * Select "All Configurations" and "All Platforms" and use the following settings:
-        * C/C++     / General      / Additional Include Directories: prepend "$(PTHREAD_DIR);" (without double quotes)
+        * C/C++     / General      / Additional Include Directories: prepend [Path-to-Pthreads-Root-Directory];
         * C/C++     / Preprocessor / Preprocessor Definitions:       prepend "CBC_THREAD;" (without double quotes)
         * Librarian / General      / Additional Dependencies:        pthread.lib
-        * Librarian / General      / Additional Library Directories: $(PTHREAD_DIR)\$(Platform)-$(PlatformToolset)-$(Configuration)
+        * Librarian / General      / Additional Library Directories: [Path-to-Pthreads-Root-Directory]\$(Platform)-$(PlatformToolset)-$(Configuration)
 
 9. Choose "Build" -> "Batch-Build" and select the following projects and configurations:
     * for 32 bit:
@@ -196,8 +198,34 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 9. Find the file pthreads.h in project "pthread" -> "Header Files"
     * At the top of the file, insert the line "#define _TIMESPEC_DEFINED" (without double quotes)
 
+2.3 Building SCIP with VS 2017
+------------------------------
 
-2.3 Building ScaiIlp with VS 2017
+1. To obtain SCIP, visit https://scip.zib.de/index.php#download
+   and download the SCIP Optimization Suite.
+
+2. Open the CMake script provided with SCIP in VS2017 with File -> Open -> CMake.
+   The correct file is CMakeLists.txt inside the SCIP Optimization Suite folder.
+
+3. You may need to overwrite some compiler flags to compile the Release builds.
+   In the files ./scip/CMakeLists.txt and ./soplex/CMakeLists.txt in lines 3 and 4 respectively,
+
+   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS_RELEASE}")
+       -> set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE}")
+
+   set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_DEBUG} ${CMAKE_C_FLAGS_RELEASE}")
+       -> set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELEASE}")
+
+4. You may want to set different build/install directories.
+
+5. Compile the needed configurations [32|64 bit] in [Release | Debug] mode.
+
+6. This version of SCIP will run only single-threaded.
+   To use SCIP multithreaded you will need to compile it with the Ubiquity Generator (UG) framework.
+   The UG-framework does only provide makefiles,
+   so doing this on Windows is not easy and we can not provide a guideline for it.
+
+2.4 Building ScaiIlp with VS 2017
 ---------------------------------
 
 1. Ensure that you have built Cbc as described above.
@@ -207,23 +235,31 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
     * "define=BOOST_TEST_NO_MAIN"      (without double quotes)
 
 3. Specify the location of Cbc by opening the properties.props file
-   and setting the User Macro COIN_DIR (if your paths follow our examples)
-   or by setting the COIN_LIB_PATH and COIN_INCLUDE_PATHS macros to the correct paths on your system.
+   and setting the User Macros WITH_OSI and WITH_CBC to 'true', and COIN_DIR to the correct path (if your paths follow our examples).
+   If your paths do not follow our examples, you may want to manually edit the include and linker directories or the properties.props outside of VS.
 
-4. Activate CBC by opening the properties.props file and setting the preprocessor definitions "WITH_CBC=1" and "WITH_OSI=1".
-   You can find the preprocessor definitions under C/C++ -> Preprocessor -> Preprocessor Definitions.
-   CBC should be activated by default.
-
-5. If you want to support multithreading,
-   specify the location of pthread by setting the environment variable PTHREAD_DIR,
+4. [OPTIONAL] If you want to support multithreading,
+   specify the root-location of pthread with the User Macro "PTHREAD_DIR" in the properties.props file
    whereby PTHREAD_DIR has to contain the folders "Win32-v141-Release", "Win32-v141-Debug", "x64-v141-Release" and "x64-v141-Debug",
-   each containing the appropriate version of pthread.dll. Otherwise proceed with step 5.
+   each containing the appropriate version of pthread.dll.
+   If your structure does not follow this, you may want to manually edit the corresponding CustomBuild setting in ScaiIlpDll.vcxproj.
 
-6. Specify the location of Boost by opening the properties.props file
+5. [OPTIONAL] If you want to support SCIP,
+   specify the location of SCIP by opening the properties.props file
+   and setting the User Macro WITH_SCIP to 'true' and SCIP_DIR to the correct path (if your paths follow our examples).
+   If your paths do not follow our examples, you may want to manually edit the include and linker directories or the properties.props outside of VS.
+
+6. [OPTIONAL] If you want to support Gurobi,
+   specify the location of Gurobi by opening the properties.props file
+   and setting the User Macro WITH_GUROBI to 'true' and GUROBI_DIR to the root directory of your Gurobi Installation.
+   Note that current versions of Gurobi only support 64-bit compilation,
+   and that you need a valid Gurobi license to run ScaiILP with Gurobi.
+
+7. Specify the location of Boost by opening the properties.props file
    and setting the User Macros BOOST_VERSION and BOOST_DIR (if your paths follow our examples)
-   or by setting the BOOST_INCLUDE_PATH and BOOST_LIB_PATH manually to the correct paths on your system.
+   or by setting the BOOST_INCLUDE_PATH and BOOST_LIB_PATH manually to the correct paths on your system outside of VS.
 
-7. Build ScaiIlpDll, ScaiIlpExe, and UnitTest.
+8. Build ScaiIlpDll, ScaiIlpExe, and UnitTest.
 
 
 3 Code Structure
@@ -235,8 +271,10 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 The Visual Studio Solution (.sln) contains three projects:
 
 * ScaiIlpDll creates ScaiIlpDll.dll
-    * ScaiIlpDll.dll contains the Cbc solver and a stub to communicate with ScaiIlpExe.exe
-    * It can be linked dynamically into other programs.
+    * ScaiIlpDll.dll contains the Cbc solver and a stub to communicate with ScaiIlpExe.exe.
+      Optionally, it links dynamically to the SCIP solver and the Gurobi solver.
+    * It can be linked dynamically into other programs (which may require the dynamic libraries of other included solvers, too).
+    * The required dynamic libraries are automatically copied to the output folder when building ScaiIlpDll.
 
 * ScaiIlpExe creates ScaiIlpExe.exe
     * ScaiIlpExe.exe links ScaiIlpDll.dll dynamically to provide the Cbc solver.
@@ -257,13 +295,13 @@ The recommended way to use ScaiIlp is to use it as a DLL (dynamic linking)
 
 * Link against ScaiIlpDll.dll.
 * Include ilp_solver_factory.hpp.
-* Create your objects via create_solver_cbc() from ilp_solver_factory.hpp.
+* Create your objects via create_solver_xxx() from ilp_solver_factory.hpp.
 * To destroy the solver later, you MUST call destroy_solver() instead of deleting the pointer
   yourself.
 
 ### 3.2.2 Static linking
 
-Alternatively, you may include ilp_solver_cbc.cpp and all its dependencies in your project.
+Alternatively, you may include ilp_solver_xxx.cpp and all its dependencies in your project.
 This way, your code gets statically linked with a part of ScaiIlp.
 
 ### 3.2.3 ScaiIlpExe.exe
@@ -296,13 +334,19 @@ executable (in the same directory, should be ScaiIlpExe.exe, unless you rename i
         |                       because the OsiSolverInterface does not provide this functionality.
         |
         |-> ILPSolverCollect:   Implements all input related methods by storing the data in ILPData.
-            |                   Base class for all solvers where that is useful.
-            |
-            |-> ILPSolverStub:  Final. Solve in a separate process.
-                                solve_impl() writes the ILPData to shared memory and calls an external solver.
-                                The external solver writes the result (in form of ILPSolutionData)
-                                back to the shared memory.
-                                The solution getter methods of ILPSolverStub simply query ILPSolutionData.
+        |   |                   Base class for all solvers where that is useful.
+        |   |
+        |   |-> ILPSolverStub:  Final. Solve in a separate process.
+        |                       solve_impl() writes the ILPData to shared memory and calls an external solver.
+        |                       The external solver writes the result (in form of ILPSolutionData)
+        |                       back to the shared memory.
+        |                       The solution getter methods of ILPSolverStub simply query ILPSolutionData.
+        |
+        |-> ILPSolverSCIP:      Final. To use SCIP.
+        |                       Implements the solver specific methods for the SCIP solver.
+        |
+        |-> ILPSolverGurobi:    Final. To use Gurobi.
+                                Implements the solver specific methods for the Gurobi solver.
 
 
 3.4 Adding a New Solver

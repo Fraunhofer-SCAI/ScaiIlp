@@ -477,7 +477,7 @@ namespace ilp_solver
 
     void test_abs_gap_limit(ILPSolverInterface* p_solver)
     {
-        double      gap{ 0.6 };
+        double      gap{ 1.5 };
         double      ub{ 2.};
         std::vector obj{ 1., 0.5 };
         std::vector row{ 1., 0.5 };
@@ -486,7 +486,7 @@ namespace ilp_solver
         p_solver->set_presolve(false);
         p_solver->set_max_rel_gap(0.);
 
-        p_solver->add_variable_integer(obj[0], 0., 2.);
+        p_solver->add_variable_integer(obj[0], 0., 1.);
         p_solver->add_variable_integer(obj[1], 0., 2.);
 
         p_solver->add_constraint_upper(row, ub);
@@ -581,8 +581,14 @@ namespace ilp_solver
             BOOST_REQUIRE(p_solver->get_status() == SolutionStatus::NO_SOLUTION);
             BOOST_REQUIRE_EQUAL (p_solver->get_solution().size(), 0u);
         }
+        catch (const std::exception& e)
+        {
+            std::cerr << e.what() << std::endl;
+            BOOST_FAIL("Bad alloc test failed (threw exception instead of treating as >>no solution<<.");
+        }
         catch (...)
         {
+            std::cerr << "Stub threw unknown exception." << std::endl;
             BOOST_FAIL("Bad alloc test failed (threw exception instead of treating as >>no solution<<.");
         }
     }
@@ -604,7 +610,11 @@ namespace
     // and we somehow need to get a different file path per solver.
     int global_current_index{0};
 
-    constexpr int num_solvers = 2 * (WITH_CBC);
+    constexpr int num_solvers = 2 * (WITH_CBC) + (WITH_SCIP)
+#if _WIN64 == 1
+                              + (WITH_GUROBI)
+#endif
+    ;
 
     constexpr std::array<std::pair<FactoryFunction, std::string_view>, num_solvers> all_solvers
     {
@@ -612,8 +622,15 @@ namespace
         std::pair{create_solver_cbc,    "CBC"},
         std::pair{create_stub,          "CBCStub"},
 #endif
+#if WITH_SCIP == 1
+        std::pair{create_solver_scip,   "SCIP"},
+#endif
+#if (WITH_GUROBI == 1) && (_WIN64 == 1)
+        std::pair{create_solver_gurobi, "Gurobi"},
+#endif
     };
 }
+
 
 int create_ilp_test_suite()
 {

@@ -4,16 +4,34 @@
   <PropertyGroup Label="UserMacros">
     <BOOST_VERSION>1_68</BOOST_VERSION>
     <BOOST_DIR>$(optsoft)\boost_$(BOOST_VERSION)_0\vc$(PlatformToolsetVersion)_idl0_x$(PlatformArchitecture)</BOOST_DIR>
+    <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc141_full</PTHREAD_DIR>
+    <WITH_OSI>true</WITH_OSI>
+    <WITH_CBC>true</WITH_CBC>
     <COIN_DIR>$(optsoft)\Cbc-2.9.9_vc$(PlatformToolsetVersion)_full\</COIN_DIR>
-    <BOOST_INCLUDE_PATH>$(BOOST_DIR)\include\boost-$(BOOST_VERSION)</BOOST_INCLUDE_PATH>
+    <WITH_SCIP>false</WITH_SCIP>
+    <SCIP_DIR>$(optsoft)\SCIP\$(PlatformTarget)-$(Configuration)</SCIP_DIR>
+    <WITH_GUROBI>false</WITH_GUROBI>
+    <GUROBI_DIR>$(optsoft)\Gurobi-8.0.1</GUROBI_DIR>
     <BOOST_LIB_PATH>$(BOOST_DIR)\lib</BOOST_LIB_PATH>
+    <BOOST_INCLUDE_PATH>$(BOOST_DIR)\include\boost-$(BOOST_VERSION)</BOOST_INCLUDE_PATH>
     <COIN_LIB_PATH>$(COIN_DIR)\Cbc\MSVisualStudio\$(PlatformToolset)\$(Platform)-$(PlatformToolset)-$(Configuration)</COIN_LIB_PATH>
     <COIN_INCLUDE_PATHS>$(COIN_DIR)\clp\src;$(COIN_DIR)\Osi\src\Osi;$(COIN_DIR)\CoinUtils\src;$(COIN_DIR)\clp\src\osiclp;$(COIN_DIR)\cbc\src;$(COIN_DIR)\Cgl\src</COIN_INCLUDE_PATHS>
+    <SCIP_LIB_PATH>$(SCIP_DIR)\lib</SCIP_LIB_PATH>
+    <SCIP_INCLUDE_PATH>$(SCIP_DIR)\include</SCIP_INCLUDE_PATH>
+    <GUROBI_INCLUDE_PATH>$(GUROBI_DIR)\include</GUROBI_INCLUDE_PATH>
+    <GUROBI_LIB_PATH>$(GUROBI_DIR)\lib</GUROBI_LIB_PATH>
   </PropertyGroup>
-  <PropertyGroup />
   <ItemDefinitionGroup>
     <ClCompile>
-      <PreprocessorDefinitions>WITH_OSI=1;WITH_CBC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_OSI)' == 'true'">WITH_OSI=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_OSI)' != 'true'">WITH_OSI=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_CBC)' == 'true'">WITH_CBC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_CBC)' != 'true'">WITH_CBC=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_SCIP)' == 'true'">WITH_SCIP=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_SCIP)' != 'true'">WITH_SCIP=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' == 'true'">WITH_GUROBI=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' != 'true'">WITH_GUROBI=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -23,21 +41,29 @@
     <BuildMacro Include="BOOST_DIR">
       <Value>$(BOOST_DIR)</Value>
     </BuildMacro>
+    <BuildMacro Include="PTHREAD_DIR">
+      <Value>$(PTHREAD_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="WITH_OSI">
+      <Value>$(WITH_OSI)</Value>
+    </BuildMacro>
+    <BuildMacro Include="WITH_CBC">
+      <Value>$(WITH_CBC)</Value>
+    </BuildMacro>
     <BuildMacro Include="COIN_DIR">
       <Value>$(COIN_DIR)</Value>
     </BuildMacro>
-    <BuildMacro Include="BOOST_INCLUDE_PATH">
-      <Value>$(BOOST_INCLUDE_PATH)</Value>
-      <EnvironmentVariable>true</EnvironmentVariable>
+    <BuildMacro Include="WITH_SCIP">
+      <Value>$(WITH_SCIP)</Value>
     </BuildMacro>
-    <BuildMacro Include="BOOST_LIB_PATH">
-      <Value>$(BOOST_LIB_PATH)</Value>
+    <BuildMacro Include="SCIP_DIR">
+      <Value>$(SCIP_DIR)</Value>
     </BuildMacro>
-    <BuildMacro Include="COIN_LIB_PATH">
-      <Value>$(COIN_LIB_PATH)</Value>
+    <BuildMacro Include="WITH_GUROBI">
+      <Value>$(WITH_GUROBI)</Value>
     </BuildMacro>
-    <BuildMacro Include="COIN_INCLUDE_PATHS">
-      <Value>$(COIN_INCLUDE_PATHS)</Value>
+    <BuildMacro Include="GUROBI_DIR">
+      <Value>$(GUROBI_DIR)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

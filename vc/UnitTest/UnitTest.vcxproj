@@ -184,14 +184,6 @@
     <ClCompile Include="..\..\src\test\serialization_t.cpp" />
     <ClCompile Include="..\..\src\test\unit_tests.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="$(PTHREAD_DIR)\$(Platform)-$(PlatformToolset)-$(Configuration)\pthread.dll">
-      <FileType>Document</FileType>
-      <Command>copy "%(FullPath)" "$(OutDir)\"</Command>
-      <Message>Copy %(Filename)%(Extension)</Message>
-      <Outputs>$(OutDir)\%(Filename)%(Extension)</Outputs>
-    </CustomBuild>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

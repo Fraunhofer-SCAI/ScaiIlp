@@ -7,15 +7,16 @@
     <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc$(PlatformToolsetVersion)_full</PTHREAD_DIR>
     <WITH_OSI>true</WITH_OSI>
     <WITH_CBC>true</WITH_CBC>
-    <COIN_DIR>$(optsoft)\Cbc-2.9.9_vc$(PlatformToolsetVersion)_full\</COIN_DIR>
+    <COIN_DIR>$(optsoft)\Cbc-2.10.7dev\vc$(PlatformToolsetVersion)_$(Configuration)_$(PlatformTarget)</COIN_DIR>
     <WITH_SCIP>false</WITH_SCIP>
     <SCIP_DIR>$(optsoft)\SCIP\$(PlatformTarget)-$(Configuration)</SCIP_DIR>
     <WITH_GUROBI>false</WITH_GUROBI>
     <GUROBI_DIR>$(optsoft)\Gurobi-8.0.1</GUROBI_DIR>
     <BOOST_LIB_PATH>$(BOOST_DIR)\lib</BOOST_LIB_PATH>
     <BOOST_INCLUDE_PATH>$(BOOST_DIR)\include\boost-$(BOOST_VERSION)</BOOST_INCLUDE_PATH>
-    <COIN_LIB_PATH>$(COIN_DIR)\Cbc\MSVisualStudio\$(PlatformToolset)\$(PlatformTarget)-$(PlatformToolset)-$(Configuration)</COIN_LIB_PATH>
-    <COIN_INCLUDE_PATHS>$(COIN_DIR)\clp\src;$(COIN_DIR)\Osi\src\Osi;$(COIN_DIR)\CoinUtils\src;$(COIN_DIR)\clp\src\osiclp;$(COIN_DIR)\cbc\src;$(COIN_DIR)\Cgl\src</COIN_INCLUDE_PATHS>
+    <PTHREAD_LIB_PATH>$(PTHREAD_DIR)\$(PlatformTarget)-v$(PlatformToolsetVersion)-$(Configuration)</PTHREAD_LIB_PATH>
+    <COIN_LIB_PATH>$(COIN_DIR)\lib</COIN_LIB_PATH>
+    <COIN_INCLUDE_PATHS>$(COIN_DIR)\include\coin</COIN_INCLUDE_PATHS>
     <SCIP_LIB_PATH>$(SCIP_DIR)\lib</SCIP_LIB_PATH>
     <SCIP_INCLUDE_PATH>$(SCIP_DIR)\include</SCIP_INCLUDE_PATH>
     <GUROBI_INCLUDE_PATH>$(GUROBI_DIR)\include</GUROBI_INCLUDE_PATH>
@@ -36,6 +37,7 @@
       <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' == 'true'">WITH_GUROBI=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' != 'true'">WITH_GUROBI=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

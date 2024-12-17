@@ -3,6 +3,7 @@
 #include "ilp_solver_interface.hpp"
 #include "shared_memory_communication.hpp"
 #include "solver_exit_code.hpp"
+#include "utility.hpp"
 
 #include <stdexcept>
 #include <string>
@@ -19,7 +20,7 @@ using ilp_solver::ILPSolverInterface;
 
 static void add_variables(ILPSolverInterface* v_solver, const ILPData& p_data)
 {
-    const auto num_variables = (int) p_data.variable_type.size();
+    const auto num_variables = isize(p_data.variable_type);
 
     for (auto variable_idx = 0; variable_idx < num_variables; ++variable_idx)
     {
@@ -40,7 +41,7 @@ static void add_variables(ILPSolverInterface* v_solver, const ILPData& p_data)
 
 static void add_constraints(ILPSolverInterface* v_solver, const ILPData& p_data)
 {
-    const auto num_constraints = (int) p_data.matrix.size();
+    const auto num_constraints = isize(p_data.matrix);
 
     for (auto i = 0; i < num_constraints; ++i)
     {

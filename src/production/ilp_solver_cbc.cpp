@@ -8,6 +8,7 @@
 #include "ilp_solver_cbc.hpp"
 
 #include "ilp_data.hpp"
+#include "utility.hpp"
 
 #include "CglTreeInfo.hpp" // Needed to deal with the probing_info memory leak in Cbc
 #pragma warning(push)
@@ -38,14 +39,16 @@ namespace ilp_solver
     {
         if (p_whichevent == CbcEvent::solution || p_whichevent == CbcEvent::heuristicSolution)
         {
-            const double* best_solution = model_->bestSolution();
-            assert(best_solution);
+            auto          model         = this->getModel();
+            const double* best_solution = model->bestSolution();
+            if (!best_solution)
+                return CbcAction::noAction;
 
-            auto new_value = model_->getObjValue();
+            auto new_value = model->getObjValue();
             if (d_last_solution.solution_status == SolutionStatus::NO_SOLUTION
-                || (model_->getObjSense() * d_last_solution.objective > model_->getObjSense() * new_value))
+                || (model->getObjSense() * d_last_solution.objective > model->getObjSense() * new_value))
             {
-                auto size = model_->getNumCols();
+                auto size = model->getNumCols();
                 d_last_solution.solution.assign(best_solution, best_solution + size);
                 d_last_solution.objective = new_value;
                 d_last_solution.solution_status = SolutionStatus::SUBOPTIMAL;
@@ -120,9 +123,9 @@ namespace ilp_solver
     {
         // make sure that the cache was integrated
         prepare_impl();
-        assert( static_cast<int>(p_solution.size()) == get_num_variables() );
+        assert( isize(p_solution) == get_num_variables() );
         // Set the current best solution of Cbc to the given solution, check for feasibility, but not for better objective value.
-        d_model.setBestSolution(p_solution.data(), static_cast<int>(p_solution.size()), COIN_DBL_MAX, true);
+        d_model.setBestSolution(p_solution.data(), isize(p_solution), COIN_DBL_MAX, true);
     }
 
 

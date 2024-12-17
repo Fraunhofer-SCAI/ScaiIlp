@@ -9,7 +9,7 @@ Table of Contents
 
 2. Building
 
-    1. Building Cbc with VS 2019
+    1. Building Cbc for ScaiIlp
     2. Optional: Building pthreads-win32 with VS 2019
     3. Building SCIP with VS 2019
     4. Building ScaiIlp with VS 2019
@@ -76,77 +76,21 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 2 Building
 ==========
 
-2.1 Building Cbc with VS 2019
+2.1 Building Cbc for ScaiIlp
 -----------------------------
 
-1. Download Cbc from the [COIN project](https://www.coin-or.org/).
-    * Download: https://www.coin-or.org/download/source/Cbc/
-    * via SVN:  svn co https://projects.coin-or.org/svn/Cbc/stable/2.9 coin-Cbc
-    * Wiki:     https://projects.coin-or.org/Cbc/wiki
+1. Download the coinbrew script from https://coin-or.github.io/coinbrew/
 
-2. Rename the directory Cbc\MSVisualStudio\v10 to Cbc\MSVisualStudio\v142 and open Cbc\MSVisualStudio\v142\Cbc.sln with VS 2019 (Ignore v14)
+2. Follow the instructions described in https://coin-or.github.io/user_introduction#windows-1 to compile it to your specifications.
 
-3. Let VS update the projects (Your current Windows SDK Version, PlatForm Toolset v142)
+3. We require the configuration options
+    * --enable-shared
+    * ADD_CXXFLAGS=-D_ITERATOR_DEBUG_LEVEL=0
 
-4. Right-click onto "Solution" in the Solution Explorer and choose "Properties". Then use the following settings:
-    * Common Properties / Project Dependencies:
-        * Choose "libOsiCbc" from "Projects" and check the following 2 projects:
-            * libCbc
-            * libOsi
-        * Choose "libCbc" from "Projects" and check the following 5 projects:
-            * libCgl
-            * libClp
-            * libCoinUtils
-            * libOsi
-            * libOsiClp
-
-5. When you want to compile for 32 bit platforms:
-    * Choose "Build" -> "Configuration Manager".
-    * In the "Active solution platform" dropdown menu, select "Edit" and rename "Win32" to "x86".
-
-   Choose "Build" -> "Configuration Manager". Choose the "Active solution platform" depending on your needs:
-    * Choose "x86" when compiling for 32 bit platforms
-    * Choose "x64" when compiling for 64 bit platforms
-
-6. In the Solution Explorer, mark the following 7 projects:
-    * libCbc
-    * libCgl
-    * libClp
-    * libCoinUtils
-    * libOsi
-    * libOsiCbc
-    * libOsiClp
-
-7. Right-click onto the marked projects and choose "Properties" -> "Configuration Properties".
-    * Select "All Configurations" and "All Platforms" and use the following settings:
-        * General / Output Directory:                $(SolutionDir)$(PlatformTarget)-$(PlatformToolset)-$(Configuration)\
-        * General / Intermediate Directory:          $(PlatformTarget)-$(PlatformToolset)-$(Configuration)\
-        * General / Windows SDK Version:             Your current SDK
-        * General / Platform Toolset:                Visual Studio 2019 (v142)
-        * C/C++   / Preprocessor / Preprocessor Definitions:   prepend "_ITERATOR_DEBUG_LEVEL=0;" (without double quotes)
-        * C/C++   / Output Files / Program Database File Name: $(OutDir)$(TargetName).pdb
-
-    * For faster compilation, you can additionally use the following settings (set none or both):
-        * C/C++   / General         / Multi-processor Compilation:  Yes (/MP)
-        * C/C++   / Code Generation / Enable Minimal Rebuild:       No (/Gm-)
-
-8. If you want to support multithreading: Build pthreads-win32 as described in section 2.2 Otherwise proceed as in step 9.
-    * Right-click onto the project "libCbc" in the Solution Explorer and choose
-    * "Properties" -> "Configuration Properties".
-    * Select "All Configurations" and "All Platforms" and use the following settings:
-        * C/C++     / General      / Additional Include Directories: prepend [Path-to-Pthreads-Root-Directory];
-        * C/C++     / Preprocessor / Preprocessor Definitions:       prepend "CBC_THREAD;" (without double quotes)
-        * Librarian / General      / Additional Dependencies:        pthread.lib
-        * Librarian / General      / Additional Library Directories: [Path-to-Pthreads-Root-Directory]\$(PlatformTarget)-$(PlatformToolset)-$(Configuration)
-
-9. Choose "Build" -> "Batch-Build" and select the following projects and configurations:
-    * for 32 bit:
-        * libOsiCbc  Debug    Win32 Debug|x86
-        * libOsiCbc  Release  Win32 Release|x86
-    * for 64 bit:
-        * libOsiCbc  Debug    x64   Debug|x64
-        * libOsiCbc  Release  x64   Release|x64
-
+4. If Cbc should support multi-threading via pthreads (see section 2.2), you also need to provide the configuration options
+    * --enable-cbc-parallel
+    * --with-pthreadsw32-lib=path_to_pthreads_lib
+    * --with-pthreadsw32-incdir=path_to_pthreads_include
 
 2.2 Optional: Building pthreads-win32 with VS 2019 (only if Cbc should support multi-threading)
 -----------------------------------------------------------------------------------------------
@@ -210,11 +154,13 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 3. You may need to overwrite some compiler flags to compile the Release builds.
    In the files ./scip/CMakeLists.txt and ./soplex/CMakeLists.txt in lines 3 and 4 respectively,
 
+   ```
    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS_RELEASE}")
        -> set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE}")
 
    set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_DEBUG} ${CMAKE_C_FLAGS_RELEASE}")
        -> set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELEASE}")
+   ```
 
 4. You may want to set different build/install directories.
 

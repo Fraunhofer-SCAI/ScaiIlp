@@ -1,6 +1,7 @@
 #if (WITH_GUROBI == 1) && (_WIN64 == 1)
 
 #include "ilp_solver_gurobi.hpp"
+#include "utility.hpp"
 
 #include <cassert>
 #include <algorithm>
@@ -29,7 +30,7 @@ namespace ilp_solver
 
         inline void update_index_vector(std::vector<int>& p_vec, int p_size)
         {
-            int old_size{ static_cast<int>(p_vec.size()) };
+            const auto old_size{ isize(p_vec) };
             if (p_size > old_size)
             {
                 p_vec.reserve(p_size);
@@ -127,7 +128,7 @@ namespace ilp_solver
 
     void ILPSolverGurobi::set_start_solution(const std::vector<double>& p_solution)
     {
-        assert(static_cast<int>(p_solution.size()) == d_num_vars);
+        assert(isize(p_solution) == d_num_vars);
         call_gurobi( d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_VARHINTVAL, 0, d_num_vars, const_cast<double*>(p_solution.data()));
         call_gurobi( d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_START, 0, d_num_vars, const_cast<double*>(p_solution.data()));
     }
@@ -240,7 +241,7 @@ namespace ilp_solver
         {
             if (p_row_indices)
             {
-                num     = static_cast<int>(p_row_indices->size());
+                num     = isize(*p_row_indices);
                 indices = const_cast<int*>(p_row_indices->data());
             }
             else
@@ -252,7 +253,7 @@ namespace ilp_solver
             }
 
             values  = const_cast<double*>(p_row_values->data());
-            assert( static_cast<int>(p_row_values->size())  == num );
+            assert( isize(*p_row_values)  == num );
         }
 
         char type = (p_type == VariableType::INTEGER)    ? GRB_INTEGER
@@ -273,7 +274,7 @@ namespace ilp_solver
 
         if (p_col_indices)
         {
-            num     = static_cast<int>(p_col_indices->size());
+            num     = isize(*p_col_indices);
             indices = const_cast<int*>(p_col_indices->data());
 
             assert( p_col_indices->size() == p_col_values.size() );
@@ -285,7 +286,7 @@ namespace ilp_solver
             update_index_vector(d_indices, num);
             indices = const_cast<int*>(d_indices.data());
 
-            assert( static_cast<int>(p_col_values.size()) == num );
+            assert( isize(*p_col_values) == num );
         }
 
         if (p_lower_bound == p_upper_bound)

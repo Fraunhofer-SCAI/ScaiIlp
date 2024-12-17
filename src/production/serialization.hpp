@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utility.hpp"
+
 #include <boost/utility.hpp>
 #include <vector>
 
@@ -119,7 +121,7 @@ void Deserializer::deserialize(POD_type* r_value)
 template<typename POD_type>
 void Serializer::serialize(const std::vector<POD_type>& p_vector)
 {
-    const auto size = (int) p_vector.size();
+    const auto size = isize(p_vector);
     serialize(size);
     const auto num_bytes = size*sizeof(POD_type);
     if (!d_simulate)
@@ -145,7 +147,7 @@ void Deserializer::deserialize(std::vector<POD_type>* r_vector)
 template<typename POD_type_or_vector>
 void Serializer::serialize(const std::vector< std::vector<POD_type_or_vector> >& p_vector_of_vectors)
 {
-    const auto size = (int) p_vector_of_vectors.size();
+    const auto size = isize(p_vector_of_vectors);
     serialize(size);
     for (const auto& vector: p_vector_of_vectors)
         serialize(vector);

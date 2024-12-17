@@ -7,7 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "windows.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -25,8 +25,8 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,14,0,0
- PRODUCTVERSION 2,14,0,0
+ FILEVERSION 2,15,0,0
+ PRODUCTVERSION 2,15,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -43,10 +43,10 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Fraunhofer Institute for Algorithms and Scientific Computing SCAI"
             VALUE "FileDescription", "ScaiIlp"
-            VALUE "FileVersion", "2.14.0.0"
-            VALUE "LegalCopyright", "(C) Fraunhofer SCAI, 2016 - 2020, EPL"
+            VALUE "FileVersion", "2.15.0.0"
+            VALUE "LegalCopyright", "(C) Fraunhofer SCAI, 2016 - 2022, EPL"
             VALUE "ProductName", "ScaiIlp"
-            VALUE "ProductVersion", "2.14.0"
+            VALUE "ProductVersion", "2.15.0"
         END
     END
     BLOCK "VarFileInfo"

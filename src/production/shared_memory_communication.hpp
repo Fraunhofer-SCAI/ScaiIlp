@@ -30,7 +30,7 @@ namespace ilp_solver
             void* d_address;
             void* d_result_address;
 
-            std::string create_shared_memory(int p_size);
+            std::string create_shared_memory(size_t p_size);
     };
 
 

@@ -63,9 +63,8 @@ namespace ilp_solver
                 reduced_values.push_back(p_col_values[i]);
             }
         }
-        const int num_reduced_indices = reduced_indices.size();
 
-        const auto row = CoinPackedVector(num_reduced_indices, reduced_indices.data(), reduced_values.data(), c_test_for_duplicate_index);
+        const auto row = CoinPackedVector(static_cast<int>(reduced_indices.size()), reduced_indices.data(), reduced_values.data(), c_test_for_duplicate_index);
 
         d_matrix.appendRow(row);
         d_constraint_lower.push_back(p_lower_bound);

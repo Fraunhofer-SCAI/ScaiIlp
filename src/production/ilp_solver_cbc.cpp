@@ -30,7 +30,7 @@ namespace ilp_solver
         if (!p_start_solution.empty())
         {
             assert((int) p_start_solution.size() == d_model.getNumCols());
-            d_model.setBestSolution(p_start_solution.data(), p_start_solution.size(), COIN_DBL_MAX, true);
+            d_model.setBestSolution(p_start_solution.data(), static_cast<int>(p_start_solution.size()), COIN_DBL_MAX, true);
         }
         d_model.branchAndBound();
     }

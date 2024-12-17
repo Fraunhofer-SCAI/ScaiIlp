@@ -16,6 +16,7 @@
     <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\production\ilp_solver_exception.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\production\ilp_solver_cbc.cpp" />
@@ -26,6 +27,7 @@
     <ClCompile Include="..\..\src\production\ilp_solver_stub.cpp" />
     <ClCompile Include="..\..\src\production\shared_memory_communication.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_collect.cpp" />
+    <ClCompile Include="..\..\src\production\ilp_solver_exception.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resource Files">

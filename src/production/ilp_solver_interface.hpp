@@ -8,6 +8,14 @@ namespace ilp_solver
 {
     enum class SolutionStatus { PROVEN_OPTIMAL, PROVEN_INFEASIBLE, SUBOPTIMAL, NO_SOLUTION };
 
+
+    class SolverExeException : public std::runtime_error
+    {
+    public:
+        SolverExeException (const std::string& p_what) : std::runtime_error(p_what) {};
+    };
+
+
     class ILPSolverInterface
     {
         public:

@@ -84,7 +84,7 @@ namespace ilp_solver
     }
 
 
-    static int determine_required_size(const ILPData& p_data)
+    static size_t determine_required_size(const ILPData& p_data)
     {
         Serializer serializer(nullptr);
         serialize_ilp_data(&serializer, p_data, dummy_solution(p_data));
@@ -102,7 +102,7 @@ namespace ilp_solver
     /******************************
     * Communication of the parent *
     ******************************/
-    static windows_shared_memory* determine_free_shared_memory_name(int p_size, std::string* r_shared_memory_name)
+    static windows_shared_memory* determine_free_shared_memory_name(size_t p_size, std::string* r_shared_memory_name)
     {
         windows_shared_memory* shared_memory = nullptr;
         for (auto trial = 1; trial <= c_num_shared_memory_name_trials; ++trial)
@@ -138,7 +138,7 @@ namespace ilp_solver
     }
 
 
-    std::string CommunicationParent::create_shared_memory(int p_size)
+    std::string CommunicationParent::create_shared_memory(size_t p_size)
     {
         std::string shared_memory_name;
         d_shared_memory = determine_free_shared_memory_name(p_size, &shared_memory_name);

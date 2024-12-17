@@ -21,7 +21,7 @@ class Serializer : public boost::noncopyable
               d_simulate(d_start_address == nullptr ? true : false)
             {}
 
-        int required_bytes() const
+        size_t required_bytes() const
         {
             return d_current_address - d_start_address;
         }

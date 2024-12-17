@@ -75,7 +75,7 @@ namespace ilp_solver
         // get and check executable path
         const auto executable = full_executable_name(p_executable_basename);
         if (!file_exists(executable))
-            throw std::exception(("Could not find " + p_executable_basename).c_str());
+            throw SolverExeException(("Could not find " + p_executable_basename).c_str());
 
         // prepare command line
         const auto parameter = utf8_to_utf16(p_parameter);
@@ -101,7 +101,7 @@ namespace ilp_solver
                             0,                              // lpCurrentDirectory
                             &startup_info,
                             &process_info))
-            throw std::exception(("Error starting " + p_executable_basename + ". Error code:" + std::to_string(GetLastError())).c_str());
+            throw SolverExeException(("Error starting " + p_executable_basename + ". Error code:" + std::to_string(GetLastError())).c_str());
 
         // close handles via RAII
         struct HandleCloser

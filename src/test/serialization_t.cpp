@@ -1,12 +1,10 @@
-#include "serialization_t.hpp"
-
 #include "serialization.hpp"
 
-#include <cassert>
 #include <iostream>
 #include <vector>
 
-using std::cout;
+#include <boost/test/unit_test.hpp>
+
 using std::endl;
 using std::vector;
 
@@ -248,11 +246,12 @@ static Data deserialize(void* p_address, void** v_result_address)
 
 static void serialize_result(const Result& p_result, void* p_result_address)
 {
-    Serializer(p_result_address) << p_result.vector_3_char
-                                 << p_result.vector_1_int
-                                 << p_result.vector_2_double
-                                 << p_result.value_enum
-                                 << p_result.value_int;
+    Serializer serializer(p_result_address);
+    serializer << p_result.vector_3_char
+               << p_result.vector_1_int
+               << p_result.vector_2_double
+               << p_result.value_enum
+               << p_result.value_int;
 };
 
 
@@ -260,11 +259,12 @@ static Result deserialize_result(void* p_result_address)
 {
     Result result;
 
-    Deserializer(p_result_address) >> result.vector_3_char
-                                   >> result.vector_1_int
-                                   >> result.vector_2_double
-                                   >> result.value_enum
-                                   >> result.value_int;
+    Deserializer deserializer(p_result_address);
+    deserializer >> result.vector_3_char
+                 >> result.vector_1_int
+                 >> result.vector_2_double
+                 >> result.value_enum
+                 >> result.value_int;
 
     return result;
 }
@@ -274,50 +274,47 @@ static void verify_zero(void* p_result_address)
 {
     auto result = deserialize_result(p_result_address);
 
-    assert(result.value_int == 0);
-    assert(result.value_enum == Result::Enumeration::ENUM_NO_RESULT);
-    assert(result.vector_1_int.size() == 0);
-    assert(result.vector_2_double.size() == 0);
-    assert(result.vector_3_char.size() == 0);
+    BOOST_REQUIRE_EQUAL(result.value_int              , 0);
+    BOOST_REQUIRE      (result.value_enum           ==  Result::Enumeration::ENUM_NO_RESULT);
+    BOOST_REQUIRE_EQUAL(result.vector_1_int.size()    , 0u);
+    BOOST_REQUIRE_EQUAL(result.vector_2_double.size() , 0u);
+    BOOST_REQUIRE_EQUAL(result.vector_3_char.size()   , 0u);
 }
 
 
 static void verify_equality(const Data& p_data_1, const Data& p_data_2)
 {
-    assert(p_data_1.value_bool      == p_data_2.value_bool);
-    assert(p_data_1.value_char      == p_data_2.value_char);
-    assert(p_data_1.value_int       == p_data_2.value_int);
-    assert(p_data_1.value_float     == p_data_2.value_float);
-    assert(p_data_1.value_double    == p_data_2.value_double);
-    assert(p_data_1.vector_1_int    == p_data_2.vector_1_int);
-    assert(p_data_1.vector_2_double == p_data_2.vector_2_double);
-    assert(p_data_1.vector_3_char   == p_data_2.vector_3_char);
+    BOOST_REQUIRE_EQUAL(p_data_1.value_bool      , p_data_2.value_bool);
+    BOOST_REQUIRE_EQUAL(p_data_1.value_char      , p_data_2.value_char);
+    BOOST_REQUIRE_EQUAL(p_data_1.value_int       , p_data_2.value_int);
+    BOOST_REQUIRE_EQUAL(p_data_1.value_float     , p_data_2.value_float);
+    BOOST_REQUIRE_EQUAL(p_data_1.value_double    , p_data_2.value_double);
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(p_data_1.vector_1_int.begin(),    p_data_1.vector_1_int.end(),
+                                    p_data_2.vector_1_int.begin(),    p_data_2.vector_1_int.end());
+    BOOST_REQUIRE      (p_data_1.vector_2_double == p_data_2.vector_2_double);  // vector<vector<>>
+    BOOST_REQUIRE      (p_data_1.vector_3_char   == p_data_2.vector_3_char);    // vector<vector<vector<>>>
 }
 
 
 static void verify_equality(void* p_address_1, void* p_address_2)
 {
-    assert(p_address_1 == p_address_2);
+    BOOST_REQUIRE_EQUAL(p_address_1, p_address_2);
 }
 
 
 static void verify_equality(const Result& p_result_1, const Result& p_result_2)
 {
-    assert(p_result_1.value_int       == p_result_2.value_int);
-    assert(p_result_1.value_enum      == p_result_2.value_enum);
-    assert(p_result_1.vector_1_int    == p_result_2.vector_1_int);
-    assert(p_result_1.vector_2_double == p_result_2.vector_2_double);
-    assert(p_result_1.vector_3_char   == p_result_2.vector_3_char);
+    BOOST_REQUIRE_EQUAL(p_result_1.value_int   , p_result_2.value_int);
+    BOOST_REQUIRE      (p_result_1.value_enum == p_result_2.value_enum);
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(p_result_1.vector_1_int.begin(),    p_result_1.vector_1_int.end(),
+                                    p_result_2.vector_1_int.begin(),    p_result_2.vector_1_int.end());
+    BOOST_REQUIRE (p_result_1.vector_2_double == p_result_2.vector_2_double); // vector<vector<>>
+    BOOST_REQUIRE (p_result_1.vector_3_char   == p_result_2.vector_3_char);   // vector<vector<vector<>>>
 }
 
 
 void test_serialization()
 {
-    cout << endl
-         << "Serialization test" << endl
-         << "==================" << endl
-         << endl;
-
     // Alice: Generate data and serialize it
     const auto data_alice = generate_random_data();
 
@@ -340,6 +337,13 @@ void test_serialization()
     const auto result_alice = deserialize_result(result_address_alice);
 
     verify_equality(result_alice, result_bob);
-
-    cout << "Serialization and deserialization successful." << endl;
 }
+
+BOOST_AUTO_TEST_SUITE( IlpSolverSerializationT );
+
+BOOST_AUTO_TEST_CASE ( SerializationAndDeserialization )
+{
+    test_serialization ();
+}
+
+BOOST_AUTO_TEST_SUITE_END();

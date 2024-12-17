@@ -3,3 +3,5 @@ EXPORTS
 create_solver_cbc
 create_solver_stub
 destroy_solver
+create_exception
+destroy_exception

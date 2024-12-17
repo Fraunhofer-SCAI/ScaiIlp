@@ -19,7 +19,8 @@ namespace ilp_solver
             OsiSolverInterface*       do_get_solver    ()       override;
             const OsiSolverInterface* do_get_solver    () const override;
 
-            void                      do_solve         (int p_num_threads, bool p_deterministic, int p_log_level, double p_max_seconds) override;
+            void                      do_solve         (const std::vector<double>& p_start_solution,
+                                                        int p_num_threads, bool p_deterministic, int p_log_level, double p_max_seconds) override;
             const double*             do_get_solution  () const override;
             double                    do_get_objective () const override;
             SolutionStatus            do_get_status    () const override;

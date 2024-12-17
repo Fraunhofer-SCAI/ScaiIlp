@@ -245,11 +245,11 @@ executable (in the same directory, should be ScaiIlpExe.exe, unless you rename i
         |                       ignored because the OsiSolverInterface does not provide this functionality.
         |
         |-> ILPSolverCollect:   implements all modelling methods (e.g., do_add_variable) of
-        |                       ILPSolverInterfaceImpl and all methods that influence the modelling
-        |                       process (the prepare part of do_prepare_and_solve()) and stores these
-        |                       data in ILPData.
-        |
-        |-> ILPSolverStub:      do_solve() writes the ILPData to shared memory and calls an external
+            |                   ILPSolverInterfaceImpl and all methods that influence the modelling
+            |                   process (the prepare part of do_prepare_and_solve()) and stores these
+            |                   data in ILPData.
+            |
+            |-> ILPSolverStub:  do_solve() writes the ILPData to shared memory and calls an external
                                 solver. The external solver writes the result (in form of ILPSolutionData)
                                 back to the shared memory. The other methods of ILPSolverStub simply
                                 query ILPSolutionData.

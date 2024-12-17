@@ -67,6 +67,13 @@ static void generate_ilp(ILPSolverInterface* v_solver, const ILPData& p_data)
 }
 
 
+static void set_solver_preparation_parameters(ILPSolverInterface* v_solver, const ILPData& p_data)
+{
+    if (!p_data.start_solution.empty())
+        v_solver->set_start_solution(p_data.start_solution);
+}
+
+
 static void set_solver_parameters(ILPSolverInterface* v_solver, const ILPData& p_data)
 {
     v_solver->set_num_threads(p_data.num_threads);
@@ -114,6 +121,7 @@ static ILPSolutionData solve_ilp(const ILPData& p_data)
     try
     {
         generate_ilp(solver, p_data);
+        set_solver_preparation_parameters(solver, p_data);
         set_solver_parameters(solver, p_data);
     }
     catch (const std::bad_alloc&) { throw; }

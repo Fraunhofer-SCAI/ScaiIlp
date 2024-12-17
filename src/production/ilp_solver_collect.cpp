@@ -74,12 +74,15 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverCollect::do_prepare_and_solve(int p_num_threads, bool p_deterministic, int p_log_level, double p_max_seconds)
+    void ILPSolverCollect::do_prepare_and_solve(const std::vector<double>& p_start_solution,
+                                                int p_num_threads, bool p_deterministic, int p_log_level, double p_max_seconds)
     {
-        d_ilp_data.num_threads = p_num_threads;
+        d_ilp_data.start_solution = p_start_solution;
+
+        d_ilp_data.num_threads   = p_num_threads;
         d_ilp_data.deterministic = p_deterministic;
-        d_ilp_data.log_level = p_log_level;
-        d_ilp_data.max_seconds = p_max_seconds;
+        d_ilp_data.log_level     = p_log_level;
+        d_ilp_data.max_seconds   = p_max_seconds;
 
         do_solve(d_ilp_data);
     }

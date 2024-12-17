@@ -41,6 +41,7 @@ namespace ilp_solver
                       << p_data.constraint_upper
                       << p_data.variable_type
                       << p_data.objective_sense
+                      << p_data.start_solution
                       << p_data.num_threads
                       << p_data.deterministic
                       << p_data.log_level
@@ -64,6 +65,7 @@ namespace ilp_solver
                         >> r_data->constraint_upper
                         >> r_data->variable_type
                         >> r_data->objective_sense
+                        >> r_data->start_solution
                         >> r_data->num_threads
                         >> r_data->deterministic
                         >> r_data->log_level

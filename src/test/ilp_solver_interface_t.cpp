@@ -122,7 +122,7 @@ namespace ilp_solver
 
         // Check solution status
         const auto optimal = status == SolutionStatus::PROVEN_OPTIMAL;
-        cout << "The solution is " << (optimal ? "" : "not ") << "optimal." << endl;
+        cout << "Solution is " << (optimal ? "" : "not ") << "optimal" << endl;
         assert(optimal);
 
         // Check correctness of objective
@@ -326,6 +326,72 @@ namespace ilp_solver
     }
 
 
+    void test_start_solution(ILPSolverInterface* p_solver, const string& p_solver_name, double p_sense)
+    {
+        // max x+y+2z (<=> min -(x+y+2z)), 0 <= x, y, z <= 2
+        p_solver->add_variable_integer(1*p_sense, 0, 2);
+        p_solver->add_variable_integer(1*p_sense, 0, 2);
+        p_solver->add_variable_integer(2*p_sense, 0, 2);
+
+        // x+z <= 2
+        vector<double> values_1;
+        values_1.push_back(1);
+        values_1.push_back(0);
+        values_1.push_back(1);
+        p_solver->add_constraint_upper(values_1, 2);
+
+        // y+z <= 2
+        vector<double> values_2;
+        values_2.push_back(0);
+        values_2.push_back(1);
+        values_2.push_back(1);
+        p_solver->add_constraint_upper(values_2, 2);
+
+        // x+y+2z = (x+z) + (y+z), i.e., optimum <= 4. Optimum is attained at (0,0,2), (1,1,1), (2,2,0)
+        vector<double> expected_solution;
+        expected_solution.push_back(0);
+        expected_solution.push_back(0);
+        expected_solution.push_back(2);
+        auto success = true;
+        for (auto i = 0; i < 3; ++i)
+        {
+            p_solver->set_start_solution(expected_solution);
+            if (p_sense > 0)
+                p_solver->maximize();
+            else
+                p_solver->minimize();
+            const auto solution = p_solver->get_solution();
+
+            success &= (fabs(solution[0] - expected_solution[0]) < c_eps &&
+                        fabs(solution[1] - expected_solution[1]) < c_eps &&
+                        fabs(solution[2] - expected_solution[2]) < c_eps);
+            assert(success);
+
+            // Iterate: (0,0,2) -> (1,1,1) -> (2,2,0)
+            expected_solution[0] += 1.0;
+            expected_solution[1] += 1.0;
+            expected_solution[2] -= 1.0;
+        }
+        cout << "Test " << (success ? "succeeded" : "failed") << endl;
+    }
+
+
+    void test_start_solution_minimization(ILPSolverInterface* p_solver, const string& p_solver_name)
+    {
+        print_caption("Start solution test (minimization)", p_solver_name);
+
+        test_start_solution(p_solver, p_solver_name, -1.0);
+    }
+
+
+    void test_start_solution_maximization(ILPSolverInterface* p_solver, const string& p_solver_name)
+    {
+        print_caption("Start solution test (maximization)", p_solver_name);
+
+        test_start_solution(p_solver, p_solver_name, 1.0);
+    }
+
+
     void test_bad_alloc(ILPSolverInterface* p_solver, const string& p_solver_name)
     {
         print_caption("Bad alloc test", p_solver_name);
@@ -355,15 +421,15 @@ namespace ilp_solver
             assert(p_solver->get_solution().size() == 0);
 
             if ((p_solver->get_status() == SolutionStatus::NO_SOLUTION) && (p_solver->get_solution().size() == 0))
-                cout << "Test succeeded." << endl;
+                cout << "Test succeeded" << endl;
             else
-                cout << "Test failed." << endl;
+                cout << "Test failed" << endl;
         }
         catch (...)
         {
             assert(false);
 
-            cout << "Test failed." << endl;
+            cout << "Test failed" << endl;
         }
     }
 }

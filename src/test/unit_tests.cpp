@@ -17,6 +17,8 @@ namespace ilp_solver
         std::vector<SolverTest> tests;
         tests.push_back(test_sorting);
         tests.push_back(test_linear_programming);
+        tests.push_back(test_start_solution_minimization);
+        tests.push_back(test_start_solution_maximization);
         tests.push_back(test_performance);
 
         for (const auto test: tests)

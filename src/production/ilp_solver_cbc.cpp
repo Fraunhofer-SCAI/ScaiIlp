@@ -15,16 +15,23 @@ namespace ilp_solver
         return &d_clp_solver;
     }
 
-    void ILPSolverCbc::do_solve(int p_num_threads, bool p_deterministic, int p_log_level, double p_max_seconds)
+    void ILPSolverCbc::do_solve(const std::vector<double>& p_start_solution,
+                                int p_num_threads, bool p_deterministic, int p_log_level, double p_max_seconds)
     {
         const auto cbc_num_threads = (p_num_threads == 1 ? 0 : p_num_threads);      // peculiarity of Cbc
         const auto cbc_thread_mode = ((p_num_threads > 1 && p_deterministic) ? 1 : 0);
 
-        d_model = CbcModel(*do_get_solver());
+        const auto solver = do_get_solver();
+        d_model = CbcModel(*solver);
         d_model.setNumberThreads(cbc_num_threads);
         d_model.setThreadMode(cbc_thread_mode);
         d_model.messageHandler()->setLogLevel(std::min(std::max(p_log_level, 0), 4));   // log level must be between 0 and 4
         d_model.setMaximumSeconds(p_max_seconds);
+        if (!p_start_solution.empty())
+        {
+            assert((int) p_start_solution.size() == d_model.getNumCols());
+            d_model.setBestSolution(p_start_solution.data(), p_start_solution.size(), COIN_DBL_MAX, true);
+        }
         d_model.branchAndBound();
     }
 

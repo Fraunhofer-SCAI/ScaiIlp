@@ -18,7 +18,8 @@ namespace ilp_solver
             void do_add_constraint (const std::vector<int>& p_col_indices, const std::vector<double>& p_col_values, double p_lower_bound, double p_upper_bound, const std::string& /* p_name */)                                          override;
 
             void do_set_objective_sense (ObjectiveSense p_sense) override;
-            void do_prepare_and_solve   (int p_num_threads, bool p_deterministic, int p_log_level, double p_max_seconds) override;
+            void do_prepare_and_solve   (const std::vector<double>& p_start_solution,
+                                         int p_num_threads, bool p_deterministic, int p_log_level, double p_max_seconds) override;
     };
 }
 

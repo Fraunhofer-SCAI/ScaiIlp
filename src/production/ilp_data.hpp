@@ -20,6 +20,8 @@ namespace ilp_solver
         std::vector<VariableType> variable_type;
         ObjectiveSense objective_sense;
 
+        std::vector<double> start_solution;
+
         int num_threads;
         bool deterministic;
         int log_level;

@@ -9,7 +9,7 @@ using std::vector;
 namespace ilp_solver
 {
     ILPSolverInterfaceImpl::ILPSolverInterfaceImpl()
-        : d_num_threads(1), d_deterministic(true), d_log_level(0), d_max_seconds(std::numeric_limits<double>::max())
+        : d_start_solution(), d_num_threads(1), d_deterministic(true), d_log_level(0), d_max_seconds(std::numeric_limits<double>::max())
         {}
 
     void ILPSolverInterfaceImpl::add_variable_boolean(double p_objective, const string& p_name)
@@ -110,16 +110,21 @@ namespace ilp_solver
         add_constraint_and_update_index_vector(p_col_indices, p_col_values, p_value, p_value, p_name);
     }
 
+    void ILPSolverInterfaceImpl::set_start_solution(const std::vector<double>& p_solution)
+    {
+        d_start_solution = p_solution;
+    }
+
     void ILPSolverInterfaceImpl::minimize()
     {
         do_set_objective_sense(ObjectiveSense::MINIMIZE);
-        do_prepare_and_solve(d_num_threads, d_deterministic, d_log_level, d_max_seconds);
+        solve();
     }
 
     void ILPSolverInterfaceImpl::maximize()
     {
         do_set_objective_sense(ObjectiveSense::MAXIMIZE);
-        do_prepare_and_solve(d_num_threads, d_deterministic, d_log_level, d_max_seconds);
+        solve();
     }
 
     const vector<double> ILPSolverInterfaceImpl::get_solution() const
@@ -171,5 +176,11 @@ namespace ilp_solver
     {
         d_all_row_indices.push_back((int) d_all_row_indices.size());    // update d_all_row_indices
         do_add_constraint(p_col_indices, p_col_values, p_lower_bound, p_upper_bound, p_name);
+    }
+
+    void ILPSolverInterfaceImpl::solve()
+    {
+        do_prepare_and_solve(d_start_solution, d_num_threads, d_deterministic, d_log_level, d_max_seconds);
+        d_start_solution.clear();
     }
 }

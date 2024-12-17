@@ -77,6 +77,7 @@ static void set_solver_parameters(ILPSolverInterface* v_solver, const ILPData& p
     v_solver->set_max_solutions     (p_data.max_solutions);
     v_solver->set_max_abs_gap       (p_data.max_abs_gap);
     v_solver->set_max_rel_gap       (p_data.max_rel_gap);
+    v_solver->set_cutoff            (p_data.cutoff);
 }
 
 
@@ -102,10 +103,9 @@ static ILPSolutionData solution_data(const ILPSolverInterface& p_solver)
 
 
 // Throws ModelException, SolverException or std::bad_alloc
-static ILPSolutionData solve_ilp(const ILPData& p_data)
+static ILPSolutionData solve_ilp(const ILPData& p_data, CommunicationChild& p_communicator)
 {
     auto solver = ilp_solver::create_solver_cbc();
-
 
     // RAII for deleting solver
     struct SolverDeleter
@@ -121,6 +121,10 @@ static ILPSolutionData solve_ilp(const ILPData& p_data)
         generate_ilp(solver, p_data);
         set_solver_preparation_parameters(solver, p_data);
         set_solver_parameters(solver, p_data);
+        solver->set_interim_results([&p_communicator](ILPSolutionData* p_solution) -> void
+        {
+            p_communicator.write_solution_data(*p_solution);
+        }); // Save interim results in case the solver crashes.
     }
     catch (const std::bad_alloc&) { throw; }
     catch (...)                   { throw ModelException(); }
@@ -145,7 +149,7 @@ static SolverExitCode solve_ilp(const std::string& p_shared_memory_name)
         CommunicationChild communicator(p_shared_memory_name);
         communicator.read_ilp_data(&data);
 
-        auto solution_data = solve_ilp(data);
+        auto solution_data = solve_ilp(data, communicator);
 
         communicator.write_solution_data(solution_data);
 

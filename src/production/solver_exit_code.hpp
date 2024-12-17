@@ -4,6 +4,9 @@ enum class SolverExitCode
 {
     ok = 0,
 
+    // According to https://stackoverflow.com/questions/4344923/process-exit-code-when-process-is-killed-forcibly
+    killed_via_task_manager = 1,
+
     // Exit codes that we observed when CBC crashed
     // --------------------------------------------
     // The usual reason for CBC to crash is when a thread runs out of memory and/or throws an exception which is not caught.
@@ -23,6 +26,10 @@ enum class SolverExitCode
     // Observed for stack buffer overflow on Windows 10.
     // Google also points to stack buffer overflow.
     uncaught_exception_3 = -1073740791,
+    // heap corruption, possibly overflow, too.
+    uncaught_exception_4 = -1073740940,
+    // access violation, see https://stackoverflow.com/questions/17168982/exception-error-c0000005-in-vc
+    uncaught_exception_5 = -1073741819,
 
     // Our own exit codes, starting from an arbitrary value that is unlikely to be used by Windows for internal codes
     // --------------------------------------------------------------------------------------------------------------
@@ -37,3 +44,5 @@ enum class SolverExitCode
 static_assert (static_cast<int>(SolverExitCode::uncaught_exception_1) == 0x00000003);
 static_assert (static_cast<int>(SolverExitCode::uncaught_exception_2) == 0xE06D7363);
 static_assert (static_cast<int>(SolverExitCode::uncaught_exception_3) == 0xC0000409);
+static_assert (static_cast<int>(SolverExitCode::uncaught_exception_4) == 0xC0000374);
+static_assert (static_cast<int>(SolverExitCode::uncaught_exception_5) == 0xC0000005);

@@ -2,9 +2,9 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <BOOST_VERSION>1_68</BOOST_VERSION>
-    <BOOST_DIR>$(optsoft)\boost_$(BOOST_VERSION)_0\vc$(PlatformToolsetVersion)_idl0_x$(PlatformArchitecture)</BOOST_DIR>
-    <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc141_full</PTHREAD_DIR>
+    <BOOST_VERSION>1_71</BOOST_VERSION>
+    <BOOST_DIR>$(optsoft)\boost_$(BOOST_VERSION)_0\vc$(PlatformToolsetVersion)_idl0_$(PlatformTarget)</BOOST_DIR>
+    <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc$(PlatformToolsetVersion)_full</PTHREAD_DIR>
     <WITH_OSI>true</WITH_OSI>
     <WITH_CBC>true</WITH_CBC>
     <COIN_DIR>$(optsoft)\Cbc-2.9.9_vc$(PlatformToolsetVersion)_full\</COIN_DIR>
@@ -14,12 +14,16 @@
     <GUROBI_DIR>$(optsoft)\Gurobi-8.0.1</GUROBI_DIR>
     <BOOST_LIB_PATH>$(BOOST_DIR)\lib</BOOST_LIB_PATH>
     <BOOST_INCLUDE_PATH>$(BOOST_DIR)\include\boost-$(BOOST_VERSION)</BOOST_INCLUDE_PATH>
-    <COIN_LIB_PATH>$(COIN_DIR)\Cbc\MSVisualStudio\$(PlatformToolset)\$(Platform)-$(PlatformToolset)-$(Configuration)</COIN_LIB_PATH>
+    <COIN_LIB_PATH>$(COIN_DIR)\Cbc\MSVisualStudio\$(PlatformToolset)\$(PlatformTarget)-$(PlatformToolset)-$(Configuration)</COIN_LIB_PATH>
     <COIN_INCLUDE_PATHS>$(COIN_DIR)\clp\src;$(COIN_DIR)\Osi\src\Osi;$(COIN_DIR)\CoinUtils\src;$(COIN_DIR)\clp\src\osiclp;$(COIN_DIR)\cbc\src;$(COIN_DIR)\Cgl\src</COIN_INCLUDE_PATHS>
     <SCIP_LIB_PATH>$(SCIP_DIR)\lib</SCIP_LIB_PATH>
     <SCIP_INCLUDE_PATH>$(SCIP_DIR)\include</SCIP_INCLUDE_PATH>
     <GUROBI_INCLUDE_PATH>$(GUROBI_DIR)\include</GUROBI_INCLUDE_PATH>
     <GUROBI_LIB_PATH>$(GUROBI_DIR)\lib</GUROBI_LIB_PATH>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutDir>$(SolutionDir)$(Configuration)_$(PlatformTarget)\</OutDir>
+    <IntDir>$(ProjectDir)$(Configuration)_$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>

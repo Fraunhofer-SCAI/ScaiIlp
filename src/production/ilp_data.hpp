@@ -37,8 +37,7 @@ namespace ilp_solver
         int    max_solutions { c_default_max_solutions };
         double max_abs_gap   { c_default_max_abs_gap   };
         double max_rel_gap   { c_default_max_rel_gap   };
-
-
+        double cutoff        { c_default_cutoff        };
 
         ILPData() = default;
     };

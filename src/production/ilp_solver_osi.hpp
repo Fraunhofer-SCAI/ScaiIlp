@@ -34,6 +34,7 @@ namespace ilp_solver
             void                set_max_solutions       (int p_solutions)                       override;
             void                set_max_abs_gap         (double p_gap)                          override;
             void                set_max_rel_gap         (double p_gap)                          override;
+            void                set_cutoff              (double p_cutoff)                       override;
 
         private:
             OsiSolverInterface* d_ilp_solver;

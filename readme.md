@@ -81,12 +81,12 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 
 1. Download Cbc from the [COIN project](https://www.coin-or.org/).
     * Download: https://www.coin-or.org/download/source/Cbc/
-    * via SVN:  svn co https://projects.coin-or.org/svn/Cbc/stable/2.8 coin-Cbc
+    * via SVN:  svn co https://projects.coin-or.org/svn/Cbc/stable/2.9 coin-Cbc
     * Wiki:     https://projects.coin-or.org/Cbc/wiki
 
-2. Copy the directory Cbc\MSVisualStudio\v10 to Cbc\MSVisualStudio\v141 and open Cbc\MSVisualStudio\v141\Cbc.sln with VS 2017
+2. Rename the directory Cbc\MSVisualStudio\v10 to Cbc\MSVisualStudio\v141 and open Cbc\MSVisualStudio\v141\Cbc.sln with VS 2017 (Ignore v14)
 
-3. Let VS update the projects (Windows SDK Version 8.1, PlatForm Toolset v141)
+3. Let VS update the projects (Your current Windows SDK Version, PlatForm Toolset v141)
 
 4. Right-click onto "Solution" in the Solution Explorer and choose "Properties". Then use the following settings:
     * Common Properties / Project Dependencies:
@@ -100,8 +100,12 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
             * libOsi
             * libOsiClp
 
-5. Choose "Build" -> "Configuration Manager". Choose the "Active solution platform" depending on your needs:
-    * Choose "Win32" when compiling for 32 bit platforms
+5. When you want to compile for 32 bit platforms:
+    * Choose "Build" -> "Configuration Manager".
+    * In the "Active solution platform" dropdown menu, select "Edit" and rename "Win32" to "x86".
+
+   Choose "Build" -> "Configuration Manager". Choose the "Active solution platform" depending on your needs:
+    * Choose "x86" when compiling for 32 bit platforms
     * Choose "x64" when compiling for 64 bit platforms
 
 6. In the Solution Explorer, mark the following 7 projects:
@@ -115,9 +119,9 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 
 7. Right-click onto the marked projects and choose "Properties" -> "Configuration Properties".
     * Select "All Configurations" and "All Platforms" and use the following settings:
-        * General / Output Directory:                $(SolutionDir)$(Platform)-$(PlatformToolset)-$(Configuration)\
-        * General / Intermediate Directory:          $(Platform)-$(PlatformToolset)-$(Configuration)\
-        * General / Windows SDK Version:             8.1
+        * General / Output Directory:                $(SolutionDir)$(PlatformTarget)-$(PlatformToolset)-$(Configuration)\
+        * General / Intermediate Directory:          $(PlatformTarget)-$(PlatformToolset)-$(Configuration)\
+        * General / Windows SDK Version:             Your current SDK
         * General / Platform Toolset:                Visual Studio 2017 (v141)
         * C/C++   / Preprocessor / Preprocessor Definitions:   prepend "_ITERATOR_DEBUG_LEVEL=0;" (without double quotes)
         * C/C++   / Output Files / Program Database File Name: $(OutDir)$(TargetName).pdb
@@ -133,15 +137,15 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
         * C/C++     / General      / Additional Include Directories: prepend [Path-to-Pthreads-Root-Directory];
         * C/C++     / Preprocessor / Preprocessor Definitions:       prepend "CBC_THREAD;" (without double quotes)
         * Librarian / General      / Additional Dependencies:        pthread.lib
-        * Librarian / General      / Additional Library Directories: [Path-to-Pthreads-Root-Directory]\$(Platform)-$(PlatformToolset)-$(Configuration)
+        * Librarian / General      / Additional Library Directories: [Path-to-Pthreads-Root-Directory]\$(PlatformTarget)-$(PlatformToolset)-$(Configuration)
 
 9. Choose "Build" -> "Batch-Build" and select the following projects and configurations:
     * for 32 bit:
-        * libOsiCbc  Debug    Win32
-        * libOsiCbc  Release  Win32
+        * libOsiCbc  Debug    Win32 Debug|x86
+        * libOsiCbc  Release  Win32 Release|x86
     * for 64 bit:
-        * libOsiCbc  Debug    x64
-        * libOsiCbc  Release  x64
+        * libOsiCbc  Debug    x64   Debug|x64
+        * libOsiCbc  Release  x64   Release|x64
 
 
 2.2 Optional: Building pthreads-win32 with VS 2017 (only if Cbc should support multi-threading)
@@ -152,27 +156,23 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 
 2. Open pthread.dsw with VS 2017 and let it upgrade the project.
 
-3. When you want to compile for 32 bit platforms:
-    * Choose "Build" -> "Configuration Manager".
-    * In the "Active solution platform" dropdown menu, select "Edit" and rename "x86" to "Win32".
-
-   When you want to compile for 64 bit platforms:
+3. When you want to compile for 64 bit platforms:
     * Choose "Build" -> "Configuration Manager".
     * In the "Active solution platform" dropdown menu, select "New" and choose "x64" as new platform.
-    * Make sure that "Copy settings from: Win32" is chosen and "Create new project platforms" is checked.
+    * Make sure that "Copy settings from: x86" is chosen and "Create new project platforms" is checked.
 
 4. Choose "Build" -> "Configuration Manager". Choose the "Active solution platform" depending on your needs:
-    * Choose "Win32" when compiling for 32 bit platforms
+    * Choose "x86" when compiling for 32 bit platforms
     * Choose "x64" when compiling for 64 bit platforms
 
 5. Right-click onto the project "pthread" in the Solution Explorer and choose
     * "Properties" -> "Configuration Properties".
     * Select "All Configurations" and "All Platforms" and use the following settings:
-        * General / Output Directory:                $(SolutionDir)$(Platform)-$(PlatformToolset)-$(Configuration)\
-        * General / Intermediate Directory:          $(Platform)-$(PlatformToolset)-$(Configuration)\
-        * General / Windows SDK Version:             8.1
+        * General / Output Directory:                $(SolutionDir)$(PlatformTarget)-$(PlatformToolset)-$(Configuration)\
+        * General / Intermediate Directory:          $(PlatformTarget)-$(PlatformToolset)-$(Configuration)\
+        * General / Windows SDK Version:             Your current SDK
         * General / Platform Toolset:                Visual Studio 2017 (v141)
-        * C/C++ / General             / Debug Information Output:       Program Database (/Zi)
+        * C/C++ / General             / Debug Information Format:       Program Database (/Zi)
         * C/C++ / Preprocessor        / Preprocessor Definitions:       prepend "_ITERATOR_DEBUG_LEVEL=0;_TIMESPEC_DEFINED;" (without double quotes)
         * C/C++ / Precompiled Headers / Precompiled Header Output File: $(IntDir)pthread.pch
         * C/C++ / Output Files        / ASM List Location:              $(IntDir)
@@ -240,7 +240,7 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 
 4. [OPTIONAL] If you want to support multithreading,
    specify the root-location of pthread with the User Macro "PTHREAD_DIR" in the properties.props file
-   whereby PTHREAD_DIR has to contain the folders "Win32-v141-Release", "Win32-v141-Debug", "x64-v141-Release" and "x64-v141-Debug",
+   whereby PTHREAD_DIR has to contain the folders "x86-v141-Release", "x86-v141-Debug", "x64-v141-Release" and "x64-v141-Debug",
    each containing the appropriate version of pthread.dll.
    If your structure does not follow this, you may want to manually edit the corresponding CustomBuild setting in ScaiIlpDll.vcxproj.
 

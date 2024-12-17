@@ -4,6 +4,7 @@
 #include "solver_exit_code.hpp"
 
 #include <cassert>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -12,7 +13,7 @@
 #define NOMINMAX
 #include <windows.h>    // for GetModuleFileNameW, CreateProcessW etc.
 
-constexpr auto c_file_separator = L"\\";
+constexpr auto c_file_separator  = "\\";
 constexpr auto c_max_path_length = 1 << 16;
 
 using std::string;
@@ -20,13 +21,13 @@ using std::wstring;
 
 namespace ilp_solver
 {
-    static wstring quote(const wstring& p_string)
+    static string quote(const string& p_string)
     {
-        return L"\"" + p_string + L"\"";
+        return '"' + p_string + '"';
     }
 
 
-    static wstring directory_name(wstring p_filename)
+    static string directory_name(string p_filename)
     {
         const auto file_separator_pos = p_filename.rfind(c_file_separator);
         assert(file_separator_pos != std::wstring::npos);
@@ -35,56 +36,38 @@ namespace ilp_solver
     }
 
 
-    static wstring executable_dir()
+    static string executable_dir()
     {
-        wchar_t exe_path[c_max_path_length];
-        GetModuleFileNameW(NULL, exe_path, c_max_path_length);
-        return directory_name(wstring(exe_path));
+        char exe_path[c_max_path_length];
+        GetModuleFileNameA(NULL, exe_path, c_max_path_length);
+        return directory_name(exe_path);
     }
 
 
-    static wstring full_executable_name(const string& p_basename)
+    static string full_executable_name(const string& p_basename)
     {
-        return executable_dir() + utf8_to_utf16(p_basename);
-    }
-
-
-    static bool file_exists(const wstring& p_filename)
-    {
-        WIN32_FIND_DATA find_data;
-        const auto handle = FindFirstFileW(p_filename.c_str(), &find_data);
-
-        if (handle == INVALID_HANDLE_VALUE)
-            return false;
-
-        FindClose(handle);
-        return true;
+        return executable_dir() + p_basename;
     }
 
 
     static SolverExitCode execute_process(const string& p_executable_basename, const string& p_parameter, int p_wait_milliseconds)
     {
-        // get and check executable path
-        const auto executable = full_executable_name(p_executable_basename);
-        if (!file_exists(executable))
-            throw SolverExeException(("Could not find " + p_executable_basename).c_str());
-
         // prepare command line
-        const auto parameter = utf8_to_utf16(p_parameter);
-        auto command_line = quote(executable) + L" " + quote(parameter);
-        auto non_const_command_line = std::unique_ptr<wchar_t[]>(new wchar_t[command_line.size()+1]); // CreateProcessW needs non-const command line string
-        wcscpy_s(non_const_command_line.get(), command_line.size()+1, command_line.c_str());
+        const auto executable = full_executable_name(p_executable_basename);
+        if (!std::filesystem::exists(executable))
+            throw SolverExeException(("Could not find " + p_executable_basename).c_str());
+        auto command_line = quote(executable) + ' ' + quote(p_parameter);
 
         // prepare parameters
-        STARTUPINFOW startup_info;
+        STARTUPINFOA startup_info;
         PROCESS_INFORMATION process_info;
         std::memset(&startup_info, 0, sizeof(startup_info));
         std::memset(&process_info, 0, sizeof(process_info));
         startup_info.cb = sizeof(startup_info);
 
         // start process
-        if (!CreateProcessW(executable.c_str(),             // lpApplicationName
-                            non_const_command_line.get(),   // lpCommandLine
+        if (!CreateProcessA(executable.c_str(),             // lpApplicationName
+                            command_line.data(),            // lpCommandLine
                             0,                              // lpProcessAttributes
                             0,                              // lpThreadAttributes
                             false,                          // bInheritHandles
@@ -149,12 +132,18 @@ namespace ilp_solver
         {
         case SolverExitCode::ok:
             return "";
+        case SolverExitCode::killed_via_task_manager:
+            return "ScaiIlp killed.";
         case SolverExitCode::uncaught_exception_1:
             return "Uncaught exception, likely out of memory (stack buffer overflow Windows 7).";
         case SolverExitCode::uncaught_exception_2:
             return "Uncaught exception, likely out of memory (C++ exception).";
         case SolverExitCode::uncaught_exception_3:
             return "Uncaught exception, likely out of memory (stack buffer overflow Windows 10).";
+        case SolverExitCode::uncaught_exception_4:
+            return "Uncaught exception, the heap was most likely filled or corrupted.";
+        case SolverExitCode::uncaught_exception_5:
+            return "Uncaught exception: Access violation.";
         case SolverExitCode::out_of_memory:
             return "Out of memory.";
         case SolverExitCode::command_line_error:
@@ -181,6 +170,8 @@ namespace ilp_solver
         case SolverExitCode::uncaught_exception_1:
         case SolverExitCode::uncaught_exception_2:
         case SolverExitCode::uncaught_exception_3:
+        case SolverExitCode::uncaught_exception_4:
+        case SolverExitCode::uncaught_exception_5:
         case SolverExitCode::forced_termination:
             return true;
         default:
@@ -188,17 +179,6 @@ namespace ilp_solver
         }
     }
 
-
-    static void handle_error(int p_log_level, SolverExitCode p_exit_code)
-    {
-        if (exit_code_should_be_ignored_silently(p_exit_code))
-        {
-            if (p_log_level)
-                std::cout << exit_code_to_message(p_exit_code) << " Exit Code:" << static_cast<int>(p_exit_code);
-        }
-        else
-            throw std::exception(("External ILP solver: " + exit_code_to_message(p_exit_code)).c_str());
-    }
 
     // set_default_parameters is called in ILPSolverCollect.
     ILPSolverStub::ILPSolverStub(const std::string& p_executable_basename)
@@ -240,9 +220,13 @@ namespace ilp_solver
         const auto shared_memory_name = communicator.write_ilp_data(d_ilp_data);
 
         auto exit_code = execute_process(d_executable_basename, shared_memory_name, seconds_to_milliseconds (1.5 * d_ilp_data.max_seconds));
-        if (exit_code != SolverExitCode::ok)
-            handle_error(d_ilp_data.log_level, exit_code);
-        else
-            communicator.read_solution_data(&d_ilp_solution_data);
+
+        if (d_ilp_data.log_level)
+            std::cout << "External Solver messages: \"" << exit_code_to_message(exit_code) << "\" (Exit Code " << static_cast<int>(exit_code) << ")\n";
+
+        communicator.read_solution_data(&d_ilp_solution_data);
+
+        if (exit_code != SolverExitCode::ok && !exit_code_should_be_ignored_silently(exit_code))
+            throw std::exception(("External ILP solver: " + exit_code_to_message(exit_code)).c_str());
     }
 }

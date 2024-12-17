@@ -73,25 +73,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IntDir>$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>$(ProjectName)</TargetName>
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)$(Configuration)_x$(PlatformArchitecture)\</OutDir>
-    <IntDir>$(Configuration)_x$(PlatformArchitecture)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IntDir>$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>$(ProjectName)</TargetName>
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)$(Configuration)_x$(PlatformArchitecture)\</OutDir>
-    <IntDir>$(Configuration)_x$(PlatformArchitecture)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -228,7 +222,7 @@
       <Message Condition="'$(WITH_SCIP)' == 'true'">Copy %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(WITH_SCIP)' == 'true'">$(OutDir)\%(Filename)%(Extension)</Outputs>
     </CustomBuild>
-    <CustomBuild Include="$(PTHREAD_DIR)\$(Platform)-$(PlatformToolset)-$(Configuration)\pthread.dll">
+    <CustomBuild Include="$(PTHREAD_DIR)\$(PlatformTarget)-$(PlatformToolset)-$(Configuration)\pthread.dll">
       <FileType>Document</FileType>
       <Command>copy "%(FullPath)" "$(OutDir)\"</Command>
       <Message>Copy %(Filename)%(Extension)</Message>

@@ -7,6 +7,8 @@
 
 #include "ilp_solver_cbc.hpp"
 
+#include "ilp_data.hpp"
+
 #include "CglTreeInfo.hpp" // Needed to deal with the probing_info memory leak in Cbc
 #pragma warning(push)
 #pragma warning(disable : 5033) // silence warning in CBC concerning the deprecated keyword 'register'
@@ -19,6 +21,47 @@
 
 namespace ilp_solver
 {
+    class InterimEventHandler : public CbcEventHandler
+    {
+    public:
+        CbcAction event(CbcEvent whichevent) override;
+        CbcEventHandler* clone() const;
+
+        InterimEventHandler(std::function<void (ILPSolutionData*)> p_interim_handler) : d_interim_handler{std::move(p_interim_handler)} {}
+    private:
+         std::function<void (ILPSolutionData*)> d_interim_handler;
+         ILPSolutionData                        d_last_solution;
+    };
+
+
+    CbcEventHandler::CbcAction InterimEventHandler::event(CbcEvent p_whichevent)
+    {
+        if (p_whichevent == CbcEvent::solution || p_whichevent == CbcEvent::heuristicSolution)
+        {
+            const double* best_solution = model_->bestSolution();
+            assert(best_solution);
+
+            auto new_value = model_->getObjValue();
+            if (d_last_solution.solution_status == SolutionStatus::NO_SOLUTION
+                || (model_->getObjSense() * d_last_solution.objective > model_->getObjSense() * new_value))
+            {
+                auto size = model_->getNumCols();
+                d_last_solution.solution.assign(best_solution, best_solution + size);
+                d_last_solution.objective = new_value;
+                d_last_solution.solution_status = SolutionStatus::SUBOPTIMAL;
+                d_interim_handler(&d_last_solution);
+            }
+        }
+        return CbcAction::noAction;
+    }
+
+
+    CbcEventHandler* InterimEventHandler::clone() const
+    {
+        return static_cast<CbcEventHandler*>(new InterimEventHandler(*this));
+    }
+
+
     ILPSolverCbc::ILPSolverCbc()
     {
         // CbcModel assumes ownership over solver and deletes it in its destructor.
@@ -75,10 +118,11 @@ namespace ilp_solver
 
     void ILPSolverCbc::set_start_solution(const std::vector<double>& p_solution)
     {
-        // Set the current best solution of Cbc to the given solution, check for feasibility, but not for better objective value.
-        // get_num_variables necessary since the cache may not be included in the problem.
+        // make sure that the cache was integrated
+        prepare_impl();
         assert( static_cast<int>(p_solution.size()) == get_num_variables() );
-        d_model.setBestSolution(p_solution.data(), static_cast<int>(p_solution.size()), COIN_DBL_MAX, false);
+        // Set the current best solution of Cbc to the given solution, check for feasibility, but not for better objective value.
+        d_model.setBestSolution(p_solution.data(), static_cast<int>(p_solution.size()), COIN_DBL_MAX, true);
     }
 
 
@@ -142,6 +186,21 @@ namespace ilp_solver
     }
 
 
+    void ILPSolverCbc::set_cutoff(double p_cutoff)
+    {
+        // Only set cutoff if intended. Otherwise stick to the CBC default.
+        if (p_cutoff != c_default_cutoff)
+            d_model.setCutoff(p_cutoff);
+    }
+
+
+    void ILPSolverCbc::set_interim_results(std::function<void (ILPSolutionData*)> p_interim_handler)
+    {
+        InterimEventHandler handler{ p_interim_handler };
+        d_model.passInEventHandler(&handler); // CBC clones the handler, so no dangling pointer.
+    }
+
+
     OsiSolverInterface* ILPSolverCbc::get_solver_osi_model()
     {
         return d_model.solver();
@@ -156,6 +215,7 @@ namespace ilp_solver
         if (probing_ptr)
             delete probing_ptr;
 
+        d_model.initialSolve();
         d_model.branchAndBound();
     }
 

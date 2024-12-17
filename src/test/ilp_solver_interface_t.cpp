@@ -564,14 +564,49 @@ namespace ilp_solver
     }
 
 
+    void test_cutoff(ILPSolverInterface* p_solver)
+    {
+        std::vector obj{ 1., 1. };
+        std::vector row{ 1., 1. };
+
+        p_solver->set_presolve(false);
+
+        p_solver->add_variable_integer(obj[0], 0., 10.);
+        p_solver->add_variable_integer(obj[1], 0., 10.);
+
+        p_solver->add_constraint_lower(row, 1.5);
+        p_solver->set_cutoff(1.9);
+
+        p_solver->minimize();
+        auto sol = p_solver->get_solution();
+        auto status = p_solver->get_status();
+
+        BOOST_REQUIRE(status == SolutionStatus::PROVEN_INFEASIBLE);
+    }
+
+
     void test_bad_alloc(ILPSolverInterface* p_solver)
     {
         srand(3);
         p_solver->set_num_threads(8);
-        // It is not clear that this is sufficient to provoke a bad_alloc.
-        generate_random_problem(p_solver, 500000, 150);
-
         p_solver->set_max_seconds(10); // Don't waste time if we can build the problem.
+
+        // It is not clear that this is sufficient to provoke a bad_alloc.
+        try
+        {
+            generate_random_problem(p_solver, 500000, 150);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << std::endl;
+            BOOST_FAIL("Bad alloc test failed (Could not create problem of the required size).");
+        }
+        catch (...)
+        {
+            std::cerr << "Stub threw unknown exception." << std::endl;
+            BOOST_FAIL("Bad alloc test failed (Could not create problem of the required size).");
+        }
+
         try
         {
             // bad_alloc should be treated as "no solution"
@@ -633,13 +668,14 @@ namespace
 
 int create_ilp_test_suite()
 {
-    constexpr std::array<std::pair<TestFunction, std::string_view>, 9> all_tests
+    constexpr std::array<std::pair<TestFunction, std::string_view>, 10> all_tests
     { std::pair{test_sorting,                     "Sorting"}
     , std::pair{test_linear_programming,          "LinProgr"}
     , std::pair{test_start_solution_minimization, "StartSolutionMin"}
     , std::pair{test_start_solution_maximization, "StartSolutionMax"}
     , std::pair{test_abs_gap_limit,               "AbsGapLimit"}
     , std::pair{test_rel_gap_limit,               "RelGapLimit"}
+    , std::pair{test_cutoff,                      "CutOff"}
     , std::pair{test_performance,                 "Performance"}
     , std::pair{test_performance_big,             "PerformanceBig"}
     , std::pair{test_performance_zero,            "PerformanceZero"}

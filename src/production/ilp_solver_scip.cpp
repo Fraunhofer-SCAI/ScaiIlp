@@ -269,6 +269,14 @@ namespace ilp_solver
     }
 
 
+    void ILPSolverSCIP::set_cutoff(double p_cutoff)
+    {
+        // Only set cutoff if intended. Otherwise stick to the Scip default.
+        if (p_cutoff != c_default_cutoff)
+            call_scip(SCIPsetObjlimit, d_scip, p_cutoff);
+    }
+
+
     void ILPSolverSCIP::print_mps_file(const std::string& p_path)
     {
         // uses the extension of p_path, so this has to be ".mps".

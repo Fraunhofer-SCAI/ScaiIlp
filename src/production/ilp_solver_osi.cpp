@@ -122,6 +122,12 @@ namespace ilp_solver
     }
 
 
+    void ILPSolverOsi::set_cutoff(double)
+    {
+        // Not supported by OsiSolverInterface.
+    }
+
+
     OsiSolverInterface* ILPSolverOsi::get_solver_osi_model()
     {
         return d_ilp_solver;

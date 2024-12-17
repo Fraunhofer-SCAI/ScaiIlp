@@ -17,17 +17,17 @@ namespace ilp_solver
     ***************************************/
     static void serialize_result(Serializer* v_serializer, const ILPSolutionData& p_solution_data)
     {
-        *v_serializer << p_solution_data.solution
+        *v_serializer << p_solution_data.solution_status
                       << p_solution_data.objective
-                      << p_solution_data.solution_status;
+                      << p_solution_data.solution;
     }
 
 
     static void deserialize_result(Deserializer* v_deserializer, ILPSolutionData* r_solution_data)
     {
-        *v_deserializer >> r_solution_data->solution
+        *v_deserializer >> r_solution_data->solution_status
                         >> r_solution_data->objective
-                        >> r_solution_data->solution_status;
+                        >> r_solution_data->solution;
     }
 
 
@@ -53,7 +53,8 @@ namespace ilp_solver
                       << p_data.max_nodes
                       << p_data.max_solutions
                       << p_data.max_abs_gap
-                      << p_data.max_rel_gap;
+                      << p_data.max_rel_gap
+                      << p_data.cutoff;
 
         auto result_address = v_serializer->current_address();
 
@@ -82,7 +83,8 @@ namespace ilp_solver
                         >> r_data->max_nodes
                         >> r_data->max_solutions
                         >> r_data->max_abs_gap
-                        >> r_data->max_rel_gap;
+                        >> r_data->max_rel_gap
+                        >> r_data->cutoff;
 
         return v_deserializer->current_address();
     }

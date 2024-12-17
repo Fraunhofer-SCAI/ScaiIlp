@@ -1,4 +1,4 @@
-#include "ilp_solver_exception.hpp"
+#include "tester.hpp"
 
 #include <boost/test/unit_test.hpp>
 #include <string>

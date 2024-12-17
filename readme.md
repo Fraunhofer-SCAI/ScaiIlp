@@ -142,14 +142,24 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 9. Find the file pthreads.h in project "pthread" -> "Header Files"
     * At the top of the file, insert the line `#define _TIMESPEC_DEFINED`
 
-2.3 Building SCIP with VS 2022
+2.3 Building HiGHS with VS 2022
+-------------------------------
+
+1. Download the HiGHS source code from https://github.com/ERGO-Code/HiGHS.
+
+2. Uncomment the line `add_definitions(-D_ITERATOR_DEBUG_LEVEL=0)` in CMakeLists.txt.
+
+3. Open CMakeLists.txt in VS2022 with File -> Open -> CMake.
+
+4. Build and install all desired configurations.
+
+2.4 Building SCIP with VS 2022
 ------------------------------
 
 1. To obtain SCIP, visit https://scip.zib.de/index.php#download
    and download the SCIP Optimization Suite.
 
-2. Open the CMake script provided with SCIP in VS2022 with File -> Open -> CMake.
-   The correct file is CMakeLists.txt inside the SCIP Optimization Suite folder.
+2. Open CMakeLists.txt in VS2022 with File -> Open -> CMake.
 
 3. You may need to overwrite some compiler flags to compile the Release builds.
    In the files ./scip/CMakeLists.txt and ./soplex/CMakeLists.txt in lines 3 and 4 respectively,
@@ -171,7 +181,7 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
    The UG-framework does only provide makefiles,
    so doing this on Windows is not easy and we can not provide a guideline for it.
 
-2.4 Building ScaiIlp with VS 2022
+2.5 Building ScaiIlp with VS 2022
 ---------------------------------
 
 1. Ensure that you have built Cbc as described above.
@@ -190,9 +200,14 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
    Usually this will be `$(PTHREAD_DIR)\$(PlatformTarget)-v$(PlatformToolsetVersion)-$(Configuration)`.
    If your structure does not follow this, you may want to manually edit the corresponding CustomBuild setting in ScaiIlpDll.vcxproj.
 
+5. [OPTIONAL] If you want to support HiGHS,
+   specify the location of HiGHS by opening the properties.props file
+   and setting the User Macro `WITH_HIGHS` to 'true' and `HIGHS_DIR` to the correct path (if your paths follow our examples).
+   If your paths do not follow our examples, you may want to manually edit the include and linker directories or the properties.props outside of VS.
+
 5. [OPTIONAL] If you want to support SCIP,
    specify the location of SCIP by opening the properties.props file
-   and setting the User Macro `WITH_SCIP` to 'true' and SCIP_DIR to the correct path (if your paths follow our examples).
+   and setting the User Macro `WITH_SCIP` to 'true' and `SCIP_DIR` to the correct path (if your paths follow our examples).
    If your paths do not follow our examples, you may want to manually edit the include and linker directories or the properties.props outside of VS.
 
 6. [OPTIONAL] If you want to support Gurobi,
@@ -202,7 +217,7 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
    and that you need a valid Gurobi license to run ScaiILP with Gurobi.
 
 7. Specify the location of Boost by opening the properties.props file
-   and setting the User Macros `BOOST_VERSION and BOOST_DIR` (if your paths follow our examples)
+   and setting the User Macros `BOOST_VERSION` and `BOOST_DIR` (if your paths follow our examples)
    or by setting the `BOOST_INCLUDE_PATH` and `BOOST_LIB_PATH` manually to the correct paths on your system outside of VS.
 
 8. Build ScaiIlpDll, ScaiIlpExe, and UnitTest.
@@ -287,6 +302,9 @@ executable (in the same directory, should be ScaiIlpExe.exe, unless you rename i
         |                       The external solver writes the result (in form of ILPSolutionData)
         |                       back to the shared memory.
         |                       The solution getter methods of ILPSolverStub simply query ILPSolutionData.
+        |
+        |-> ILPSolverHighs:     Final. To use HiGHS.
+        |                       Implements the solver specific methods for the HiGHS solver.
         |
         |-> ILPSolverSCIP:      Final. To use SCIP.
         |                       Implements the solver specific methods for the SCIP solver.

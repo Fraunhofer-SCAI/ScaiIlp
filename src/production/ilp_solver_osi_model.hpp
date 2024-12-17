@@ -1,10 +1,10 @@
 #pragma once
 
-#if WITH_OSI == 1
+#ifdef WITH_OSI
 
 #include "ilp_solver_impl.hpp"
 
-#include "CoinModel.hpp"
+#include <CoinModel.hpp>
 
 #include <string>
 #include <vector>
@@ -42,8 +42,11 @@ namespace ilp_solver
                                    OptionalIndexArray p_row_indices = {}) override;
 
             void add_constraint_impl (double p_lower_bound, double p_upper_bound,
-                ValueArray p_col_values, [[maybe_unused]] const std::string& p_name = "",
-                OptionalIndexArray p_col_indices = {}) override;
+                                      ValueArray p_col_values, [[maybe_unused]] const std::string& p_name = "",
+                                      OptionalIndexArray p_col_indices = {}) override;
+
+            // Helper object for dense -> sparse conversions.
+            SparseVec d_sparse{};
     };
 }
 

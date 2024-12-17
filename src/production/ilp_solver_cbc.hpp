@@ -1,19 +1,17 @@
 #pragma once
 
-#if WITH_CBC == 1
+#ifdef WITH_CBC
 
-static_assert(WITH_OSI == 1,
+#ifndef WITH_OSI
+static_assert(false,
     "CBC requires the Osi-Interface and the CoinUtils contained therein. "
-    "Please set WITH_OSI=1 or deactivate CBC with WITH_CBC=0.");
+    "Please define WITH_OSI or deactivate CBC by not defining WITH_CBC.");
+#endif
 
 #include "ilp_solver_osi_model.hpp" // Including this also links with the required COIN Libraries.
 
-#pragma warning(push)
-#pragma warning(disable : 5033) // silence warning in CBC concerning the deprecated keyword 'register'
-#pragma warning(disable : 4309) // silence warning in CBC concerning truncations of constant values in 64 bit.
-#include "CbcModel.hpp"
-#include "OsiClpSolverInterface.hpp"
-#pragma warning(pop)
+#include <CbcModel.hpp>
+#include <OsiClpSolverInterface.hpp>
 
 class OsiSolverInterface;
 
@@ -21,7 +19,7 @@ class OsiSolverInterface;
 namespace ilp_solver
 {
     // Final implementation of CBC in ScaiILP.
-    class ILPSolverCbc : public ILPSolverOsiModel
+    class ILPSolverCbc final : public ILPSolverOsiModel
     {
         public:
             ILPSolverCbc();

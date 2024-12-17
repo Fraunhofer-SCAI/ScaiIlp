@@ -5,12 +5,16 @@
 #include "solver_exit_code.hpp"
 #include "utility.hpp"
 
+#include <boost/chrono.hpp>
+#include <boost/nowide/convert.hpp>
+#include <chrono>
 #include <stdexcept>
 #include <string>
 
 #include <windows.h> // for SetErrorMode
+#include <psapi.h> // GetProcessMemoryInfo
 
-#if WITH_MIMALLOC == 1
+#ifdef WITH_MIMALLOC
 #pragma warning(push)
 #pragma warning(disable : 28251) // inconsistent annotation
 #pragma warning(disable : 4559)  // redefinition with __declspec(restrict)
@@ -31,10 +35,21 @@ using namespace ilp_solver;
 class ModelException : public std::exception {};
 class SolverException : public std::exception {};
 
-using ilp_solver::ILPSolverInterface;
+using ilp_solver::ScopedILPSolver;
 
+using Seconds   = boost::chrono::duration<double>;
+using UserClock = boost::chrono::process_user_cpu_clock;
 
-static void add_variables(ILPSolverInterface* v_solver, const ILPData& p_data)
+// 0 never crash on purpose
+// 1 crash on large LPs
+// 2 always crash
+constexpr int   c_test_crash = 0;
+constexpr auto c_test_exit_code
+//= SolverExitCode::out_of_memory; // results in warning if only large LPs fail
+//= SolverExitCode::missing_dll; // always results in error
+= SolverExitCode::forced_termination; // special case
+
+static void add_variables(ScopedILPSolver& v_solver, const ILPDataView& p_data)
 {
     const auto num_variables = isize(p_data.variable_type);
 
@@ -55,36 +70,37 @@ static void add_variables(ILPSolverInterface* v_solver, const ILPData& p_data)
 }
 
 
-static void add_constraints(ILPSolverInterface* v_solver, const ILPData& p_data)
+static void add_constraints(ScopedILPSolver& v_solver, const ILPDataView& p_data)
 {
-    const auto num_constraints = isize(p_data.matrix);
+    const auto num_constraints = isize(p_data.matrix.d_values);
 
     for (auto i = 0; i < num_constraints; ++i)
     {
-        const auto& row = p_data.matrix[i];
-        const auto lower = p_data.constraint_lower[i];
-        const auto upper = p_data.constraint_upper[i];
+        const auto& values  = p_data.matrix.d_values[i];
+        const auto& indices = p_data.matrix.d_indices[i];
+        const auto  lower   = p_data.constraint_lower[i];
+        const auto  upper   = p_data.constraint_upper[i];
 
-        v_solver->add_constraint(row, lower, upper);
+        v_solver->add_constraint(indices, values, lower, upper);
     }
 }
 
 
-static void generate_ilp(ILPSolverInterface* v_solver, const ILPData& p_data)
+static void generate_ilp(ScopedILPSolver& v_solver, const ILPDataView& p_data)
 {
     add_variables(v_solver, p_data);
     add_constraints(v_solver, p_data);
 }
 
 
-static void set_solver_preparation_parameters(ILPSolverInterface* v_solver, const ILPData& p_data)
+static void set_solver_preparation_parameters(ScopedILPSolver& v_solver, const ILPDataView& p_data)
 {
     if (!p_data.start_solution.empty())
         v_solver->set_start_solution(p_data.start_solution);
 }
 
 
-static void set_solver_parameters(ILPSolverInterface* v_solver, const ILPData& p_data)
+static void set_solver_parameters(ScopedILPSolver& v_solver, const ILPDataView& p_data)
 {
     v_solver->set_num_threads       (p_data.num_threads);
     v_solver->set_deterministic_mode(p_data.deterministic);
@@ -100,7 +116,7 @@ static void set_solver_parameters(ILPSolverInterface* v_solver, const ILPData& p
 }
 
 
-static void solve_ilp(ILPSolverInterface* v_solver, ObjectiveSense p_objective_sense)
+static void solve_ilp(ScopedILPSolver& v_solver, ObjectiveSense p_objective_sense)
 {
     if (p_objective_sense == ObjectiveSense::MINIMIZE)
         v_solver->minimize();
@@ -109,31 +125,35 @@ static void solve_ilp(ILPSolverInterface* v_solver, ObjectiveSense p_objective_s
 }
 
 
-static ILPSolutionData solution_data(const ILPSolverInterface& p_solver)
+// Returns peak memory usage in megabytes.
+static double peak_memory_usage()
+{
+    PROCESS_MEMORY_COUNTERS memory;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &memory, sizeof(memory)))
+        return static_cast<unsigned long long>(memory.PeakWorkingSetSize) * 0x1p-20;
+    return 0.;
+}
+
+
+static ILPSolutionData solution_data(const ScopedILPSolver& p_solver, UserClock::time_point p_start_time)
 {
     ILPSolutionData solution_data;
 
-    solution_data.solution        = p_solver.get_solution();
-    solution_data.objective       = p_solver.get_objective();
-    solution_data.solution_status = p_solver.get_status();
+    solution_data.solution        = p_solver->get_solution();
+    solution_data.objective       = p_solver->get_objective();
+    solution_data.solution_status = p_solver->get_status();
+    solution_data.peak_memory     = peak_memory_usage();
+    solution_data.cpu_time_sec    = Seconds(UserClock::now() - p_start_time).count();
 
     return solution_data;
 }
 
 
-// Throws ModelException, SolverException or std::bad_alloc
-static ILPSolutionData solve_ilp(const ILPData& p_data, CommunicationChild& p_communicator)
+// Throws ModelException, InvalidStartSolutionException, SolverException or std::bad_alloc
+static ILPSolutionData solve_ilp(const ILPDataView& p_data, CommunicationChild& p_communicator)
 {
-    auto solver = ilp_solver::create_solver_cbc();
-
-    // RAII for deleting solver
-    struct SolverDeleter
-    {
-        explicit SolverDeleter(ILPSolverInterface* p_solver) : solver(p_solver) {}
-        ~SolverDeleter()                                               { ilp_solver::destroy_solver(solver); }
-
-        ILPSolverInterface* solver;
-    } solver_deleter(solver);
+    const auto start_time = UserClock::now();
+    auto       solver     = ilp_solver::create_solver_cbc();
 
     try
     {
@@ -144,15 +164,18 @@ static ILPSolutionData solve_ilp(const ILPData& p_data, CommunicationChild& p_co
         {
             p_communicator.write_solution_data(*p_solution);
         }); // Save interim results in case the solver crashes.
+        // If the solver never finds a solution better than the start solution, above callback is never called.
+        // So, we manually ensure that at least the start solution is communicated back to the calling process.
+        p_communicator.write_solution_data(solution_data(solver, start_time));
     }
-    catch (const std::bad_alloc&) { throw; }
-    catch (...)                   { throw ModelException(); }
+    catch (const std::bad_alloc&)                { throw; }
+    catch (const InvalidStartSolutionException&) { throw; }
+    catch (...)                                  { throw ModelException(); }
 
     try
     {
         solve_ilp(solver, p_data.objective_sense);
-
-        return solution_data(*solver);
+        return solution_data(solver, start_time);
     }
     catch (const std::bad_alloc&) { throw; }
     catch (...)                   { throw SolverException(); }
@@ -163,21 +186,39 @@ static SolverExitCode solve_ilp(const std::string& p_shared_memory_name)
 {
     try
     {
-        ILPData data;
-
+        // read input data
         CommunicationChild communicator(p_shared_memory_name);
-        communicator.read_ilp_data(&data);
+        auto               data = communicator.read_ilp_data();
 
-        auto solution_data = solve_ilp(data, communicator);
+        // test behavior of Caller when ScaiIlpExe crashes
+        constexpr auto c_size_of_stub_tester = 2;
+        if constexpr (c_test_crash != 0 && c_test_exit_code != SolverExitCode::forced_termination)
+        {
+            if constexpr (c_test_crash == 2)
+                return c_test_exit_code;
+            else if (data.matrix.d_num_cols > c_size_of_stub_tester)
+                return c_test_exit_code;
+        }
 
-        communicator.write_solution_data(solution_data);
+        // do the computation
+        communicator.write_solution_data(solve_ilp(data, communicator));
+
+        // test timeouts
+        if constexpr (c_test_crash != 0 && c_test_exit_code == SolverExitCode::forced_termination)
+        {
+            if constexpr (c_test_crash == 2)
+                std::this_thread::sleep_for(std::chrono::hours(8));
+            else if (data.matrix.d_num_cols > c_size_of_stub_tester)
+                std::this_thread::sleep_for(std::chrono::hours(8));
+        }
 
         return SolverExitCode::ok;
     }
-    catch (const std::bad_alloc&)   { return SolverExitCode::out_of_memory;       }
-    catch (const ModelException&)   { return SolverExitCode::model_error;         }
-    catch (const SolverException&)  { return SolverExitCode::solver_error;        }
-    catch (...)                     { return SolverExitCode::shared_memory_error; }
+    catch (const std::bad_alloc&)                { return SolverExitCode::out_of_memory;          }
+    catch (const InvalidStartSolutionException&) { return SolverExitCode::invalid_start_solution; }
+    catch (const ModelException&)                { return SolverExitCode::model_error;            }
+    catch (const SolverException&)               { return SolverExitCode::solver_error;           }
+    catch (...)                                  { return SolverExitCode::shared_memory_error;    }
 }
 
 
@@ -187,7 +228,7 @@ SolverExitCode my_main (int argc, wchar_t* argv[])
     if (argc != 2)
         return SolverExitCode::command_line_error;
     const auto shared_memory_name = std::wstring(argv[1]);
-    return solve_ilp(utf16_to_utf8(shared_memory_name));
+    return solve_ilp(boost::nowide::narrow(shared_memory_name));
 }
 
 

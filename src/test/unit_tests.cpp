@@ -4,18 +4,16 @@
 #define BOOST_TEST_MAIN
 
 
-#include "ilp_solver_exception.hpp"
+#include "tester.hpp"
 #include "ilp_solver_factory.hpp"
 #include "ilp_solver_interface.hpp"
 
+#include <boost/nowide/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
-#include <functional>
-#include <string>
-#include <vector>
-
-const auto c_solver_exe_name = "ScaiIlpExe.exe";
 
 int main(int p_argc, char* p_argv[])
 {
+    // Make boost::filesystem treat all char-based strings as UTF-8.
+    boost::nowide::nowide_filesystem();
     return unit_test_main(init_unit_test_suite, p_argc, p_argv);
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "solver_exit_code.hpp"
+
 #include <functional>
 #include <span>
 #include <stdexcept>
@@ -38,7 +40,13 @@ namespace ilp_solver
     class SolverExeException : public std::runtime_error
     {
     public:
-        explicit SolverExeException(const std::string& p_what) : std::runtime_error("External ILP Solver: " + p_what){};
+        explicit SolverExeException(const std::string& p_what) : std::runtime_error("ScaiIlpExe.exe: " + p_what){};
+    };
+
+    class InvalidStartSolutionException : public std::logic_error
+    {
+    public:
+        explicit InvalidStartSolutionException() : std::logic_error("Invalid start solution given to ILP solver."){};
     };
 
     // This class is the basic interface fulfilled by all ScaiILP solver classes.
@@ -89,6 +97,7 @@ namespace ilp_solver
 
             // Set a starting solution.
             // Depending on the solver, it may be checked whether the solution is actually valid or not.
+            // May throw InvalidStartSolutionException if the solver does not accept the given solution.
             virtual void set_start_solution  (ValueArray p_solution) = 0;
 
             // [Minimize | Maximize] the currently given objective function under the given constraints.
@@ -103,6 +112,15 @@ namespace ilp_solver
 
             // Obtain the current status of the solver.
             virtual SolutionStatus            get_status    () const = 0;
+
+            // Obtain external CPU time in seconds, if an external process was used.
+            virtual double                    get_external_cpu_time_sec() const { return 0; };
+
+            // Obtain external peak memory usage in megabytes, if an external process was used.
+            virtual double                    get_external_peak_memory_mb() const { return 0; };
+
+            // Obtain the external exit code of the solver.
+            virtual SolverExitCode            get_external_exit_code() const { return SolverExitCode::ok; };
 
             // Delete all information about previous solutions while keeping the model and settings.
             virtual void                      reset_solution()       = 0;
@@ -172,6 +190,6 @@ namespace ilp_solver
             // May be unsupported by some solvers.
             virtual void set_interim_results    (std::function<void (ILPSolutionData*)> p_interim_function) = 0;
 
-            virtual ~ILPSolverInterface() noexcept {}
+            virtual ~ILPSolverInterface() = default;
     };
 }

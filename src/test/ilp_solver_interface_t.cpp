@@ -5,19 +5,13 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <boost/test/unit_test.hpp>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 #include <iostream>
 #include <string>
 #include <string_view>
 
-#define NOMINMAX
-#include <windows.h>    // for GetTickCount
-
-using std::cout;
-using std::endl;
-using std::string;
-using std::vector;
 
 const auto c_eps = 0.0001;
 const auto c_num_performance_test_repetitions = 1;
@@ -26,15 +20,9 @@ const bool LOGGING = true;
 
 namespace ilp_solver
 {
-    static_assert(sizeof(char8_t) == sizeof(char));
-    static std::string u8string_to_string(std::u8string_view p_string)
-    {
-        return std::string(p_string.begin(), p_string.end());
-    }
-
     static int round(double x)
     {
-        return (int) (x+0.5);
+        return static_cast<int>(x+0.5);
     }
 
 
@@ -44,18 +32,18 @@ namespace ilp_solver
     }
 
 
-    static std::pair<int, int> generate_random_problem(ILPSolverInterface* p_solver, int p_num_variables, int p_num_constraints)
+    static std::pair<long long, long long> generate_random_problem(ILPSolverInterface* p_solver, int p_num_variables, int p_num_constraints)
     {
         srand(3);
         static constexpr double variable_scaling = 10.0;
         static const double   constraint_scaling = p_num_variables * variable_scaling;
 
-        const auto start_time = GetTickCount();
+        const auto start_time = std::chrono::steady_clock::now();
 
         for (auto j = 0; j < p_num_variables; ++j)
             p_solver->add_variable_integer(rand_double(), variable_scaling*rand_double(), variable_scaling*(1.0 + rand_double()));
 
-        const auto middle_time = GetTickCount();
+        const auto middle_time = std::chrono::steady_clock::now();
 
         std::vector<double> constraint_vector(p_num_variables);
 
@@ -64,35 +52,24 @@ namespace ilp_solver
             std::generate(std::begin(constraint_vector), std::end(constraint_vector), []() { return rand_double(); });
             p_solver->add_constraint(constraint_vector, constraint_scaling*rand_double(), constraint_scaling*(1.0 + rand_double()));
         }
-        const auto end_time = GetTickCount();
-        return {middle_time - start_time, end_time - middle_time};
+        const auto end_time = std::chrono::steady_clock::now();
+
+        const auto time_variables   = std::chrono::duration_cast<std::chrono::milliseconds>(middle_time - start_time).count();
+        const auto time_constraints = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - middle_time).count();
+        return {time_variables, time_constraints};
     }
 
 
     using TestFunction    = void(*)(ILPSolverInterface*);
-    using FactoryFunction = ILPSolverInterface* (__stdcall *)(void);
-    using StubFunction    = ILPSolverInterface* (__stdcall *)(const char*);
+    using FactoryFunction = ScopedILPSolver (__stdcall *)(void);
 
-    void execute_test_and_destroy_solver(ILPSolverInterface* p_solver, TestFunction p_test)
-    {
-        try
-        {
-            p_test(p_solver);
-        }
-        catch (...)
-        {
-            destroy_solver(p_solver);
-            throw;
-        }
-        destroy_solver(p_solver);
-    }
 
 
     void test_sorting(ILPSolverInterface* p_solver)
     {
         std::stringstream logging;
 
-        std::vector<int> numbers{ 62, 20, 4, 49, 97, 73, 35, 51, 18, 86};
+        const std::vector<int> numbers{ 62, 20, 4, 49, 97, 73, 35, 51, 18, 86};
         const auto num_vars = isize(numbers);
 
         // xi - target position of numbers[i]
@@ -108,8 +85,8 @@ namespace ilp_solver
         // Add constraints
         logging << "Initial array: ";
 
-        vector<double> values{1., -1.};
-        vector<int> indices{0, 0};
+        const std::vector<double> values{1., -1.};
+        std::vector<int> indices{0, 0};
         for (auto i = 0; i < num_vars; ++i)
         {
             for (auto j = i+1; j < num_vars; ++j)
@@ -127,7 +104,7 @@ namespace ilp_solver
             }
             logging << numbers[i] << " ";
         }
-        logging << endl << endl;
+        logging << std::endl << std::endl;
 
         p_solver->minimize();
 
@@ -137,7 +114,7 @@ namespace ilp_solver
 
         // Check solution status
         const auto optimal = status == SolutionStatus::PROVEN_OPTIMAL;
-        logging << "Solution is " << (optimal ? "" : "not ") << "optimal" << endl;
+        logging << "Solution is " << (optimal ? "" : "not ") << "optimal" << std::endl;
         BOOST_REQUIRE(optimal);
 
         // Check correctness of objective
@@ -145,9 +122,9 @@ namespace ilp_solver
         BOOST_REQUIRE_CLOSE(obj_value, expected_obj_value, c_eps);  // objective should be 0+1+...+(num_numbers-1)
 
         // Check correctness of solution
-        auto sorted = vector<int>(num_vars, INT_MIN);       // sort according solution
+        auto sorted = std::vector<int>(num_vars, INT_MIN);       // sort according solution
 
-        logging << endl << "Resulting permutation: ";
+        logging << std::endl << "Resulting permutation: ";
         for (auto i = 0; i < num_vars; ++i)
         {
             const auto pos = round(permutation[i]);
@@ -157,7 +134,7 @@ namespace ilp_solver
             BOOST_REQUIRE_CLOSE(pos, permutation[i], c_eps);    // solution must be integral
             sorted[pos] = numbers[i];
         }
-        logging << endl;
+        logging << std::endl;
 
         logging << "Sorted array: ";
         for (auto i = 0; i < num_vars; ++i)
@@ -168,10 +145,10 @@ namespace ilp_solver
             if (i > 0)
                 BOOST_REQUIRE_LT(sorted[i-1], sorted[i]);            // solution must sort
         }
-        logging << endl;
+        logging << std::endl;
 
         if (LOGGING)
-            cout << logging.str();
+            std::cout << logging.str();
     }
 
 
@@ -207,7 +184,7 @@ namespace ilp_solver
 
             logging << c[i] << " ";
         }
-        logging << endl;
+        logging << std::endl;
 
         // optimal objective
         auto obj0 = 0.0;
@@ -231,10 +208,10 @@ namespace ilp_solver
             p_solver->add_variable_continuous(c[i], std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), "x" + std::to_string(i));
 
         // Add constraints
-        logging << "Constraints:" << endl;
+        logging << "Constraints:" << std::endl;
         for (auto j = 0; j < num_dirs; ++j)
         {
-            const auto values = vector<double>(a[j], a[j] + num_vars);
+            const auto values = std::vector<double>(a[j], a[j] + num_vars);
 
             auto j_s{ std::to_string(j) };
             if (j % 2)
@@ -248,9 +225,9 @@ namespace ilp_solver
             logging << b[j] - constraint_shift << " <= ";
             for (auto i = 0; i < num_vars; ++i)
                 logging << (i == 0 ? "" : " + ") << a[j][i] << "*x" << i;
-            logging << " <= " << b[j] << endl;
+            logging << " <= " << b[j] << std::endl;
         }
-        logging << endl;
+        logging << std::endl;
 
         p_solver->maximize();
 
@@ -261,7 +238,7 @@ namespace ilp_solver
         // Check solution status
         const auto optimal = status == SolutionStatus::PROVEN_OPTIMAL;
         BOOST_REQUIRE(optimal);
-        logging << "The solution is " << (optimal ? "" : "not ") << "optimal." << endl;
+        logging << "The solution is " << (optimal ? "" : "not ") << "optimal." << std::endl;
 
         // Check correctness of objective
         auto obj_cmp = 0.0;
@@ -269,31 +246,32 @@ namespace ilp_solver
             obj_cmp += c[i]*x[i];
         BOOST_REQUIRE_CLOSE(obj, obj_cmp, c_eps);   // objective should fit to the solution
 
-        logging << endl;
-        logging << "Expected objective: " << obj0 << endl;
-        logging << "Resulting objective: " << obj << endl;
+        logging << std::endl;
+        logging << "Expected objective: " << obj0 << std::endl;
+        logging << "Resulting objective: " << obj << std::endl;
 
         BOOST_REQUIRE_CLOSE(obj, obj0,  c_eps);      // objective should equal the optimal objective
 
         // Check correctness of solution
-        logging << endl << "Constraint values:" << endl;
+        logging << std::endl << "Constraint values:" << std::endl;
         for (auto j = 0; j < num_dirs; ++j)
         {
             auto constraint_value = 0.0;
             for (auto i = 0; i < num_vars; ++i)
                 constraint_value += a[j][i]*x[i];
 
-            logging << constraint_value << " (must be in [" << b[j] -constraint_shift << "," << b[j] << "), expected " << b[j] << endl;
+            logging << constraint_value << " (must be in [" << b[j] - constraint_shift << "," << b[j] << "), expected "
+                    << b[j] << std::endl;
 
             BOOST_REQUIRE_GE(constraint_value, b[j] - constraint_shift - c_eps);  // solution obeys lower bound of the j'th constraint
             BOOST_REQUIRE_LE(constraint_value, b[j] + c_eps);                     // solution obeys upper bound of the j'th constraint
             BOOST_REQUIRE_GE(constraint_value, b[j] - c_eps);                     // upper bound of the j'th constraint is tight
         }
 
-        logging << endl << "Expected solution: ";
+        logging << std::endl << "Expected solution: ";
         for (auto i = 0; i < num_vars; ++i)
             logging << x0[i] << " ";
-        logging << endl;
+        logging << std::endl;
 
         logging << "Resulting solution: ";
         for (auto i = 0; i < num_vars; ++i)
@@ -301,10 +279,10 @@ namespace ilp_solver
             logging << x[i] << " ";
             BOOST_REQUIRE_CLOSE(x[i], x0[i], c_eps);
         }
-        logging << endl;
+        logging << std::endl;
 
         if (LOGGING)
-            cout << logging.str();
+            std::cout << logging.str();
     }
 
 
@@ -316,20 +294,16 @@ namespace ilp_solver
         std::cout.setstate(std::ios_base::failbit);
         test_linear_programming(p_solver);
         std::cout.clear();
-
+        boost::filesystem::path path{p_path};
+        boost::filesystem::remove(path);
         p_solver->print_mps_file(p_path);
-
-        std::filesystem::path path{ p_path };
-        BOOST_REQUIRE(std::filesystem::is_regular_file(path));
-
-        auto size{ std::filesystem::file_size(path) };
-        BOOST_REQUIRE(std::filesystem::file_size(path) > 0);
-
+        BOOST_REQUIRE(boost::filesystem::is_regular_file(path));
+        auto size{ boost::filesystem::file_size(path) };
+        BOOST_REQUIRE(size > 0);
         if (LOGGING)
         {
-            cout << "Successfully wrote mps-File to "
-                 << u8string_to_string(std::filesystem::absolute(path).generic_u8string()) << ".\n"
-                 << "\tFilesize is " << size << " Byte." << std::endl;
+            std::cout << "Successfully wrote mps-File to " << boost::filesystem::absolute(path).generic_string() << ".\n"
+                      << "\tFilesize is " << size << " Byte." << std::endl;
         }
     }
 
@@ -341,20 +315,20 @@ namespace ilp_solver
         p_solver->add_variable_continuous(1, -1, 1);
 
         // x+2y <= 2
-        vector<double> values_1{1, 2};
+        const std::vector<double> values_1{1, 2};
         p_solver->add_constraint_upper(values_1, 2);
 
         // 2x+y <= 2
-        vector<double> values_2{2,1};
+        const std::vector<double> values_2{2,1};
         p_solver->add_constraint_upper(values_2, 2);
 
-        vector<double> expected_solution{2./3., 2./3.};
+        const std::vector<double> expected_solution{2./3., 2./3.};
 
-        const auto start_time = GetTickCount();
+        const auto start_time = std::chrono::steady_clock::now();
         for (auto i = 1; i <= c_num_performance_test_repetitions; ++i)
         {
             p_solver->reset_solution();
-            BOOST_REQUIRE(p_solver->get_status() == SolutionStatus::NO_SOLUTION);
+            BOOST_REQUIRE(p_solver->get_status() != SolutionStatus::PROVEN_OPTIMAL);
             BOOST_REQUIRE(p_solver->get_solution().empty());
 
             p_solver->maximize();
@@ -363,10 +337,13 @@ namespace ilp_solver
             BOOST_REQUIRE_CLOSE(solution[0], expected_solution[0], c_eps);
             BOOST_REQUIRE_CLOSE(solution[1], expected_solution[1], c_eps);
         }
-        const auto end_time = GetTickCount();
+        const auto end_time = std::chrono::steady_clock::now();
 
         if (LOGGING)
-            cout << "Test for multiple solves took " << end_time - start_time << " ms" << endl;
+        {
+            const auto time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            std::cout << "Test for multiple solves took " << time << " ms" << std::endl;
+        }
     }
 
 
@@ -374,7 +351,7 @@ namespace ilp_solver
     {
         static constexpr int c_num_constraints{ 50 };
         static constexpr int c_num_variables  { 50000 };
-        const auto start_time = GetTickCount();
+        const auto           start_time = std::chrono::steady_clock::now();
 
         auto [var_time, cons_time] = generate_random_problem(p_solver, c_num_variables, c_num_constraints);
 
@@ -382,7 +359,7 @@ namespace ilp_solver
         BOOST_REQUIRE_EQUAL( p_solver->get_num_constraints(), c_num_constraints );
         BOOST_REQUIRE_EQUAL( p_solver->get_num_variables(),   c_num_variables );
 
-        const auto middle_time = GetTickCount();
+        const auto middle_time = std::chrono::steady_clock::now();
         p_solver->set_max_seconds(0.001);
         p_solver->minimize();
 
@@ -390,20 +367,23 @@ namespace ilp_solver
         BOOST_REQUIRE_EQUAL(p_solver->get_num_constraints(), c_num_constraints);
         BOOST_REQUIRE_EQUAL(p_solver->get_num_variables(),   c_num_variables);
 
-        const auto end_time = GetTickCount();
+        const auto end_time = std::chrono::steady_clock::now();
 
         if (LOGGING)
-            cout << "Test for creating a big problem took " << end_time - start_time << " ms.\n"
-                 << "\t" <<  var_time              << " for creating the variables.\n"
-                 << "\t" << cons_time              << " for creating the constraints.\n"
-                 << "\t" << end_time - middle_time << " for finalizing the problem." << endl;
-
+        {
+            const auto time_creating = std::chrono::duration_cast<std::chrono::milliseconds>(middle_time - start_time).count();
+            const auto time_solving = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - middle_time).count();
+            std::cout << "Test for creating a big problem took " << time_creating << " ms.\n"
+                      << "\t" <<  var_time              << " for creating the variables.\n"
+                      << "\t" << cons_time              << " for creating the constraints.\n"
+                      << "\t" << time_solving << " for finalizing the problem." << std::endl;
+        }
     }
 
 
     void test_performance_zero(ILPSolverInterface* p_solver)
     {
-        const auto start_time = GetTickCount();
+        const auto start_time = std::chrono::steady_clock::now();
         for(int i = 0; i < 1000; i++)
             p_solver->add_variable_integer(1., 0., 2.);
         p_solver->add_variable_integer(-1., 0., 2.);
@@ -420,11 +400,14 @@ namespace ilp_solver
         p_solver->minimize();
         const auto objective = p_solver->get_objective();
 
-        const auto end_time = GetTickCount();
+        const auto end_time = std::chrono::steady_clock::now();
         BOOST_REQUIRE_CLOSE( objective, -1., c_eps );
 
         if (LOGGING)
-            cout << "Test for zero-pruning took " << end_time - start_time << " ms" << endl;
+        {
+            const auto time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            std::cout << "Test for zero-pruning took " <<  time << " ms" << std::endl;
+        }
     }
 
 
@@ -436,37 +419,34 @@ namespace ilp_solver
         p_solver->add_variable_integer(2*p_sense, 0, 2);
 
         // x+z <= 2
-        vector<double> values_1{1., 0., 1.};
+        const std::vector<double> values_1{1., 0., 1.};
         p_solver->add_constraint_upper(values_1, 2);
 
         // y+z <= 2
-        vector<double> values_2{0., 1., 1.};
+        const std::vector<double> values_2{0., 1., 1.};
         p_solver->add_constraint_upper(values_2, 2);
 
-        // x+y+2z = (x+z) + (y+z), i.e., optimum <= 4. Optimum is attained at (0,0,2), (1,1,1), (2,2,0)
-        vector<double> expected_solution{0., 0., 2.};
+        // Check that an invalid solution raises an exception.
+        // This may not be implemented for all solvers, but it is for CBC and HiGHS.
+        // Normally the exception will be raised in set_start_solution.
+        // If the stub is used, it will be thrown after the solution is given to the solver in the external process
+        // which is invoked from maximize().
+        const std::vector<double> invalid_solution{1., 1., 2.};
+        BOOST_CHECK_THROW(p_solver->set_start_solution(invalid_solution); p_solver->maximize(), InvalidStartSolutionException);
 
-        p_solver->set_presolve(false);
+        // x+y+2z = (x+z) + (y+z), i.e., optimum <= 4. Optimum is attained at (0,0,2), (1,1,1), (2,2,0)
+        std::vector<double> valid_solution{0., 0., 2.};
 
         for (auto i = 0; i < 3; ++i)
         {
             p_solver->reset_solution();
-            p_solver->set_start_solution(expected_solution);
-
-            if (p_sense > 0)
-                p_solver->maximize();
-            else
-                p_solver->minimize();
-            const auto solution = p_solver->get_solution();
-
-            BOOST_REQUIRE_CLOSE (solution[0], expected_solution[0], c_eps);
-            BOOST_REQUIRE_CLOSE (solution[1], expected_solution[1], c_eps);
-            BOOST_REQUIRE_CLOSE (solution[2], expected_solution[2], c_eps);
+            // set_start_solution (or maximize - see comment above) should throw on failure.
+            BOOST_CHECK_NO_THROW(p_solver->set_start_solution(valid_solution); p_solver->maximize());
 
             // Iterate: (0,0,2) -> (1,1,1) -> (2,2,0)
-            expected_solution[0] += 1.0;
-            expected_solution[1] += 1.0;
-            expected_solution[2] -= 1.0;
+            valid_solution[0] += 1.0;
+            valid_solution[1] += 1.0;
+            valid_solution[2] -= 1.0;
         }
 
     }
@@ -484,100 +464,10 @@ namespace ilp_solver
     }
 
 
-    void test_abs_gap_limit(ILPSolverInterface* p_solver)
-    {
-        double      gap{ 1.5 };
-        double      ub{ 2.};
-        std::vector obj{ 1., 0.5 };
-        std::vector row{ 1., 0.5 };
-        std::vector expected_sol{ 1., 1. }; // Expected when given as start solution due to gap.
-
-        p_solver->set_presolve(false);
-        p_solver->set_max_rel_gap(0.);
-
-        p_solver->add_variable_integer(obj[0], 0., 1.);
-        p_solver->add_variable_integer(obj[1], 0., 2.);
-
-        p_solver->add_constraint_upper(row, ub);
-
-        p_solver->set_start_solution(expected_sol);
-        p_solver->maximize();
-        auto sol = p_solver->get_solution();
-
-        BOOST_REQUIRE_CLOSE (sol[0], 1., c_eps);
-        BOOST_REQUIRE_CLOSE (sol[1], 2., c_eps);
-
-        double best_objective{ p_solver->get_objective() };
-
-        if (LOGGING)
-            cout << "Maximal Absolute gap: " << gap << '\n'
-                 << "  Start solution gap: " << fabs(best_objective - (expected_sol[0] * obj[0] + expected_sol[1] * obj[1])) << '\n'
-                 << "   Best Solution gap: " << fabs(best_objective - (sol[0] * obj[0] + sol[1] * obj[1])) << std::endl;
-
-        p_solver->reset_solution();
-
-        p_solver->set_max_abs_gap(gap);
-        p_solver->set_start_solution(expected_sol);
-
-        p_solver->maximize();
-        sol = p_solver->get_solution();
-        BOOST_REQUIRE_CLOSE (sol[0], expected_sol[0], c_eps);
-        BOOST_REQUIRE_CLOSE (sol[1], expected_sol[1], c_eps);
-
-        if (LOGGING)
-            cout << "  Found solution gap: " << fabs(best_objective - (sol[0] * obj[0] + sol[1] * obj[1])) << std::endl;
-    }
-
-
-    void test_rel_gap_limit(ILPSolverInterface* p_solver)
-    {
-        double      gap{ 0.1 };
-        double      ub{ 2. };
-        std::vector obj{ 10., 1. };
-        std::vector row{ 1., 0.5 };
-        std::vector expected_sol{ 1., 1. }; // Expected when given as start solution due to gap.
-
-        p_solver->set_presolve(false);
-        p_solver->set_max_abs_gap(0.);
-
-        p_solver->add_variable_integer(obj[0], 0., 1.);
-        p_solver->add_variable_integer(obj[1], 0., 2.);
-
-        p_solver->add_constraint_upper(row, ub);
-
-        p_solver->set_start_solution(expected_sol);
-        p_solver->maximize();
-        auto sol = p_solver->get_solution();
-
-        BOOST_REQUIRE_CLOSE (sol[0], 1., c_eps);
-        BOOST_REQUIRE_CLOSE (sol[1], 2., c_eps);
-
-        double best_objective{ p_solver->get_objective() };
-
-        if (LOGGING)
-            cout << "Maximal Relative gap: " << gap << '\n'
-                 << "  Start solution gap: " << 1. - (expected_sol[0] * obj[0] + expected_sol[1] * obj[1]) / best_objective << '\n'
-                 << "   Best Solution gap: " << 1. - (sol[0] * obj[0] + sol[1] * obj[1]) / best_objective << '\n';
-
-        p_solver->reset_solution();
-
-        p_solver->set_max_rel_gap(gap);
-        p_solver->set_start_solution(expected_sol);
-
-        p_solver->maximize();
-        sol = p_solver->get_solution();
-        BOOST_REQUIRE_CLOSE (sol[0], expected_sol[0], c_eps);
-        BOOST_REQUIRE_CLOSE (sol[1], expected_sol[1], c_eps);
-
-        if (LOGGING)
-            cout << "  Found solution gap: " << 1. - (sol[0] * obj[0] + sol[1] * obj[1])  / best_objective << '\n';
-    }
-
-
     void test_cutoff(ILPSolverInterface* p_solver)
     {
-        std::vector obj{ 1., 1. };
-        std::vector row{ 1., 1. };
+        const std::vector obj{ 1., 1. };
+        const std::vector row{ 1., 1. };
 
         p_solver->set_presolve(false);
 
@@ -638,10 +528,10 @@ namespace ilp_solver
     }
 
 
-    ILPSolverInterface* __stdcall create_stub()
+    ScopedILPSolver __stdcall create_stub()
     {
         constexpr std::string_view solver_exe_name = "ScaiIlpExe.exe";
-        return create_solver_stub(solver_exe_name.data(), SCAIILP_SOLVER_STUB_IGNORE_KNOWN_CRASHES);
+        return create_solver_stub(solver_exe_name.data(), false /*throw on all crashes*/);
     }
 }
 
@@ -654,23 +544,20 @@ namespace
     // and we somehow need to get a different file path per solver.
     int global_current_index{0};
 
-    constexpr int num_solvers = 2 * (WITH_CBC) + (WITH_SCIP)
-#if _WIN64 == 1
-                              + (WITH_GUROBI)
-#endif
-    ;
-
-    constexpr std::array<std::pair<FactoryFunction, std::string_view>, num_solvers> all_solvers
+    static const std::vector<std::pair<FactoryFunction, std::string_view>> all_solvers
     {
-#if WITH_CBC == 1
+#ifdef WITH_CBC
         std::pair{create_solver_cbc,    "CBC"},
         std::pair{create_stub,          "CBCStub"},
 #endif
-#if WITH_SCIP == 1
+#ifdef WITH_SCIP
         std::pair{create_solver_scip,   "SCIP"},
 #endif
-#if (WITH_GUROBI == 1) && (_WIN64 == 1)
+#if defined(WITH_GUROBI) && (_WIN64 == 1)
         std::pair{create_solver_gurobi, "Gurobi"},
+#endif
+#if defined(WITH_HIGHS) && (_WIN64 == 1)
+        std::pair{create_solver_highs, "HiGHS"},
 #endif
     };
 }
@@ -678,13 +565,11 @@ namespace
 
 int create_ilp_test_suite()
 {
-    constexpr std::array<std::pair<TestFunction, std::string_view>, 10> all_tests
+    constexpr std::array<std::pair<TestFunction, std::string_view>, 8> all_tests
     { std::pair{test_sorting,                     "Sorting"}
     , std::pair{test_linear_programming,          "LinProgr"}
     , std::pair{test_start_solution_minimization, "StartSolutionMin"}
     , std::pair{test_start_solution_maximization, "StartSolutionMax"}
-    , std::pair{test_abs_gap_limit,               "AbsGapLimit"}
-    , std::pair{test_rel_gap_limit,               "RelGapLimit"}
     , std::pair{test_cutoff,                      "CutOff"}
     , std::pair{test_performance,                 "Performance"}
     , std::pair{test_performance_big,             "PerformanceBig"}
@@ -700,18 +585,18 @@ int create_ilp_test_suite()
         for (auto& [test, test_name] : all_tests)
         {
             // We need an object to pass to make_test_case, and it needs copy-by-value (solver and test are merely pointers anyway.).
-            auto lambda = [solver, test]() { execute_test_and_destroy_solver(solver(), test); };
+            auto lambda = [solver, test]() { test(solver().get()); };
             // Since we use a functor and a name, we avoid using one of the macros and create a test case directly.
             suite->add( boost::unit_test::make_test_case(lambda, (std::string(solver_name) + '_' + test_name.data()).c_str(), __FILE__, __LINE__) );
         }
 
         auto mps_path   = [](ILPSolverInterface* p_solver) -> void {test_mps_output(p_solver, std::string(all_solvers[global_current_index++].second) + "_unittest.mps");};
-        auto mps_lambda = [solver, mps_path]() { execute_test_and_destroy_solver(solver(), mps_path); };
+        auto mps_lambda = [solver, mps_path]() { mps_path(solver().get()); };
         suite->add( boost::unit_test::make_test_case(mps_lambda, (std::string(solver_name) + "_MPSOut").c_str(), __FILE__, __LINE__) );
 
         if (solver_name.rfind("Stub") != std::string::npos)
         {
-            auto lambda = [solver]() { execute_test_and_destroy_solver(solver(), test_bad_alloc); };
+            auto lambda = [solver]() { test_bad_alloc(solver().get()); };
             suite->add( boost::unit_test::make_test_case(lambda, (std::string(solver_name) + "_BadAlloc").c_str(), __FILE__, __LINE__) );
         }
 

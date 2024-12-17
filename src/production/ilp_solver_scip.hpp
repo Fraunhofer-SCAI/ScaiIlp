@@ -1,6 +1,6 @@
 #pragma once
 
-#if WITH_SCIP == 1
+#ifdef WITH_SCIP
 
 #include "ilp_solver_impl.hpp"
 
@@ -20,7 +20,7 @@ namespace ilp_solver
     typedef SCIP_Vartype SCIP_VARTYPE;
 
     // Final Implementation of SCIP inside ScaiILP.
-    class ILPSolverSCIP : public ILPSolverImpl
+    class ILPSolverSCIP final : public ILPSolverImpl
     {
     public:
 
@@ -62,13 +62,13 @@ namespace ilp_solver
         void set_objective_sense_impl(ObjectiveSense p_sense) override;
         void solve_impl() override;
         void add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
-                                const std::string& p_name = "", OptionValueArray p_row_values = {},
-                                OptionIndexArray p_row_indices = {}) override;
+                                const std::string& p_name = "", OptionalValueArray p_row_values = {},
+                                OptionalIndexArray p_row_indices = {}) override;
 
 
         void add_constraint_impl (double p_lower_bound, double p_upper_bound,
                                   ValueArray p_col_values, const std::string& p_name = "",
-                                  OptionIndexArray p_col_indices = {}) override;
+                                  OptionalIndexArray p_col_indices = {}) override;
 
         void set_max_seconds_impl(double p_seconds) override;
     };

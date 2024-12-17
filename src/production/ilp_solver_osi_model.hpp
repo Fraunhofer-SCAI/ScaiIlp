@@ -1,9 +1,15 @@
 #ifndef _ILP_SOLVER_OSI_MODEL_HPP
 #define _ILP_SOLVER_OSI_MODEL_HPP
 
-#include "ilp_solver_interface_impl.hpp"
+#if WITH_OSI == 1
 
-#include "CoinPackedMatrix.hpp"
+// Link with the CoinUtils and Osi Libraries.
+#pragma comment(lib, "libCoinUtils.lib")
+#pragma comment(lib, "libOsi.lib")
+#pragma comment(lib, "libOsiClp.lib")
+
+#include "ilp_solver_impl.hpp"
+#include "CoinModel.hpp"
 
 #include <string>
 #include <vector>
@@ -13,34 +19,38 @@ class OsiSolverInterface;
 namespace ilp_solver
 {
     // Implements all methods from ILPSolverInterfaceImpl that can be realized
-    // via the model of the OsiSolverInterface.
-    class ILPSolverOsiModel : public ILPSolverInterfaceImpl
+    // via the pure problem model of the OsiSolverInterface.
+    // If your solver uses an OsiInterface to store the problem model,
+    // but provides an additional interface on top of the OsiInterface
+    // you may want to derive from this class.
+    class ILPSolverOsiModel : public ILPSolverImpl
     {
         public:
-            ILPSolverOsiModel();
+            int  get_num_constraints() const override;
+            int  get_num_variables  () const override;
 
+            void print_mps_file     (const std::string& p_filename) override;
+        protected:
+            ILPSolverOsiModel() = default;
+
+            void prepare_impl() override;
+
+            CoinModel d_cache{};
+            bool      d_cache_changed{ false };
         private:
-            CoinPackedMatrix          d_matrix;
-            std::vector<double>       d_objective;
-            std::vector<double>       d_variable_lower, d_variable_upper;
-            std::vector<double>       d_constraint_lower, d_constraint_upper;
-            std::vector<VariableType> d_variable_type;
-            std::vector<std::string>  d_variable_name;
-            std::vector<std::string>  d_constraint_name;
+            // Obtain a pointer to a solver fulfilling the OsiSolverInterface.
+            virtual OsiSolverInterface* get_solver_osi_model() = 0;
 
-            virtual OsiSolverInterface*       do_get_solver ()       = 0;
-            virtual const OsiSolverInterface* do_get_solver () const = 0;
-            virtual void                      do_solve      (const std::vector<double>& p_start_solution, int p_num_threads, bool p_deterministic,
-                                                             int p_log_level, double p_max_seconds) = 0; // not always implemented as solver().branchAndBound() (see ILPSolverCbc)
+            void add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
+                [[maybe_unused]] const std::string& p_name = "", const std::vector<double>* p_row_values = nullptr,
+                const std::vector<int>* p_row_indices = nullptr) override;
 
-            void do_add_variable   (const std::vector<int>& p_row_indices, const std::vector<double>& p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name, VariableType p_type) override;
-            void do_add_constraint (const std::vector<int>& p_col_indices, const std::vector<double>& p_col_values, double p_lower_bound, double p_upper_bound, const std::string& p_name)                                          override;
-
-            void do_set_objective_sense (ObjectiveSense p_sense) override;
-            void do_prepare_and_solve   (const std::vector<double>& p_start_solution, int p_num_threads, bool p_deterministic, int p_log_level, double p_max_seconds) override;
-
-            void prepare();
+            void add_constraint_impl (double p_lower_bound, double p_upper_bound,
+                const std::vector<double>& p_col_values, [[maybe_unused]] const std::string& p_name = "",
+                const std::vector<int>* p_col_indices = nullptr) override;
     };
 }
+
+#endif
 
 #endif

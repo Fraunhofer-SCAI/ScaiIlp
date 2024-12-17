@@ -13,8 +13,8 @@ namespace ilp_solver
         virtual ~ILPSolverException() {}
     };
 
-    extern "C" ILPSolverException* __stdcall create_exception();
-    extern "C" void                __stdcall destroy_exception(ILPSolverException* p_exception);
+    extern "C" __declspec (dllexport) ILPSolverException* __stdcall create_exception();
+    extern "C" __declspec (dllexport) void                __stdcall destroy_exception(ILPSolverException* p_exception);
 }
 
 #endif

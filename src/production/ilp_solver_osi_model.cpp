@@ -1,9 +1,16 @@
+#if WITH_OSI == 1
+
 #include "ilp_solver_osi_model.hpp"
 
-#include "CoinPackedVector.hpp"
+#pragma warning(push)
+#pragma warning(disable : 4309) // silence warning in CBC concerning truncations of constant values in 64 bit.
 #include "OsiSolverInterface.hpp"
+#pragma warning(pop)
 
+#include <optional>
 #include <cassert>
+#include <algorithm>
+#include <numeric>
 
 using std::string;
 using std::vector;
@@ -15,114 +22,173 @@ using std::vector;
 
 // States whether consecutive elements of each column are contiguous in memory.
 // (If not, consecutive elements of each row are contiguous in memory.)
-const auto c_column_ordered = false;
+constexpr auto c_column_ordered = false;
 
-const auto c_test_for_duplicate_index = false;
+constexpr auto c_test_for_duplicate_index = false;
 
 namespace ilp_solver
 {
-    ILPSolverOsiModel::ILPSolverOsiModel() : d_matrix(c_column_ordered, 0, 0)
+    namespace
     {
-        d_matrix.setDimensions(0, 0);
-    }
 
-
-    void ILPSolverOsiModel::do_add_variable(const vector<int>& p_row_indices, const vector<double>& p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const string& p_name, VariableType p_type)
-    {
-        const auto num_indices = (int) p_row_indices.size();
-        assert((int) p_row_values.size() == num_indices);
-
-        const auto column = CoinPackedVector(num_indices, p_row_indices.data(), p_row_values.data(), c_test_for_duplicate_index);
-
-        d_matrix.appendCol(column);
-        d_objective.push_back(p_objective);
-        d_variable_lower.push_back(p_lower_bound);
-        d_variable_upper.push_back(p_upper_bound);
-        d_variable_type.push_back(p_type);
-
-#ifdef DO_FORWARD_NAME
-        d_variable_name.push_back(p_name);
-#else
-        p_name; // suppress warning "unreferenced variable"
-#endif
-    }
-
-
-    void ILPSolverOsiModel::do_add_constraint(const vector<int>& p_col_indices, const vector<double>& p_col_values, double p_lower_bound, double p_upper_bound, const string& p_name)
-    {
-        assert((int) p_col_values.size() == (int) p_col_indices.size());
-
-        // reduce row to indices with values!=0
-        vector<int> reduced_indices;
-        vector<double> reduced_values;
-        for (int i=0; i<(int)p_col_indices.size(); ++i)
+        // Prune zeros before constructing a coin-packed vector.
+        // Takes pointers to the vectors or nullptrs as parameters.
+        // If p_values is a nullptr, does nothing and returns 0, nullptr and nullptr.
+        // If p_values is valid,
+        //     prunes all zeros from it and constructs a new value array if there were any,
+        //     and a new index array if there are any zeros or if p_indices == nullptr.
+        class ZeroPruner
         {
-            if (p_col_values[i] != 0)
-            {
-                reduced_indices.push_back(p_col_indices[i]);
-                reduced_values.push_back(p_col_values[i]);
+        public:
+            ZeroPruner (const std::vector<int>* p_indices, const std::vector<double>* p_values);
+            ~ZeroPruner();
+
+            int           size()    const { return d_num_indices; }
+            const double* values()  const { return d_values; }
+            const int*    indices() const { return d_indices; }
+        private:
+            static constexpr int c_owns_values{2};
+            static constexpr int c_owns_indices{1};
+
+            double* d_values      {nullptr};
+            int*    d_indices     {nullptr};
+            int     d_num_indices {0};
+            int     d_owns        {0};
+        };
+
+        ZeroPruner::ZeroPruner(const std::vector<int>* p_indices, const std::vector<double>* p_values)
+        {
+            if (p_values != nullptr) {
+                assert ((p_indices == nullptr) || (p_indices->size() == p_values->size()));
+
+                int num_zeros{ static_cast<int>(std::count(p_values->begin(), p_values->end(), 0.)) };
+
+                if (num_zeros > 0)
+                {
+                    d_num_indices = static_cast<int>(p_values->size()) - num_zeros;
+                    d_owns        = c_owns_values | c_owns_indices;
+                    d_values      = new double[d_num_indices];
+                    d_indices     = new int   [d_num_indices];
+
+                    for (int i = 0, j = 0; i < static_cast<int>(p_values->size()); i++)
+                    {
+                        auto value = (*p_values)[i];
+                        // Construct the new arrays. If we have no indices, use the current index.
+                        if (value != 0.)
+                        {
+                            d_values [j]   = value;
+                            d_indices[j++] = (p_indices != nullptr) ? (*p_indices)[i] : i;
+                        }
+                    }
+                }
+                else
+                {
+                    // const_cast is valid since we do not ever manipulate this data
+                    // and the getter-methods return const pointers again.
+                    d_values      = const_cast<double*>(p_values->data());
+                    d_num_indices = static_cast<int>(p_values->size());
+
+                    if (p_indices == nullptr)
+                    {
+                        d_owns    = c_owns_indices;
+                        d_indices = new int[d_num_indices];
+                        std::iota(d_indices, d_indices + d_num_indices, 0);
+                    }
+                    else
+                    {
+                        d_owns    = 0;
+                        d_indices = const_cast<int*>(p_indices->data());
+                    }
+                }
             }
         }
 
-        const auto row = CoinPackedVector(static_cast<int>(reduced_indices.size()), reduced_indices.data(), reduced_values.data(), c_test_for_duplicate_index);
-
-        d_matrix.appendRow(row);
-        d_constraint_lower.push_back(p_lower_bound);
-        d_constraint_upper.push_back(p_upper_bound);
-
-#ifdef DO_FORWARD_NAME
-        d_constraint_name.push_back(p_name);
-#else
-        p_name; // suppress warning "unreferenced variable"
-#endif
-    }
-
-
-    void ILPSolverOsiModel::do_set_objective_sense(ObjectiveSense p_sense)
-    {
-        do_get_solver()->setObjSense(p_sense == ObjectiveSense::MINIMIZE ? 1 : -1);
-    }
-
-
-    void ILPSolverOsiModel::do_prepare_and_solve(const std::vector<double>& p_start_solution, int p_num_threads, bool p_deterministic, int p_log_level, double p_max_seconds)
-    {
-        prepare();
-        do_solve(p_start_solution, p_num_threads, p_deterministic, p_log_level, p_max_seconds);
-    }
-
-
-    void ILPSolverOsiModel::prepare()
-    {
-        auto ilp_solver = do_get_solver();
-
-        // Add variables and constraints
-        ilp_solver->loadProblem(d_matrix,
-                                d_variable_lower.data(),
-                                d_variable_upper.data(),
-                                d_objective.data(),
-                                d_constraint_lower.data(),
-                                d_constraint_upper.data());
-
-        // Set variable types
-        for (auto i = 0; i < (int) d_variable_type.size(); ++i)
+        ZeroPruner::~ZeroPruner() noexcept
         {
-            if (d_variable_type[i] == VariableType::INTEGER)
-                ilp_solver->setInteger(i);
-            else
-                ilp_solver->setContinuous(i);
+            if (d_owns & c_owns_values)  delete[] d_values;
+            if (d_owns & c_owns_indices) delete[] d_indices;
         }
+    }
 
-#ifdef DO_FORWARD_NAME
-        // Set variable names
-        for (auto i = 0; i < (int) d_variable_name.size(); ++i)
-            ilp_solver->setColName(i, d_variable_name[i]);
 
-        // Set constraint names
-        for (auto j = 0; j < (int) d_constraint_name.size(); ++j)
-            ilp_solver->setRowName(j, d_constraint_name[j]);
+    int ILPSolverOsiModel::get_num_constraints() const
+    {
+        return d_cache.numberRows();
+    }
+
+
+    int ILPSolverOsiModel::get_num_variables() const
+    {
+        return d_cache.numberColumns();
+    }
+
+
+    void ILPSolverOsiModel::print_mps_file(const std::string& p_filename)
+    {
+        // path,
+        // compression (off),
+        // format (extra precision),
+        // number of values per dataline (1 or 2),
+        // keepStrings (no idea what it does, false is default).
+        if( d_cache.writeMps(p_filename.c_str(), 0, 1, 1, false) )
+            throw std::exception("Could not write mps file.");
+    }
+
+
+    void ILPSolverOsiModel::prepare_impl()
+    {
+        auto* solver{ get_solver_osi_model() };
+        if (d_cache_changed && (d_cache.numberColumns() > 0 || d_cache.numberRows() > 0))
+        {
+            solver->loadFromCoinModel(d_cache, true);
+            d_cache_changed = false;
+        }
+    }
+
+
+    void ILPSolverOsiModel::add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
+        [[maybe_unused]] const std::string& p_name, const std::vector<double>* p_row_values,
+        const std::vector<int>* p_row_indices)
+    {
+        ZeroPruner pruner{p_row_indices, p_row_values};
+        assert (pruner.size() <= get_num_constraints());
+
+        // OSI has no special case for binary variables.
+        bool is_integer_or_binary{ (p_type == VariableType::CONTINUOUS) ? false : true };
+#if DO_FORWARD_NAME == true
+        if (!p_name.empty())
+        {
+            // Spaces are problematic when printing to mps.
+            auto name = p_name;
+            std::replace(name.begin(), name.end(), ' ', '_');
+            d_cache.addCol(pruner.size(), pruner.indices(), pruner.values(), p_lower_bound, p_upper_bound, p_objective, name.c_str(), is_integer_or_binary);
+        }
+        else
 #endif
+            d_cache.addCol(pruner.size(), pruner.indices(), pruner.values(), p_lower_bound, p_upper_bound, p_objective, nullptr, is_integer_or_binary);
+        d_cache_changed = true;
+    }
 
-        // Deactivate solvers console output
-        ilp_solver->setHintParam(OsiDoReducePrint, 1);
+
+    void ILPSolverOsiModel::add_constraint_impl (double p_lower_bound, double p_upper_bound,
+        const std::vector<double>& p_col_values, [[maybe_unused]] const std::string& p_name,
+        const std::vector<int>* p_col_indices)
+    {
+        ZeroPruner pruner{p_col_indices, &p_col_values};
+
+#if DO_FORWARD_NAME == true
+        if (!p_name.empty())
+        {
+            // Spaces are problematic when printing to mps.
+            auto name = p_name;
+            std::replace(name.begin(), name.end(), ' ', '_');
+            d_cache.addRow(pruner.size(), pruner.indices(), pruner.values(), p_lower_bound, p_upper_bound, name.c_str());
+        }
+        else
+#endif
+            d_cache.addRow(pruner.size(), pruner.indices(), pruner.values(), p_lower_bound, p_upper_bound);
+        d_cache_changed = true;
     }
 }
+
+#endif

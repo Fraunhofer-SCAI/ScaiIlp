@@ -2,7 +2,7 @@
 #define _ILP_DATA_HPP
 
 #include "ilp_solver_interface.hpp"
-#include "ilp_solver_interface_impl.hpp"
+#include "ilp_solver_impl.hpp"
 
 #include <limits>
 #include <vector>
@@ -11,24 +11,37 @@ namespace ilp_solver
 {
     struct ILPData
     {
-        std::vector< std::vector<double> > matrix;  // Note: mx0 matrices can be stored, but 0xn matrices cannot.
+        // Inner vectors are rows/constraints. The size of the outer vector is the number of constraints.
+        // The size of the inner vectors is the number of variables.
+        // If no constraints are given, we can not know the number of variables. (m x 0 can be stored, 0 x n can not).
+        using Matrix = std::vector<std::vector<double>>;
+
+        Matrix              matrix;
         std::vector<double> objective;
         std::vector<double> variable_lower;
         std::vector<double> variable_upper;
         std::vector<double> constraint_lower;
         std::vector<double> constraint_upper;
         std::vector<VariableType> variable_type;
-        ObjectiveSense objective_sense;
+        ObjectiveSense objective_sense{ ObjectiveSense::MINIMIZE };
 
         std::vector<double> start_solution;
 
-        int num_threads;
-        bool deterministic;
-        int log_level;
-        double max_seconds;
+        // Defaults will be overwritten in ilp_solver_collect,
+        // but are initialized to the same constants to be sure.
+        int    num_threads   { c_default_num_threads   };
+        bool   deterministic { c_default_deterministic };
+        int    log_level     { c_default_log_level     };
+        bool   presolve      { c_default_presolve      };
+        double max_seconds   { c_default_max_seconds   };
+        int    max_nodes     { c_default_max_nodes     };
+        int    max_solutions { c_default_max_solutions };
+        double max_abs_gap   { c_default_max_abs_gap   };
+        double max_rel_gap   { c_default_max_rel_gap   };
 
-        ILPData() : objective_sense(ObjectiveSense::MINIMIZE),
-                    num_threads(0), deterministic(true), log_level(0), max_seconds(std::numeric_limits<double>::max()) {}
+
+
+        ILPData() = default;
     };
 
 

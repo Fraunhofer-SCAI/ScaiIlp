@@ -4,7 +4,6 @@
 #include "solver_exit_code.hpp"
 
 #include <cassert>
-#include <codecvt>      // for std::codecvt_utf8_utf16
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -13,21 +12,14 @@
 #define NOMINMAX
 #include <windows.h>    // for GetModuleFileNameW, CreateProcessW etc.
 
-const auto c_file_separator = L"\\";
-const auto c_max_path_length = 1 << 16;
+constexpr auto c_file_separator = L"\\";
+constexpr auto c_max_path_length = 1 << 16;
 
 using std::string;
 using std::wstring;
 
 namespace ilp_solver
 {
-    static wstring utf8_to_utf16(const string& p_utf8_string)
-    {
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-        return converter.from_bytes(p_utf8_string);
-    }
-
-
     static wstring quote(const wstring& p_string)
     {
         return L"\"" + p_string + L"\"";
@@ -208,40 +200,48 @@ namespace ilp_solver
             throw std::exception(("External ILP solver: " + exit_code_to_message(p_exit_code)).c_str());
     }
 
-
+    // set_default_parameters is called in ILPSolverCollect.
     ILPSolverStub::ILPSolverStub(const std::string& p_executable_basename)
         : d_executable_basename(p_executable_basename)
-        {}
+    { }
 
 
-    const double* ILPSolverStub::do_get_solution() const
+    std::vector<double> ILPSolverStub::get_solution() const
     {
-        return d_ilp_solution_data.solution.data();
+        return d_ilp_solution_data.solution;
     }
 
 
-    double ILPSolverStub::do_get_objective() const
+    double ILPSolverStub::get_objective() const
     {
         return d_ilp_solution_data.objective;
     }
 
 
-    SolutionStatus ILPSolverStub::do_get_status() const
+    SolutionStatus ILPSolverStub::get_status() const
     {
         return d_ilp_solution_data.solution_status;
     }
 
 
-    void ILPSolverStub::do_solve(const ILPData& p_data)
+    void ILPSolverStub::reset_solution()
     {
-        d_ilp_solution_data = ILPSolutionData(p_data.objective_sense);
+        d_ilp_data.start_solution.clear();
+        d_ilp_solution_data = ILPSolutionData(d_ilp_data.objective_sense);
+    }
+
+
+
+    void ILPSolverStub::solve_impl()
+    {
+        d_ilp_solution_data = ILPSolutionData(d_ilp_data.objective_sense);
 
         CommunicationParent communicator;
-        const auto shared_memory_name = communicator.write_ilp_data(p_data);
+        const auto shared_memory_name = communicator.write_ilp_data(d_ilp_data);
 
-        auto exit_code = execute_process(d_executable_basename, shared_memory_name, seconds_to_milliseconds (1.5*p_data.max_seconds));
+        auto exit_code = execute_process(d_executable_basename, shared_memory_name, seconds_to_milliseconds (1.5 * d_ilp_data.max_seconds));
         if (exit_code != SolverExitCode::ok)
-            handle_error(p_data.log_level, exit_code);
+            handle_error(d_ilp_data.log_level, exit_code);
         else
             communicator.read_solution_data(&d_ilp_solution_data);
     }

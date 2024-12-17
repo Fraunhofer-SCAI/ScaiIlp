@@ -1,14 +1,23 @@
-#ifndef _ILP_SOLVER_INTERFACE_IMPL_HPP
-#define _ILP_SOLVER_INTERFACE_IMPL_HPP
+#ifndef _ILP_SOLVER_IMPL_HPP
+#define _ILP_SOLVER_IMPL_HPP
 
 #include "ilp_solver_interface.hpp"
 
+// The implementation serves to avoid redundant code duplication.
 namespace ilp_solver
 {
-    enum class VariableType   { INTEGER, CONTINUOUS };
+    enum class VariableType   { INTEGER, CONTINUOUS, BINARY };
     enum class ObjectiveSense { MINIMIZE, MAXIMIZE };
 
-    class ILPSolverInterfaceImpl : public ILPSolverInterface
+
+    // You may call this free function in the constructor of your fully implemented class.
+    // Can not be called in the constructor of ILPSolverImpl since the virtual functions are not yet overridden.
+    void set_default_parameters(ILPSolverInterface* p_solver);
+
+    // This is the base class for any solver not using some kind of Osi-modeling or full interface.
+    // It implements some methods of ILPSolverInterface by introducing fewer private virtual methods,
+    // collecting multiple cases at once.
+    class ILPSolverImpl : public ILPSolverInterface
     {
         public:
             void add_variable_boolean    (                                                                                double p_objective,                                             const std::string& p_name = "") override;
@@ -30,49 +39,26 @@ namespace ilp_solver
             void add_constraint_equality (                                       const std::vector<double>& p_col_values,                                              double p_value,    const std::string& p_name = "") override;
             void add_constraint_equality (const std::vector<int>& p_col_indices, const std::vector<double>& p_col_values,                                              double p_value,    const std::string& p_name = "") override;
 
-            void set_start_solution      (const std::vector<double>& p_solution) override;
-
-            void                      minimize      ()       override;
-            void                      maximize      ()       override;
-            const std::vector<double> get_solution  () const override;
-            double                    get_objective () const override;
-            SolutionStatus            get_status    () const override;
-
-            void set_num_threads        (int p_num_threads)    override;
-            void set_deterministic_mode (bool p_deterministic) override;
-            void set_log_level          (int p_level)          override;
-            void set_max_seconds        (double p_seconds)     override;
+            void minimize() override;
+            void maximize() override;
 
         protected:
-            ILPSolverInterfaceImpl();
+            ILPSolverImpl() = default;
 
         private:
-            std::vector<int>    d_all_col_indices;
-            std::vector<int>    d_all_row_indices;
-            std::vector<double> d_start_solution;
-
-            int    d_num_threads;
-            bool   d_deterministic;
-            int    d_log_level;
-            double d_max_seconds;
-
-            virtual void do_add_variable   (const std::vector<int>& p_row_indices, const std::vector<double>& p_row_values, double p_objective,
-                                            double p_lower_bound, double p_upper_bound, const std::string& p_name, VariableType p_type)             = 0;
-            virtual void do_add_constraint (const std::vector<int>& p_col_indices, const std::vector<double>& p_col_values, double p_lower_bound,
-                                            double p_upper_bound, const std::string& p_name)                                                        = 0;
-
-            virtual void           do_set_objective_sense (ObjectiveSense p_sense) = 0;
-            virtual void           do_prepare_and_solve   (const std::vector<double>& p_start_solution,                                          // p_start_solution can be empty;
-                                                           int p_num_threads, bool p_deterministic, int p_log_level, double p_max_seconds) = 0;
-            virtual const double*  do_get_solution        () const = 0;
-            virtual double         do_get_objective       () const = 0;
-            virtual SolutionStatus do_get_status          () const = 0;
-
-            void add_variable_and_update_index_vector   (const std::vector<int>& p_row_indices, const std::vector<double>& p_row_values,
-                                                         double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name, VariableType p_type);
-            void add_constraint_and_update_index_vector (const std::vector<int>& p_col_indices, const std::vector<double>& p_col_values,
-                                                         double p_lower_bound, double p_upper_bound, const std::string& p_name);
-            void solve();
+            // If there is anything that needs to be done before a solve, overwrite prepare_impl.
+            // It will be called before set_objective_sense_impl and solve_impl.
+            // Useful e.g. for cached problems etc.
+            // The default version does nothing.
+            virtual void                      prepare_impl();
+            virtual void                      add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
+                                                                 const std::string& p_name = "", const std::vector<double>* p_row_values = nullptr,
+                                                                 const std::vector<int>* p_row_indices = nullptr) = 0;
+            virtual void                      add_constraint_impl (double p_lower_bound, double p_upper_bound,
+                                                                   const std::vector<double>& p_col_values, const std::string& p_name = "",
+                                                                   const std::vector<int>* p_col_indices = nullptr) = 0;
+            virtual void                      solve_impl() = 0;
+            virtual void                      set_objective_sense_impl(ObjectiveSense p_sense) = 0;
     };
 }
 

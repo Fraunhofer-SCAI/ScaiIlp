@@ -206,18 +206,24 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
     * "define=_ITERATOR_DEBUG_LEVEL=0" (without double quotes)
     * "define=BOOST_TEST_NO_MAIN"      (without double quotes)
 
-3. Specify the location of Cbc by setting the environment variable CBC_DIR.
+3. Specify the location of Cbc by opening the properties.props file
+   and setting the User Macro COIN_DIR (if your paths follow our examples)
+   or by setting the COIN_LIB_PATH and COIN_INCLUDE_PATHS macros to the correct paths on your system.
 
-4. If you want to support multithreading,
+4. Activate CBC by opening the properties.props file and setting the preprocessor definitions "WITH_CBC=1" and "WITH_OSI=1".
+   You can find the preprocessor definitions under C/C++ -> Preprocessor -> Preprocessor Definitions.
+   CBC should be activated by default.
+
+5. If you want to support multithreading,
    specify the location of pthread by setting the environment variable PTHREAD_DIR,
    whereby PTHREAD_DIR has to contain the folders "Win32-v141-Release", "Win32-v141-Debug", "x64-v141-Release" and "x64-v141-Debug",
    each containing the appropriate version of pthread.dll. Otherwise proceed with step 5.
 
-5. Specify the location of Boost by setting the environment variable BOOST_DIR. Note that the
-   include files must be located in $(BOOST_DIR)\include\boost-1_66 and the lib files must be located in
-   $(BOOST_DIR)\lib (for 32 bit) and $(BOOST_DIR)\lib_64 (for 64 bit).
+6. Specify the location of Boost by opening the properties.props file
+   and setting the User Macros BOOST_VERSION and BOOST_DIR (if your paths follow our examples)
+   or by setting the BOOST_INCLUDE_PATH and BOOST_LIB_PATH manually to the correct paths on your system.
 
-6. Build ScaiIlpDll, ScaiIlpExe, and UnitTest.
+7. Build ScaiIlpDll, ScaiIlpExe, and UnitTest.
 
 
 3 Code Structure
@@ -271,33 +277,32 @@ executable (in the same directory, should be ScaiIlpExe.exe, unless you rename i
 3.3 Class Hierarchy
 -------------------
 
-    ILPSolverInterface: published Interface
+    ILPSolverInterface:         Published interface
     |
-    |-> ILPSolverInterfaceImpl: implements all methods of ILPSolverInterface, partially by introducing
-        |                       private virtual methods
+    |-> ILPSolverImpl:          Auxiliary base class to simplify implementation of any specific solver.
+        |                       Implements some methods of ILPSolverInterface
+        |                       by calling a smaller number of newly introduced private virtual methods.
         |
-        |-> ILPSolverOsiModel:  implements all modelling methods (e.g., do_add_variable) of
-        |   |                   ILPSolverInterfaceImpl and all methods that influence the modelling
-        |   |                   process (the prepare part of do_prepare_and_solve()) for arbitrary
-        |   |                   solvers whose modelling functionality is exposed via the
-        |   |                   OsiSolverInterface
+        |-> ILPSolverOsiModel:  Base class for solvers whose modeling functionality is exposed via
+        |   |                   the OsiSolverInterface, i.e. have a partial Osi interface.
+        |   |                   Implements all methods they share.
         |   |
-        |   |-> ILPSolverCbc:   implements the remaining, solver specific methods for the Cbc solver
+        |   |-> ILPSolverCbc:   Final. To use CBC.
+        |   |                   Implements the remaining, solver specific methods for the CBC solver.
         |   |
-        |   |-> ILPSolverOsi:   implements the remaining, solver specific methods for arbitrary solvers
-        |                       whose functionality is exposed via the OsiSolverInterface.
-        |                       Currently, the run time limit and the maximum number of threads are
-        |                       ignored because the OsiSolverInterface does not provide this functionality.
+        |   |-> ILPSolverOsi:   Final. Class for solvers who have a complete Osi interface.
+        |                       Implements the remaining, solver specific methods.
+        |                       Currently, some parameter-setting functions have empty implementations
+        |                       because the OsiSolverInterface does not provide this functionality.
         |
-        |-> ILPSolverCollect:   implements all modelling methods (e.g., do_add_variable) of
-            |                   ILPSolverInterfaceImpl and all methods that influence the modelling
-            |                   process (the prepare part of do_prepare_and_solve()) and stores these
-            |                   data in ILPData.
+        |-> ILPSolverCollect:   Implements all input related methods by storing the data in ILPData.
+            |                   Base class for all solvers where that is useful.
             |
-            |-> ILPSolverStub:  do_solve() writes the ILPData to shared memory and calls an external
-                                solver. The external solver writes the result (in form of ILPSolutionData)
-                                back to the shared memory. The other methods of ILPSolverStub simply
-                                query ILPSolutionData.
+            |-> ILPSolverStub:  Final. Solve in a separate process.
+                                solve_impl() writes the ILPData to shared memory and calls an external solver.
+                                The external solver writes the result (in form of ILPSolutionData)
+                                back to the shared memory.
+                                The solution getter methods of ILPSolverStub simply query ILPSolutionData.
 
 
 3.4 Adding a New Solver
@@ -306,30 +311,24 @@ executable (in the same directory, should be ScaiIlpExe.exe, unless you rename i
 When you want to support a new solver, you must ask yourself at which level you want to hook into
 the class hierarchy.
 
-1. If you want to communicate with the solver via the OsiSolverInterface, then you derive a class
-   from ILPSolverOsi, construct your solver and forward a pointer to this solver (its
-   OsiSolverInterface) to the constructor of ILPSolverOsi.
+1. If you want to communicate with the solver via the OsiSolverInterface, can use the ILPSolverOsi class.
+   The constructor takes any valid OsiSolverInterface*.
 
    Note, however, that the OsiSolverInterface does not provide all the functionality that is
-   exposed by ILPSolverInterface. If you can access the solver that is wrapped inside
-   OsiSolverInterface, then you can overwrite* the method ILPSolverOsi::do_solve() to forward some
-   information that is ignored in this method to the solver.
-
-   An alternative would be to modify ILPSolverOsi::do_solve() to forward the parameters that are
-   currently ignored to a virtual function that can be implemented in a derived class and has an
-   empty default implementation. But currently, there is no need for this, so we do not extra
-   lines of code for this feature.
+   exposed by ILPSolverInterface. If your solver provides a non-Osi interface, you might prefer
+   the latter. If your solver has ways to partially bypass Osi and add the missing functionality,
+   you should derive from IlpSolverOsi and override the corresponding functions.
 
 2. If your solver is based on an LP-Solver it communicates with via the OsiSolverInterface and if
    your solver obtains its model via this LP-solver, then you should derive from ILPSolverOsiModel
    like Cbc does.
 
-3. As a last option, you can derive from ILPSolverInterfaceImpl and implement all the virtual
-   methods yourself.
+3. If you don't use Osi at all, you should derive from ILPSolverImpl.
 
-If you want your solver to be accessible via the DLL, then you must declare and define a function
+   Most likely you don't want to derive from IlpSolverInterface directly.
 
-    extern "C" ILPSolverInterface* __stdcall create_solver_xyz(parameters)
+If you want your solver to be accessible via the DLL, then you must declare a function
 
-in ilp_solver_factory.hpp and ilp_solver_factory.cpp, respectively, and add this function in the
-module definition file ScaiIlpDll.def, which can be found in vc\ScaiIlpDll.
+    extern "C" __declspec (dllexport) ILPSolverInterface* __stdcall create_solver_xyz(parameters);
+
+in ilp_solver_factory.hpp and define it in ilp_solver_factory.cpp, respectively.

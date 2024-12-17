@@ -35,8 +35,8 @@ enum class SolverExitCode
     forced_termination
 };
 
-static_assert (static_cast<int>(SolverExitCode::uncaught_exception_1) == 0x00000003, "uncaught_exception_1");
-static_assert (static_cast<int>(SolverExitCode::uncaught_exception_2) == 0xE06D7363, "uncaught_exception_2");
-static_assert (static_cast<int>(SolverExitCode::uncaught_exception_3) == 0xC0000409, "uncaught_exception_3");
+static_assert (static_cast<int>(SolverExitCode::uncaught_exception_1) == 0x00000003);
+static_assert (static_cast<int>(SolverExitCode::uncaught_exception_2) == 0xE06D7363);
+static_assert (static_cast<int>(SolverExitCode::uncaught_exception_3) == 0xC0000409);
 
 #endif

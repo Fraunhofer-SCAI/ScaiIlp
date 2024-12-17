@@ -50,6 +50,12 @@ namespace ilp_solver
             void* const d_address;
             void* d_result_address;
     };
+
+
+    // conversion between utf8 and utf16
+    std::wstring utf8_to_utf16(const std::string& p_utf8_string);
+
+    std::string utf16_to_utf8(const std::wstring& p_utf16_string);
 }
 
 #endif

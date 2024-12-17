@@ -4,7 +4,6 @@
     <ClInclude Include="..\..\src\production\ilp_solver_cbc.hpp" />
     <ClInclude Include="..\..\src\production\ilp_solver_factory.hpp" />
     <ClInclude Include="..\..\src\production\ilp_solver_interface.hpp" />
-    <ClInclude Include="..\..\src\production\ilp_solver_interface_impl.hpp" />
     <ClInclude Include="..\..\src\production\ilp_solver_osi.hpp" />
     <ClInclude Include="..\..\src\production\ilp_solver_osi_model.hpp" />
     <ClInclude Include="..\..\src\production\ilp_solver_stub.hpp" />
@@ -17,17 +16,18 @@
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\production\ilp_solver_exception.hpp" />
+    <ClInclude Include="..\..\src\production\ilp_solver_impl.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\production\ilp_solver_cbc.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_factory.cpp" />
-    <ClCompile Include="..\..\src\production\ilp_solver_interface_impl.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_osi.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_osi_model.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_stub.cpp" />
     <ClCompile Include="..\..\src\production\shared_memory_communication.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_collect.cpp" />
     <ClCompile Include="..\..\src\production\ilp_solver_exception.cpp" />
+    <ClCompile Include="..\..\src\production\ilp_solver_impl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resource Files">

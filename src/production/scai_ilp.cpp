@@ -7,8 +7,6 @@
 #include <stdexcept>
 #include <string>
 
-#include <codecvt>      // for std::codecvt_utf8_utf16
-
 #include <windows.h>    // for SetErrorMode
 
 using namespace ilp_solver;
@@ -17,13 +15,6 @@ class ModelException : public std::exception {};
 class SolverException : public std::exception {};
 
 using ilp_solver::ILPSolverInterface;
-
-
-static std::string utf16_to_utf8(const std::wstring &p_utf16_string)
-{
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> convert;
-    return convert.to_bytes(p_utf16_string);
-}
 
 
 static void add_variables(ILPSolverInterface* v_solver, const ILPData& p_data)
@@ -76,10 +67,16 @@ static void set_solver_preparation_parameters(ILPSolverInterface* v_solver, cons
 
 static void set_solver_parameters(ILPSolverInterface* v_solver, const ILPData& p_data)
 {
-    v_solver->set_num_threads(p_data.num_threads);
+    v_solver->set_num_threads       (p_data.num_threads);
     v_solver->set_deterministic_mode(p_data.deterministic);
-    v_solver->set_log_level(p_data.log_level);
-    v_solver->set_max_seconds(p_data.max_seconds);
+    v_solver->set_log_level         (p_data.log_level);
+    v_solver->set_presolve          (p_data.presolve);
+
+    v_solver->set_max_seconds       (p_data.max_seconds);
+    v_solver->set_max_nodes         (p_data.max_nodes);
+    v_solver->set_max_solutions     (p_data.max_solutions);
+    v_solver->set_max_abs_gap       (p_data.max_abs_gap);
+    v_solver->set_max_rel_gap       (p_data.max_rel_gap);
 }
 
 
@@ -108,6 +105,7 @@ static ILPSolutionData solution_data(const ILPSolverInterface& p_solver)
 static ILPSolutionData solve_ilp(const ILPData& p_data)
 {
     auto solver = ilp_solver::create_solver_cbc();
+
 
     // RAII for deleting solver
     struct SolverDeleter

@@ -11,10 +11,12 @@ namespace ilp_solver
         }
     };
 
+
     extern "C" ILPSolverException* __stdcall create_exception()
     {
         return new ILPSolverExceptionImpl();
     }
+
 
     extern "C" void __stdcall destroy_exception(ILPSolverException* p_exception)
     {

@@ -30,6 +30,8 @@ static void add_variables(ILPSolverInterface* v_solver, const ILPData& p_data)
 
         if (variable_type == VariableType::INTEGER)
             v_solver->add_variable_integer(objective, lower, upper);
+        else if (variable_type == VariableType::BINARY)
+            v_solver->add_variable_boolean(objective);
         else
             v_solver->add_variable_continuous(objective, lower, upper);
     }

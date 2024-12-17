@@ -1,5 +1,4 @@
-#ifndef _ILP_SOLVER_FACTORY_HPP
-#define _ILP_SOLVER_FACTORY_HPP
+#pragma once
 
 #include "ilp_solver_interface.hpp"
 
@@ -40,5 +39,3 @@ namespace ilp_solver
     __declspec (dllexport)
     void __stdcall destroy_solver(ILPSolverInterface* p_solver);
 }
-
-#endif

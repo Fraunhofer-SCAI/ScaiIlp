@@ -1,5 +1,10 @@
 #if WITH_OSI == 1
 
+// Link with the CoinUtils and Osi Libraries.
+#pragma comment(lib, "libCoinUtils.lib")
+#pragma comment(lib, "libOsi.lib")
+#pragma comment(lib, "libOsiClp.lib")
+
 #include "ilp_solver_osi_model.hpp"
 
 #pragma warning(push)
@@ -14,11 +19,6 @@
 
 using std::string;
 using std::vector;
-
-// Specify name of variable or constraint only in debug mode:
-#ifdef _DEBUG
-#define DO_FORWARD_NAME true
-#endif
 
 // States whether consecutive elements of each column are contiguous in memory.
 // (If not, consecutive elements of each row are contiguous in memory.)
@@ -147,15 +147,13 @@ namespace ilp_solver
 
 
     void ILPSolverOsiModel::add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
-        [[maybe_unused]] const std::string& p_name, const std::vector<double>* p_row_values,
-        const std::vector<int>* p_row_indices)
+                                               const std::string& p_name, const std::vector<double>* p_row_values, const std::vector<int>* p_row_indices)
     {
         ZeroPruner pruner{p_row_indices, p_row_values};
         assert (pruner.size() <= get_num_constraints());
 
         // OSI has no special case for binary variables.
         bool is_integer_or_binary{ (p_type == VariableType::CONTINUOUS) ? false : true };
-#if DO_FORWARD_NAME == true
         if (!p_name.empty())
         {
             // Spaces are problematic when printing to mps.
@@ -164,19 +162,16 @@ namespace ilp_solver
             d_cache.addCol(pruner.size(), pruner.indices(), pruner.values(), p_lower_bound, p_upper_bound, p_objective, name.c_str(), is_integer_or_binary);
         }
         else
-#endif
             d_cache.addCol(pruner.size(), pruner.indices(), pruner.values(), p_lower_bound, p_upper_bound, p_objective, nullptr, is_integer_or_binary);
         d_cache_changed = true;
     }
 
 
-    void ILPSolverOsiModel::add_constraint_impl (double p_lower_bound, double p_upper_bound,
-        const std::vector<double>& p_col_values, [[maybe_unused]] const std::string& p_name,
-        const std::vector<int>* p_col_indices)
+    void ILPSolverOsiModel::add_constraint_impl (double p_lower_bound, double p_upper_bound, const std::vector<double>& p_col_values,
+                                                 const std::string& p_name, const std::vector<int>* p_col_indices)
     {
         ZeroPruner pruner{p_col_indices, &p_col_values};
 
-#if DO_FORWARD_NAME == true
         if (!p_name.empty())
         {
             // Spaces are problematic when printing to mps.
@@ -185,7 +180,6 @@ namespace ilp_solver
             d_cache.addRow(pruner.size(), pruner.indices(), pruner.values(), p_lower_bound, p_upper_bound, name.c_str());
         }
         else
-#endif
             d_cache.addRow(pruner.size(), pruner.indices(), pruner.values(), p_lower_bound, p_upper_bound);
         d_cache_changed = true;
     }

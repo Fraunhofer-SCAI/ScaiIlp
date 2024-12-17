@@ -1,14 +1,13 @@
-#ifndef _SHARED_MEMORY_COMMUNICATION_HPP
-#define _SHARED_MEMORY_COMMUNICATION_HPP
+#pragma once
 
 #include "ilp_data.hpp"
 
+#include <boost/interprocess/mapped_region.hpp>
+#include <boost/interprocess/windows_shared_memory.hpp>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <boost/interprocess/windows_shared_memory.hpp>
-#include <boost/interprocess/mapped_region.hpp>
 
 namespace ilp_solver
 {
@@ -57,5 +56,3 @@ namespace ilp_solver
 
     std::string utf16_to_utf8(const std::wstring& p_utf16_string);
 }
-
-#endif

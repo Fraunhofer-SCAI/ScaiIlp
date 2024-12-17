@@ -1,11 +1,11 @@
-#ifndef _ILP_SOLVER_OSI_HPP
-#define _ILP_SOLVER_OSI_HPP
+#pragma once
 
 #if WITH_OSI == 1
 
 #include "ilp_solver_osi_model.hpp"
 
 class OsiSolverInterface;
+
 
 namespace ilp_solver
 {
@@ -44,7 +44,5 @@ namespace ilp_solver
             void                set_objective_sense_impl(ObjectiveSense p_sense)                override;
     };
 }
-
-#endif
 
 #endif

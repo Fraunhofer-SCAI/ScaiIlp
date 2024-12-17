@@ -1,8 +1,7 @@
-#ifndef _ILP_DATA_HPP
-#define _ILP_DATA_HPP
+#pragma once
 
-#include "ilp_solver_interface.hpp"
 #include "ilp_solver_impl.hpp"
+#include "ilp_solver_interface.hpp"
 
 #include <limits>
 #include <vector>
@@ -63,5 +62,3 @@ namespace ilp_solver
             {}
     };
 }
-
-#endif

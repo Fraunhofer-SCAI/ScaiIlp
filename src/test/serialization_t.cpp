@@ -1,9 +1,9 @@
 #include "serialization.hpp"
 
+#include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
 
 using std::endl;
 using std::vector;

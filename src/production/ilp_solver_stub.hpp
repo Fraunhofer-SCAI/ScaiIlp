@@ -1,5 +1,4 @@
-#ifndef _ILP_SOLVER_STUB_HPP
-#define _ILP_SOLVER_STUB_HPP
+#pragma once
 
 #include "ilp_data.hpp"
 #include "ilp_solver_collect.hpp"
@@ -29,5 +28,3 @@ namespace ilp_solver
             void solve_impl() override;
     };
 }
-
-#endif

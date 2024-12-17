@@ -1,14 +1,20 @@
 #if WITH_CBC == 1
 
-#include <algorithm>
-#include "ilp_solver_cbc.hpp"
-#include "CglTreeInfo.hpp" // Needed to deal with the probing_info memory leak in Cbc
+// Link with the required CBC Libraries.
+#pragma comment(lib, "libCbc.lib")
+#pragma comment(lib, "libClp.lib")
+#pragma comment(lib, "libCgl.lib")
 
+#include "ilp_solver_cbc.hpp"
+
+#include "CglTreeInfo.hpp" // Needed to deal with the probing_info memory leak in Cbc
 #pragma warning(push)
 #pragma warning(disable : 5033) // silence warning in CBC concerning the deprecated keyword 'register'
 #include "CoinMessageHandler.hpp"
 #include "OsiSolverInterface.hpp"
 #pragma warning(pop)
+
+#include <algorithm>
 
 
 namespace ilp_solver

@@ -1,12 +1,12 @@
-#ifndef _ILP_SOLVER_GUROBI_HPP
-#define _ILP_SOLVER_GUROBI_HPP
+#pragma once
 
 //Gurobi is only supported on 64-bit builds.
 #if (WITH_GUROBI == 1) && (_WIN64 == 1)
 
+#include "ilp_solver_impl.hpp"
+
 #pragma comment(lib, "gurobi80.lib")
 
-#include "ilp_solver_impl.hpp"
 
 namespace ilp_solver
 {
@@ -68,5 +68,4 @@ namespace ilp_solver
     };
 }
 
-#endif
 #endif

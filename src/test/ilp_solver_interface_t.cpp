@@ -1,13 +1,12 @@
 #include "ilp_solver_factory.hpp"
 #include "ilp_solver_interface.hpp"
 
-#include <array>
 #include <algorithm>
+#include <array>
+#include <boost/test/unit_test.hpp>
+#include <filesystem>
 #include <iostream>
 #include <string_view>
-#include <filesystem>
-
-#include <boost/test/unit_test.hpp>
 
 #define NOMINMAX
 #include <windows.h>    // for GetTickCount

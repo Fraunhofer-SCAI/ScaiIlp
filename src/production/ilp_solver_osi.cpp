@@ -7,6 +7,7 @@
 #include "OsiSolverInterface.hpp"
 #pragma warning(pop)
 
+
 namespace ilp_solver
 {
     ILPSolverOsi::ILPSolverOsi(OsiSolverInterface* p_ilp_solver)

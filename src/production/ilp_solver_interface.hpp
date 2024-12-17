@@ -1,8 +1,8 @@
-#ifndef _ILP_SOLVER_INTERFACE_HPP
-#define _ILP_SOLVER_INTERFACE_HPP
+#pragma once
 
 #include <string>
 #include <vector>
+
 
 namespace ilp_solver
 {
@@ -154,5 +154,3 @@ namespace ilp_solver
             virtual ~ILPSolverInterface() noexcept {}
     };
 }
-
-#endif

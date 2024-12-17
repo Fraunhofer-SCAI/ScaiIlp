@@ -1,5 +1,4 @@
-#ifndef _ILP_SOLVER_EXCEPTION_HPP
-#define _ILP_SOLVER_EXCEPTION_HPP
+#pragma once
 
 #include <string>
 
@@ -16,5 +15,3 @@ namespace ilp_solver
     extern "C" __declspec (dllexport) ILPSolverException* __stdcall create_exception();
     extern "C" __declspec (dllexport) void                __stdcall destroy_exception(ILPSolverException* p_exception);
 }
-
-#endif

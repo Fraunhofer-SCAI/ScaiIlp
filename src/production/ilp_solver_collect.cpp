@@ -1,9 +1,9 @@
 #include "ilp_solver_collect.hpp"
 
-#include <fstream>
-#include <sstream>
-#include <iomanip>
 #include <cassert>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
 
 using std::string;
 using std::vector;

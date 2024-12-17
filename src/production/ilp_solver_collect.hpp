@@ -1,5 +1,4 @@
-#ifndef _ILP_SOLVER_COLLECT_HPP
-#define _ILP_SOLVER_COLLECT_HPP
+#pragma once
 
 #include "ilp_data.hpp"
 #include "ilp_solver_impl.hpp"
@@ -45,5 +44,3 @@ namespace ilp_solver
             void set_max_rel_gap        (double p_gap)         override;
     };
 }
-
-#endif

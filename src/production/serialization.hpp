@@ -1,9 +1,7 @@
-#ifndef _SERIALIZATION_HPP
-#define _SERIALIZATION_HPP
-
-#include <vector>
+#pragma once
 
 #include <boost/utility.hpp>
+#include <vector>
 
 /**********************************
 * Serializes plain old data types *
@@ -163,5 +161,3 @@ void Deserializer::deserialize(std::vector< std::vector<POD_type_or_vector> >* r
     for (auto& vector: *r_vector_of_vectors)
         deserialize(&vector);
 }
-
-#endif

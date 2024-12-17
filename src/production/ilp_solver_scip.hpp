@@ -1,11 +1,11 @@
-#ifndef __ILP_SOLVER_SCIP_HPP
-#define __ILP_SOLVER_SCIP_HPP
+#pragma once
 
 #if WITH_SCIP == 1
 
+#include "ilp_solver_impl.hpp"
+
 #pragma comment(lib, "scip.lib")
 
-#include "ilp_solver_impl.hpp"
 
 namespace ilp_solver
 {
@@ -70,5 +70,4 @@ namespace ilp_solver
     };
 }
 
-#endif
 #endif

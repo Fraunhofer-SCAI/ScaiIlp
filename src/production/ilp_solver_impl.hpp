@@ -1,7 +1,7 @@
-#ifndef _ILP_SOLVER_IMPL_HPP
-#define _ILP_SOLVER_IMPL_HPP
+#pragma once
 
 #include "ilp_solver_interface.hpp"
+
 
 // The implementation serves to avoid redundant code duplication.
 namespace ilp_solver
@@ -61,5 +61,3 @@ namespace ilp_solver
             virtual void                      set_objective_sense_impl(ObjectiveSense p_sense) = 0;
     };
 }
-
-#endif

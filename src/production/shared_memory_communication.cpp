@@ -1,7 +1,9 @@
 #include "shared_memory_communication.hpp"
 
-#include <codecvt>      // for std::codecvt_utf8_utf16
 #include "serialization.hpp"
+
+#include <codecvt>      // for std::codecvt_utf8_utf16
+
 
 using namespace boost::interprocess;
 

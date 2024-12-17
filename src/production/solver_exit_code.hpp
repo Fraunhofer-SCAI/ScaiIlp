@@ -1,5 +1,4 @@
-#ifndef _SOLVER_EXIT_CODE_HPP
-#define _SOLVER_EXIT_CODE_HPP
+#pragma once
 
 enum class SolverExitCode
 {
@@ -38,5 +37,3 @@ enum class SolverExitCode
 static_assert (static_cast<int>(SolverExitCode::uncaught_exception_1) == 0x00000003);
 static_assert (static_cast<int>(SolverExitCode::uncaught_exception_2) == 0xE06D7363);
 static_assert (static_cast<int>(SolverExitCode::uncaught_exception_3) == 0xC0000409);
-
-#endif

@@ -22,7 +22,7 @@
     <ProjectGuid>{F3E554F5-F2D5-4185-86A5-87D100CCDA78}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ScaiIlpDll</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -105,6 +105,7 @@
       <DisableSpecificWarnings>4127</DisableSpecificWarnings>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <SupportJustMyCode>false</SupportJustMyCode>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -127,6 +128,7 @@
       <DisableSpecificWarnings>4127</DisableSpecificWarnings>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <SupportJustMyCode>false</SupportJustMyCode>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -218,13 +220,13 @@
     <ClCompile Include="..\..\src\production\ilp_solver_stub.cpp" />
     <ClCompile Include="..\..\src\production\shared_memory_communication.cpp" />
   </ItemGroup>
-   <ItemGroup>
+  <ItemGroup>
     <CustomBuild Include="$(SCIP_DIR)\bin\scip.dll">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(WITH_SCIP)' != 'true'">true</ExcludedFromBuild>
-      <Command           Condition="'$(WITH_SCIP)' == 'true'">copy "%(FullPath)" "$(OutDir)\"</Command>
-      <Message           Condition="'$(WITH_SCIP)' == 'true'">Copy %(Filename)%(Extension)</Message>
-      <Outputs           Condition="'$(WITH_SCIP)' == 'true'">$(OutDir)\%(Filename)%(Extension)</Outputs>
+      <Command Condition="'$(WITH_SCIP)' == 'true'">copy "%(FullPath)" "$(OutDir)\"</Command>
+      <Message Condition="'$(WITH_SCIP)' == 'true'">Copy %(Filename)%(Extension)</Message>
+      <Outputs Condition="'$(WITH_SCIP)' == 'true'">$(OutDir)\%(Filename)%(Extension)</Outputs>
     </CustomBuild>
     <CustomBuild Include="$(PTHREAD_DIR)\$(Platform)-$(PlatformToolset)-$(Configuration)\pthread.dll">
       <FileType>Document</FileType>
@@ -235,9 +237,9 @@
     <CustomBuild Include="$(GUROBI_DIR)\bin\gurobi80.dll">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(WITH_GUROBI)$(Platform)' != 'truex64'">true</ExcludedFromBuild>
-      <Command           Condition="'$(WITH_GUROBI)$(Platform)' == 'truex64'">copy "%(FullPath)" "$(OutDir)\"</Command>
-      <Message           Condition="'$(WITH_GUROBI)$(Platform)' == 'truex64'">Copy %(Filename)%(Extension)</Message>
-      <Outputs           Condition="'$(WITH_GUROBI)$(Platform)' == 'truex64'">$(OutDir)\%(Filename)%(Extension)</Outputs>
+      <Command Condition="'$(WITH_GUROBI)$(Platform)' == 'truex64'">copy "%(FullPath)" "$(OutDir)\"</Command>
+      <Message Condition="'$(WITH_GUROBI)$(Platform)' == 'truex64'">Copy %(Filename)%(Extension)</Message>
+      <Outputs Condition="'$(WITH_GUROBI)$(Platform)' == 'truex64'">$(OutDir)\%(Filename)%(Extension)</Outputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

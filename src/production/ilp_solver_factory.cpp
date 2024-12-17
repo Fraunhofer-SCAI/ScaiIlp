@@ -1,8 +1,8 @@
 #include "ilp_solver_factory.hpp"
 
-#include "ilp_solver_scip.hpp"
 #include "ilp_solver_cbc.hpp"
 #include "ilp_solver_gurobi.hpp"
+#include "ilp_solver_scip.hpp"
 #include "ilp_solver_stub.hpp"
 
 

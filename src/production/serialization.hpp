@@ -3,7 +3,23 @@
 #include "utility.hpp"
 
 #include <boost/utility.hpp>
+#include <type_traits>
 #include <vector>
+
+template<typename T>
+concept POD = requires
+{
+    std::is_pod_v<T>;
+};
+
+template<class T, template<typename...> typename Template>
+constexpr bool IsSpecialization = false;
+
+template<template<typename...> typename Template, typename... Types>
+constexpr bool IsSpecialization<Template<Types...>, Template> = true;
+
+template<typename T>
+concept POD_or_Vector = POD<T> || IsSpecialization<T, std::vector>;
 
 /**********************************
 * Serializes plain old data types *
@@ -32,9 +48,9 @@ class Serializer
 
         void* current_address() const { return d_current_address; }
 
-        template<typename POD_type>             void serialize(const POD_type& p_value);
-        template<typename POD_type>             void serialize(const std::vector<POD_type>& p_vector);
-        template<typename POD_type_or_vector>   void serialize(const std::vector< std::vector<POD_type_or_vector> >& p_vector_of_vectors);
+        template<POD T>           void serialize(const T& p_value);
+        template<POD T>           void serialize(const std::vector<T>& p_vector);
+        template<POD_or_Vector T> void serialize(const std::vector< std::vector<T> >& p_vector_of_vectors);
 
     private:
         const char* d_start_address;
@@ -54,9 +70,9 @@ class Deserializer
 
         void* current_address() const { return d_current_address; }
 
-        template<typename POD_type>             void deserialize(POD_type* r_value);
-        template<typename POD_type>             void deserialize(std::vector<POD_type>* r_vector);
-        template<typename POD_type_or_vector>   void deserialize(std::vector< std::vector<POD_type_or_vector> >* r_vector_of_vectors);
+        template<POD T>           void deserialize(T* r_value);
+        template<POD T>           void deserialize(std::vector<T>* r_vector);
+        template<POD_or_Vector T> void deserialize(std::vector< std::vector<T> >* r_vector_of_vectors);
 
     private:
         char* d_current_address;
@@ -93,24 +109,24 @@ Deserializer& operator>>(Deserializer& p_deserializer, Deserializable& p_deseria
 
 // (De-) Serialization of a POD type
 // =================================
-template<typename POD_type>
-void Serializer::serialize(const POD_type& p_value)
+template<POD T>
+void Serializer::serialize(const T& p_value)
 {
-    const auto num_bytes = sizeof(POD_type);
+    const auto num_bytes = sizeof(T);
     if (!d_simulate)
     {
-        auto address = static_cast<POD_type*>(static_cast<void*>(d_current_address));
+        auto address = static_cast<T*>(static_cast<void*>(d_current_address));
         *address = p_value;
     }
     d_current_address += num_bytes;
 }
 
 
-template<typename POD_type>
-void Deserializer::deserialize(POD_type* r_value)
+template<POD T>
+void Deserializer::deserialize(T* r_value)
 {
-    const auto num_bytes = sizeof(POD_type);
-    auto address = static_cast<POD_type*>(static_cast<void*>(d_current_address));
+    const auto num_bytes = sizeof(T);
+    auto address = static_cast<T*>(static_cast<void*>(d_current_address));
     *r_value = *address;
     d_current_address += num_bytes;
 }
@@ -118,24 +134,24 @@ void Deserializer::deserialize(POD_type* r_value)
 
 // (De-) Serialization of a POD type vector
 // ========================================
-template<typename POD_type>
-void Serializer::serialize(const std::vector<POD_type>& p_vector)
+template<POD T>
+void Serializer::serialize(const std::vector<T>& p_vector)
 {
     const auto size = isize(p_vector);
     serialize(size);
-    const auto num_bytes = size*sizeof(POD_type);
+    const auto num_bytes = size*sizeof(T);
     if (!d_simulate)
         std::memcpy(d_current_address, p_vector.data(), num_bytes);
     d_current_address += num_bytes;
 }
 
 
-template<typename POD_type>
-void Deserializer::deserialize(std::vector<POD_type>* r_vector)
+template<POD T>
+void Deserializer::deserialize(std::vector<T>* r_vector)
 {
     int size;
     deserialize(&size);
-    const auto num_bytes = size*sizeof(POD_type);
+    const auto num_bytes = size*sizeof(T);
     r_vector->resize(size);
     std::memcpy(r_vector->data(), d_current_address, num_bytes);
     d_current_address += num_bytes;
@@ -144,8 +160,8 @@ void Deserializer::deserialize(std::vector<POD_type>* r_vector)
 
 // (De-) Serialization of a vector of vectors
 // ==========================================
-template<typename POD_type_or_vector>
-void Serializer::serialize(const std::vector< std::vector<POD_type_or_vector> >& p_vector_of_vectors)
+template<POD_or_Vector T>
+void Serializer::serialize(const std::vector< std::vector<T> >& p_vector_of_vectors)
 {
     const auto size = isize(p_vector_of_vectors);
     serialize(size);
@@ -154,8 +170,8 @@ void Serializer::serialize(const std::vector< std::vector<POD_type_or_vector> >&
 }
 
 
-template<typename POD_type_or_vector>
-void Deserializer::deserialize(std::vector< std::vector<POD_type_or_vector> >* r_vector_of_vectors)
+template<POD_or_Vector T>
+void Deserializer::deserialize(std::vector< std::vector<T> >* r_vector_of_vectors)
 {
     int size;
     deserialize(&size);

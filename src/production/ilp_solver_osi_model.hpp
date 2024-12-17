@@ -38,12 +38,12 @@ namespace ilp_solver
             virtual OsiSolverInterface* get_solver_osi_model() = 0;
 
             void add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
-                [[maybe_unused]] const std::string& p_name = "", const std::vector<double>* p_row_values = nullptr,
-                const std::vector<int>* p_row_indices = nullptr) override;
+                                   [[maybe_unused]] const std::string& p_name = "", OptionalValueArray p_row_values = {},
+                                   OptionalIndexArray p_row_indices = {}) override;
 
             void add_constraint_impl (double p_lower_bound, double p_upper_bound,
-                const std::vector<double>& p_col_values, [[maybe_unused]] const std::string& p_name = "",
-                const std::vector<int>* p_col_indices = nullptr) override;
+                ValueArray p_col_values, [[maybe_unused]] const std::string& p_name = "",
+                OptionalIndexArray p_col_indices = {}) override;
     };
 }
 

@@ -1,24 +1,25 @@
 #include "ilp_solver_exception.hpp"
 
+#include <stdexcept>
 
 namespace ilp_solver
 {
-    struct ILPSolverExceptionImpl : ILPSolverException
+    struct ExceptionTesterImpl : ExceptionTester
     {
         void throw_exception(const std::string& p_message) const override
         {
-            throw std::exception(p_message.c_str());
+            throw std::runtime_error(p_message);
         }
     };
 
 
-    extern "C" ILPSolverException* __stdcall create_exception()
+    extern "C" ExceptionTester* __stdcall create_exception_tester()
     {
-        return new ILPSolverExceptionImpl();
+        return new ExceptionTesterImpl();
     }
 
 
-    extern "C" void __stdcall destroy_exception(ILPSolverException* p_exception)
+    extern "C" void __stdcall destroy_exception_tester(ExceptionTester* p_exception)
     {
         delete p_exception;
     }

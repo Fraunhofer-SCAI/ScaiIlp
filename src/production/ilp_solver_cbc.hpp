@@ -32,14 +32,13 @@ namespace ilp_solver
 
             void                reset_solution()       override;
 
-            void set_start_solution     (const std::vector<double>& p_solution)                    override;
+            void set_start_solution     (ValueArray p_solution)                                    override;
 
             void set_num_threads        (int p_num_threads)                                        override;
             void set_deterministic_mode (bool p_deterministic)                                     override;
             void set_log_level          (int p_level)                                              override;
             void set_presolve           (bool p_presolve)                                          override;
 
-            void set_max_seconds        (double p_seconds)                                         override;
             void set_max_nodes          (int p_nodes)                                              override;
             void set_max_solutions      (int p_solutions)                                          override;
             void set_max_abs_gap        (double p_gap)                                             override;
@@ -59,6 +58,7 @@ namespace ilp_solver
 
             void solve_impl() override;
             void set_objective_sense_impl(ObjectiveSense p_sense) override;
+            void set_max_seconds_impl(double p_seconds) override;
     };
 }
 

@@ -23,25 +23,25 @@ namespace ilp_solver
             switch (retcode)
             {
                 case SCIP_OKAY:               break;
-                case SCIP_ERROR:              throw std::exception("SCIP produced an unspecified error.");
-                case SCIP_NOMEMORY:           throw std::exception("SCIP has insufficient memory.");
-                case SCIP_READERROR:          throw std::exception("SCIP could not read data.");
-                case SCIP_WRITEERROR:         throw std::exception("SCIP could not write data.");
-                case SCIP_NOFILE:             throw std::exception("SCIP could not read file.");
-                case SCIP_FILECREATEERROR:    throw std::exception("SCIP could not write file.");
-                case SCIP_LPERROR:            throw std::exception("SCIP produced error in LP solve.");
-                case SCIP_NOPROBLEM:          throw std::exception("SCIP had no problem to solve.");
-                case SCIP_INVALIDCALL:        throw std::exception("SCIP tried to call a method that was invalid at this time.");
-                case SCIP_INVALIDDATA:        throw std::exception("SCIP tried to call a method with invalid data.");
-                case SCIP_INVALIDRESULT:      throw std::exception("SCIP method returned an invalid result code.");
-                case SCIP_PLUGINNOTFOUND:     throw std::exception("SCIP could not find a required plugin.");
-                case SCIP_PARAMETERUNKNOWN:   throw std::exception("SCIP could not find a parameter of the given name.");
-                case SCIP_PARAMETERWRONGTYPE: throw std::exception("SCIP parameter had an unexpected type.");
-                case SCIP_PARAMETERWRONGVAL:  throw std::exception("SCIP tried to set a parameter to an invalid value.");
-                case SCIP_KEYALREADYEXISTING: throw std::exception("SCIP tried to insert an already existing key into the table.");
-                case SCIP_MAXDEPTHLEVEL:      throw std::exception("SCIP exceeded the maximal branching depth level.");
-                case SCIP_BRANCHERROR:        throw std::exception("SCIP could not perform the branching.");
-                default:                      throw std::exception("SCIP produced an unknown error.");
+                case SCIP_ERROR:              throw std::runtime_error("SCIP produced an unspecified error.");
+                case SCIP_NOMEMORY:           throw std::runtime_error("SCIP has insufficient memory.");
+                case SCIP_READERROR:          throw std::runtime_error("SCIP could not read data.");
+                case SCIP_WRITEERROR:         throw std::runtime_error("SCIP could not write data.");
+                case SCIP_NOFILE:             throw std::runtime_error("SCIP could not read file.");
+                case SCIP_FILECREATEERROR:    throw std::runtime_error("SCIP could not write file.");
+                case SCIP_LPERROR:            throw std::runtime_error("SCIP produced error in LP solve.");
+                case SCIP_NOPROBLEM:          throw std::runtime_error("SCIP had no problem to solve.");
+                case SCIP_INVALIDCALL:        throw std::runtime_error("SCIP tried to call a method that was invalid at this time.");
+                case SCIP_INVALIDDATA:        throw std::runtime_error("SCIP tried to call a method with invalid data.");
+                case SCIP_INVALIDRESULT:      throw std::runtime_error("SCIP method returned an invalid result code.");
+                case SCIP_PLUGINNOTFOUND:     throw std::runtime_error("SCIP could not find a required plugin.");
+                case SCIP_PARAMETERUNKNOWN:   throw std::runtime_error("SCIP could not find a parameter of the given name.");
+                case SCIP_PARAMETERWRONGTYPE: throw std::runtime_error("SCIP parameter had an unexpected type.");
+                case SCIP_PARAMETERWRONGVAL:  throw std::runtime_error("SCIP tried to set a parameter to an invalid value.");
+                case SCIP_KEYALREADYEXISTING: throw std::runtime_error("SCIP tried to insert an already existing key into the table.");
+                case SCIP_MAXDEPTHLEVEL:      throw std::runtime_error("SCIP exceeded the maximal branching depth level.");
+                case SCIP_BRANCHERROR:        throw std::runtime_error("SCIP could not perform the branching.");
+                default:                      throw std::runtime_error("SCIP produced an unknown error.");
             }
         };
     }
@@ -167,7 +167,7 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverSCIP::set_start_solution(const std::vector<double>& p_solution)
+    void ILPSolverSCIP::set_start_solution(ValueArray p_solution)
     {
         assert(p_solution.size() == d_cols.size());
 
@@ -179,7 +179,7 @@ namespace ilp_solver
         SCIP_Bool ignored{ false };
         call_scip(SCIPcreateSol, d_scip, &sol, nullptr);
 
-        // SCIP uses a double*, not a const double*, but ScaiILP demands a const std::vector<double>&.
+        // SCIP uses a double*, not a const double*.
         // Internally, SCIP calls a single-variable setter for every variable with a by-value pass of the corresponding double,
         // so the const_cast should not violate actual const-ness.
         // Sadly, it is not avoidable since SCIP is not const-correct. (SCIP 6.0)
@@ -235,7 +235,7 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverSCIP::set_max_seconds(double p_seconds)
+    void ILPSolverSCIP::set_max_seconds_impl(double p_seconds)
     {
         p_seconds = std::clamp(p_seconds, 0., 1e20); // SCIP Maximum.
         call_scip(SCIPsetRealParam, d_scip, "limits/time", p_seconds);
@@ -300,7 +300,7 @@ namespace ilp_solver
 
 
     void ILPSolverSCIP::add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
-        const std::string& p_name, const std::vector<double>* p_row_values, const std::vector<int>* p_row_indices)
+        const std::string& p_name, OptionValueArray p_row_values, OptionIndexArray p_row_indices)
     {
         SCIP_VAR* var;
         const char* name = p_name.c_str();
@@ -344,7 +344,7 @@ namespace ilp_solver
 
 
     void ILPSolverSCIP::add_constraint_impl (double p_lower_bound, double p_upper_bound,
-        const std::vector<double>& p_col_values, const std::string& p_name, const std::vector<int>* p_col_indices)
+        ValueArray p_col_values, const std::string& p_name, OptionIndexArray p_col_indices)
     {
         SCIP_CONS* cons;
         SCIP_VAR**  vars;

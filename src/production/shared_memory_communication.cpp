@@ -36,7 +36,7 @@ namespace ilp_solver
     **********************************/
     static void* serialize_ilp_data(Serializer* v_serializer, const ILPData& p_data, const ILPSolutionData& p_solution_data)
     {
-        *v_serializer << p_data.matrix
+        *v_serializer << p_data.matrix.to_base()
                       << p_data.objective
                       << p_data.variable_lower
                       << p_data.variable_upper
@@ -66,7 +66,7 @@ namespace ilp_solver
 
     static void* deserialize_ilp_data(Deserializer* v_deserializer, ILPData* r_data)
     {
-        *v_deserializer >> r_data->matrix
+        *v_deserializer >> r_data->matrix.to_base()
                         >> r_data->objective
                         >> r_data->variable_lower
                         >> r_data->variable_upper

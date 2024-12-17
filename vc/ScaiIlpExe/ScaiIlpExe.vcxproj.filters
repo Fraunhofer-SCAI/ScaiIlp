@@ -13,6 +13,7 @@
     <ClInclude Include="..\ScaiIlpDll\resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\production\version.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resource Files">
@@ -20,8 +21,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\ScaiIlpDll\ScaiIlp.rc">
+    <ResourceCompile Include="ScaiIlp.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="$(MIMALLOC_OVERRIDE_DIR)\mimalloc-override.dll" />
+    <CustomBuild Include="$(MIMALLOC_OVERRIDE_DIR)\mimalloc-redirect.dll" />
   </ItemGroup>
 </Project>

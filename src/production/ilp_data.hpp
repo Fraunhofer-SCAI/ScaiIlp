@@ -2,6 +2,7 @@
 
 #include "ilp_solver_impl.hpp"
 #include "ilp_solver_interface.hpp"
+#include "utility.hpp"
 
 #include <limits>
 #include <vector>
@@ -13,18 +14,72 @@ namespace ilp_solver
         // Inner vectors are rows/constraints. The size of the outer vector is the number of constraints.
         // The size of the inner vectors is the number of variables.
         // If no constraints are given, we can not know the number of variables. (m x 0 can be stored, 0 x n can not).
-        using Matrix = std::vector<std::vector<double>>;
+        struct Matrix : public std::vector<std::vector<double>>
+        {
+            const std::vector<std::vector<double>>& to_base() const noexcept { return *this; }
+            std::vector<std::vector<double>>& to_base() noexcept { return *this; }
 
-        Matrix              matrix;
-        std::vector<double> objective;
-        std::vector<double> variable_lower;
-        std::vector<double> variable_upper;
-        std::vector<double> constraint_lower;
-        std::vector<double> constraint_upper;
+            void append_column(ValueArray p_row_values)
+            {
+                // set specified values
+                for (int i = 0; i < isize(*this); i++)
+                    (*this)[i].push_back(p_row_values[i]);
+            }
+
+
+            void append_column(IndexArray p_row_indices, ValueArray p_row_values)
+            {
+                if (empty())
+                    return;
+
+                // enlarge matrix
+                for (auto& row : *this)
+                    row.push_back(0.0);
+
+                // set specified values
+                for (auto i = 0; i < isize(p_row_indices); ++i)
+                {
+                    const auto row_index = p_row_indices[i];
+                    const auto value     = p_row_values[i];
+                    assert(0 <= row_index && row_index < isize(*this));
+                    (*this)[row_index].back() = value;
+                }
+            }
+
+
+            void append_row(ValueArray p_col_values)
+            {
+                // enlarge matrix
+                emplace_back(p_col_values.begin(), p_col_values.end());
+            }
+
+
+            void append_row(int p_num_cols, IndexArray p_col_indices, ValueArray p_col_values)
+            {
+                // enlarge matrix
+                emplace_back(p_num_cols, 0.0);
+
+                // set specified values
+                auto& row = back();
+                for (auto i = 0; i < isize(p_col_indices); ++i)
+                {
+                    const auto col_index = p_col_indices[i];
+                    const auto value     = p_col_values[i];
+                    assert(0 <= col_index && col_index < isize(row));
+                    row[col_index] = value;
+                }
+            }
+        };
+
+        Matrix                    matrix;
+        std::vector<double>       objective;
+        std::vector<double>       variable_lower;
+        std::vector<double>       variable_upper;
+        std::vector<double>       constraint_lower;
+        std::vector<double>       constraint_upper;
         std::vector<VariableType> variable_type;
-        ObjectiveSense objective_sense{ ObjectiveSense::MINIMIZE };
-
-        std::vector<double> start_solution;
+        std::vector<double>       start_solution;
+        ObjectiveSense            objective_sense{ObjectiveSense::MINIMIZE};
 
         // Defaults will be overwritten in ilp_solver_collect,
         // but are initialized to the same constants to be sure.

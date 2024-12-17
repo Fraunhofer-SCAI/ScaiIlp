@@ -23,7 +23,7 @@ namespace ilp_solver
             if (retcode != 0)
             {
                 auto ret = std::string("Gurobi Error: \"") + GRBgeterrormsg(GRBgetenv(p_model)) + '"';
-                throw std::exception(ret.c_str());
+                throw std::runtime_error(ret);
             }
         }
 
@@ -45,11 +45,11 @@ namespace ilp_solver
         // We can not use call_gurobi before the model is set up.
         auto ret = GRBloadenv(&d_env, nullptr);
         if (ret != 0)
-            throw std::exception("Gurobi Error: \"Could not set up the environment.\"");
+            throw std::runtime_error("Gurobi Error: \"Could not set up the environment.\"");
 
         ret = GRBnewmodel( d_env, &d_model, "", 0, nullptr, nullptr, nullptr, nullptr, nullptr);
         if (ret != 0)
-            throw std::exception("Gurobi Error: \"Could not create a new model.\"");
+            throw std::runtime_error("Gurobi Error: \"Could not create a new model.\"");
 
         set_default_parameters(this);
     }
@@ -126,11 +126,11 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverGurobi::set_start_solution(const std::vector<double>& p_solution)
+    void ILPSolverGurobi::set_start_solution(ValueArray p_solution)
     {
         assert(isize(p_solution) == d_num_vars);
         call_gurobi( d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_VARHINTVAL, 0, d_num_vars, const_cast<double*>(p_solution.data()));
-        call_gurobi( d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_START, 0, d_num_vars, const_cast<double*>(p_solution.data()));
+        call_gurobi( d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_START,      0, d_num_vars, const_cast<double*>(p_solution.data()));
     }
 
 
@@ -181,7 +181,7 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverGurobi::set_max_seconds(double p_seconds)
+    void ILPSolverGurobi::set_max_seconds_impl(double p_seconds)
     {
         assert(p_seconds >= 0.);
         call_gurobi( d_model, GRBsetdblparam, GRBgetenv(d_model), GRB_DBL_PAR_TIMELIMIT, p_seconds);
@@ -232,7 +232,7 @@ namespace ilp_solver
 
 
     void ILPSolverGurobi::add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
-        const std::string& p_name, const std::vector<double>* p_row_values, const std::vector<int>* p_row_indices)
+        const std::string& p_name, OptionValueArray p_row_values, OptionIndexArray p_row_indices)
     {
         int     num{0};
         int*    indices{nullptr};
@@ -266,7 +266,7 @@ namespace ilp_solver
 
 
     void ILPSolverGurobi::add_constraint_impl (double p_lower_bound, double p_upper_bound,
-        const std::vector<double>& p_col_values, const std::string& p_name, const std::vector<int>* p_col_indices)
+        ValueArray p_col_values, const std::string& p_name, OptionIndexArray p_col_indices)
     {
         int     num{0};
         int*    indices{nullptr};

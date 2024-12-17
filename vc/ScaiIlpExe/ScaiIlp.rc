@@ -50,8 +50,8 @@ BEGIN
             VALUE "LegalCopyright",   SCAIILP_COPYRIGHT_STRING
             VALUE "ProductName",      SCAIILP_PRODUCT_NAME_STRING
             VALUE "ProductVersion",   SCAIILP_PRODUCT_VERSION_STRING
-            VALUE "OriginalFilename", SCAIILP_DLL_FILE_NAME_STRING
-            VALUE "InternalName",     SCAIILP_DLL_FILE_NAME_STRING
+            VALUE "OriginalFilename", SCAIILP_EXE_FILE_NAME_STRING
+            VALUE "InternalName",     SCAIILP_EXE_FILE_NAME_STRING
         END
     END
     BLOCK "VarFileInfo"

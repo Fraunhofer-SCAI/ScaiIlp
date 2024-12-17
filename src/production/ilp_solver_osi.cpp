@@ -29,7 +29,7 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverOsi::set_start_solution(const std::vector<double>& p_solution)
+    void ILPSolverOsi::set_start_solution(ValueArray p_solution)
     {
         // get_num_variables necessary since the cache may not be included in the problem.
         assert(isize(p_solution) == get_num_variables());
@@ -95,7 +95,7 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverOsi::set_max_seconds(double)
+    void ILPSolverOsi::set_max_seconds_impl(double)
     {
         // Not supported by OsiSolverInterface.
     }

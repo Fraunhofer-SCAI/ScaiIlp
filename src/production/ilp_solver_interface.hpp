@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -8,6 +9,9 @@
 
 namespace ilp_solver
 {
+    using IndexArray = std::span<const int>;
+    using ValueArray = std::span<const double>;
+
     struct ILPSolutionData;
 
     enum class SolutionStatus { PROVEN_OPTIMAL, PROVEN_INFEASIBLE, PROVEN_UNBOUNDED, SUBOPTIMAL, NO_SOLUTION };
@@ -34,7 +38,7 @@ namespace ilp_solver
     class SolverExeException : public std::runtime_error
     {
     public:
-        explicit SolverExeException (const std::string& p_what) : std::runtime_error(p_what) {};
+        explicit SolverExeException(const std::string& p_what) : std::runtime_error("External ILP Solver: " + p_what){};
     };
 
     // This class is the basic interface fulfilled by all ScaiILP solver classes.
@@ -49,17 +53,17 @@ namespace ilp_solver
             //     not participating in any current constraints.
             //     the factor p_row_values[i] in each current constraint i                (i < |constraints|)
             //     the factor p_row_values[i] in each current constraint p_row_indices[i] (i < p_row_indices.size()).
-            virtual void add_variable_boolean    (                                                                                double p_objective,                                             const std::string& p_name = "") = 0;
-            virtual void add_variable_boolean    (                                       const std::vector<double>& p_row_values, double p_objective,                                             const std::string& p_name = "") = 0;
-            virtual void add_variable_boolean    (const std::vector<int>& p_row_indices, const std::vector<double>& p_row_values, double p_objective,                                             const std::string& p_name = "") = 0;
+            virtual void add_variable_boolean    (                                                   double p_objective,                                             const std::string& p_name = "") = 0;
+            virtual void add_variable_boolean    (                          ValueArray p_row_values, double p_objective,                                             const std::string& p_name = "") = 0;
+            virtual void add_variable_boolean    (IndexArray p_row_indices, ValueArray p_row_values, double p_objective,                                             const std::string& p_name = "") = 0;
 
-            virtual void add_variable_integer    (                                                                                double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") = 0;
-            virtual void add_variable_integer    (                                       const std::vector<double>& p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") = 0;
-            virtual void add_variable_integer    (const std::vector<int>& p_row_indices, const std::vector<double>& p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") = 0;
+            virtual void add_variable_integer    (                                                   double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") = 0;
+            virtual void add_variable_integer    (                          ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") = 0;
+            virtual void add_variable_integer    (IndexArray p_row_indices, ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") = 0;
 
-            virtual void add_variable_continuous (                                                                                double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") = 0;
-            virtual void add_variable_continuous (                                       const std::vector<double>& p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") = 0;
-            virtual void add_variable_continuous (const std::vector<int>& p_row_indices, const std::vector<double>& p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") = 0;
+            virtual void add_variable_continuous (                                                   double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") = 0;
+            virtual void add_variable_continuous (                          ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") = 0;
+            virtual void add_variable_continuous (IndexArray p_row_indices, ValueArray p_row_values, double p_objective, double p_lower_bound, double p_upper_bound, const std::string& p_name = "") = 0;
 
 
             // Add an [general | upper | lower | equality ] constraint to the linear system.
@@ -67,17 +71,17 @@ namespace ilp_solver
             // The constraint can include either all or some current variables.
             //     the constraint has the form [p_lower_bound <= ]  p_col_values^T current_variables [ <= p_upper_bound]  ( or = p_value for equality).
             //     all indices that are not occurring in p_col_indices are treated as if their corresponding p_col_values value is 0. (i.e. as if the variable does not participate in the constraint.)
-            virtual void add_constraint          (                                       const std::vector<double>& p_col_values, double p_lower_bound, double p_upper_bound,                     const std::string& p_name = "") = 0;  // l <= a*x <= r
-            virtual void add_constraint          (const std::vector<int>& p_col_indices, const std::vector<double>& p_col_values, double p_lower_bound, double p_upper_bound,                     const std::string& p_name = "") = 0;  // l <= a*x <= r
+            virtual void add_constraint          (                          ValueArray p_col_values, double p_lower_bound, double p_upper_bound,                     const std::string& p_name = "") = 0;  // l <= a*x <= r
+            virtual void add_constraint          (IndexArray p_col_indices, ValueArray p_col_values, double p_lower_bound, double p_upper_bound,                     const std::string& p_name = "") = 0;  // l <= a*x <= r
 
-            virtual void add_constraint_upper    (                                       const std::vector<double>& p_col_values,                       double p_upper_bound,                     const std::string& p_name = "") = 0;  //      a*x <= r
-            virtual void add_constraint_upper    (const std::vector<int>& p_col_indices, const std::vector<double>& p_col_values,                       double p_upper_bound,                     const std::string& p_name = "") = 0;  //      a*x <= r
+            virtual void add_constraint_upper    (                          ValueArray p_col_values,                       double p_upper_bound,                     const std::string& p_name = "") = 0;  //      a*x <= r
+            virtual void add_constraint_upper    (IndexArray p_col_indices, ValueArray p_col_values,                       double p_upper_bound,                     const std::string& p_name = "") = 0;  //      a*x <= r
 
-            virtual void add_constraint_lower    (                                       const std::vector<double>& p_col_values, double p_lower_bound,                                           const std::string& p_name = "") = 0;  // l <= a*x
-            virtual void add_constraint_lower    (const std::vector<int>& p_col_indices, const std::vector<double>& p_col_values, double p_lower_bound,                                           const std::string& p_name = "") = 0;  // l <= a*x
+            virtual void add_constraint_lower    (                          ValueArray p_col_values, double p_lower_bound,                                           const std::string& p_name = "") = 0;  // l <= a*x
+            virtual void add_constraint_lower    (IndexArray p_col_indices, ValueArray p_col_values, double p_lower_bound,                                           const std::string& p_name = "") = 0;  // l <= a*x
 
-            virtual void add_constraint_equality (                                       const std::vector<double>& p_col_values,                                              double p_value,    const std::string& p_name = "") = 0;  //      a*x = v
-            virtual void add_constraint_equality (const std::vector<int>& p_col_indices, const std::vector<double>& p_col_values,                                              double p_value,    const std::string& p_name = "") = 0;  //      a*x = v
+            virtual void add_constraint_equality (                          ValueArray p_col_values,                                              double p_value,    const std::string& p_name = "") = 0;  //      a*x = v
+            virtual void add_constraint_equality (IndexArray p_col_indices, ValueArray p_col_values,                                              double p_value,    const std::string& p_name = "") = 0;  //      a*x = v
 
             // Obtain the current number of [constraints | variables].
             virtual int get_num_constraints() const = 0;
@@ -85,7 +89,7 @@ namespace ilp_solver
 
             // Set a starting solution.
             // Depending on the solver, it may be checked whether the solution is actually valid or not.
-            virtual void set_start_solution      (const std::vector<double>& p_solution) = 0;
+            virtual void set_start_solution  (ValueArray p_solution) = 0;
 
             // [Minimize | Maximize] the currently given objective function under the given constraints.
             virtual void                      minimize      ()       = 0;
@@ -126,6 +130,7 @@ namespace ilp_solver
 
             // Set the number of seconds after which the solver should terminate.
             // This may be not followed exactly. The duration may be slightly longer than the given number.
+            // Setting this to zero guarantees to not produce a solution.
             // May be unsupported by some solvers.
             virtual void set_max_seconds        (double p_seconds)     = 0;
 

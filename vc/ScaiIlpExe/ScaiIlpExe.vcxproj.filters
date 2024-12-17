@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\src\production\shared_memory_communication.cpp" />
+    <ClCompile Include="..\..\src\production\scai_ilp.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\production\ilp_data.hpp" />
+    <ClInclude Include="..\..\src\production\ilp_solver_interface.hpp" />
+    <ClInclude Include="..\..\src\production\serialization.hpp" />
+    <ClInclude Include="..\..\src\production\shared_memory_communication.hpp" />
+    <ClInclude Include="..\..\src\production\solver_exit_code.hpp" />
+    <ClInclude Include="..\ScaiIlpDll\resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{e4aba764-7e45-45b5-aeab-4fb296b8ae30}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\ScaiIlpDll\ScaiIlp.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

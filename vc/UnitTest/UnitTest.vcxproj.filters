@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\src\production\ilp_solver_factory.hpp">
+      <Filter>production</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\test\ilp_solver_interface_t.hpp">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\test\serialization_t.hpp">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\production\ilp_solver_interface.hpp">
+      <Filter>production</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\production\serialization.hpp">
+      <Filter>production</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\test\ilp_solver_interface_t.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\test\serialization_t.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\test\unit_tests.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="test">
+      <UniqueIdentifier>{6746bdb6-432d-47d5-9e5b-394e3c85d306}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="production">
+      <UniqueIdentifier>{5fdf6001-8865-416a-a291-6bc47ec7e573}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

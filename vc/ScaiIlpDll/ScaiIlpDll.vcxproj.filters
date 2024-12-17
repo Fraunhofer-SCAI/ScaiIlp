@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\src\production\ilp_solver_cbc.hpp" />
+    <ClInclude Include="..\..\src\production\ilp_solver_factory.hpp" />
+    <ClInclude Include="..\..\src\production\ilp_solver_interface.hpp" />
+    <ClInclude Include="..\..\src\production\ilp_solver_interface_impl.hpp" />
+    <ClInclude Include="..\..\src\production\ilp_solver_osi.hpp" />
+    <ClInclude Include="..\..\src\production\ilp_solver_osi_model.hpp" />
+    <ClInclude Include="..\..\src\production\ilp_solver_stub.hpp" />
+    <ClInclude Include="..\..\src\production\serialization.hpp" />
+    <ClInclude Include="..\..\src\production\shared_memory_communication.hpp" />
+    <ClInclude Include="..\..\src\production\ilp_solver_collect.hpp" />
+    <ClInclude Include="..\..\src\production\solver_exit_code.hpp" />
+    <ClInclude Include="..\..\src\production\ilp_data.hpp" />
+    <ClInclude Include="resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\production\ilp_solver_cbc.cpp" />
+    <ClCompile Include="..\..\src\production\ilp_solver_factory.cpp" />
+    <ClCompile Include="..\..\src\production\ilp_solver_interface_impl.cpp" />
+    <ClCompile Include="..\..\src\production\ilp_solver_osi.cpp" />
+    <ClCompile Include="..\..\src\production\ilp_solver_osi_model.cpp" />
+    <ClCompile Include="..\..\src\production\ilp_solver_stub.cpp" />
+    <ClCompile Include="..\..\src\production\shared_memory_communication.cpp" />
+    <ClCompile Include="..\..\src\production\ilp_solver_collect.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{a3ffe818-d172-4e28-be8e-85616dd6f112}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ScaiIlp.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

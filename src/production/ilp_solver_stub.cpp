@@ -158,9 +158,11 @@ namespace ilp_solver
         case SolverExitCode::ok:
             return "";
         case SolverExitCode::uncaught_exception_1:
-            return "Uncaught exception (maybe out of memory).";
+            return "Uncaught exception, likely out of memory (stack buffer overflow Windows 7).";
         case SolverExitCode::uncaught_exception_2:
             return "Uncaught exception, likely out of memory (C++ exception).";
+        case SolverExitCode::uncaught_exception_3:
+            return "Uncaught exception, likely out of memory (stack buffer overflow Windows 10).";
         case SolverExitCode::out_of_memory:
             return "Out of memory.";
         case SolverExitCode::command_line_error:
@@ -186,6 +188,7 @@ namespace ilp_solver
         case SolverExitCode::out_of_memory:
         case SolverExitCode::uncaught_exception_1:
         case SolverExitCode::uncaught_exception_2:
+        case SolverExitCode::uncaught_exception_3:
         case SolverExitCode::forced_termination:
             return true;
         default:
@@ -199,7 +202,7 @@ namespace ilp_solver
         if (exit_code_should_be_ignored_silently(p_exit_code))
         {
             if (p_log_level)
-                std::cout << exit_code_to_message(p_exit_code);
+                std::cout << exit_code_to_message(p_exit_code) << " Exit Code:" << static_cast<int>(p_exit_code);
         }
         else
             throw std::exception(("External ILP solver: " + exit_code_to_message(p_exit_code)).c_str());

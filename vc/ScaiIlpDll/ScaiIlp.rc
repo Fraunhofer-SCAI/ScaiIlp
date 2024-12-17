@@ -25,8 +25,8 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,2,0,0
- PRODUCTVERSION 1,2,0,0
+ FILEVERSION 1,3,0,0
+ PRODUCTVERSION 1,3,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -43,10 +43,10 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Fraunhofer Institute for Algorithms and Scientific Computing SCAI"
             VALUE "FileDescription", "ScaiIlp"
-            VALUE "FileVersion", "1.2.0.0"
+            VALUE "FileVersion", "1.3.0.0"
             VALUE "LegalCopyright", "(C) Fraunhofer SCAI, 2016 - 2017, EPL"
             VALUE "ProductName", "ScaiIlp"
-            VALUE "ProductVersion", "1.2.0"
+            VALUE "ProductVersion", "1.3.0"
         END
     END
     BLOCK "VarFileInfo"

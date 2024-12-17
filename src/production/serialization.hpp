@@ -9,7 +9,7 @@
 * Serializes plain old data types *
 * (POD types) and vectors         *
 **********************************/
-class Serializer : public boost::noncopyable
+class Serializer
 {
     public:
         // p_address == nullptr simulates serialization. This allows calculating
@@ -20,6 +20,10 @@ class Serializer : public boost::noncopyable
               d_current_address(static_cast<char*>(p_address)),
               d_simulate(d_start_address == nullptr ? true : false)
             {}
+
+        // copy constructor and assignment operator are not allowed (due to const members)
+        Serializer(const Serializer&) = delete;
+        Serializer& operator= (const Serializer&) = delete;
 
         size_t required_bytes() const
         {

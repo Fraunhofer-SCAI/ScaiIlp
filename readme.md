@@ -9,9 +9,9 @@ Table of Contents
 
 2. Building
 
-    1. Building Cbc with VS 2012
-    2. Optional: Building pthreads-win32
-    3. Building ScaiIlp with VS 2012
+    1. Building Cbc with VS 2017
+    2. Optional: Building pthreads-win32 with VS 2017
+    3. Building ScaiIlp with VS 2017
 
 3. Code Structure
 
@@ -74,17 +74,17 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 2 Building
 ==========
 
-2.1 Building Cbc with VS 2012
+2.1 Building Cbc with VS 2017
 -----------------------------
 
-1. Download Cbc from the [COIN project](http://www.coin-or.org/).
-    * Download: http://www.coin-or.org/download/source/Cbc/
+1. Download Cbc from the [COIN project](https://www.coin-or.org/).
+    * Download: https://www.coin-or.org/download/source/Cbc/
     * via SVN:  svn co https://projects.coin-or.org/svn/Cbc/stable/2.8 coin-Cbc
     * Wiki:     https://projects.coin-or.org/Cbc/wiki
 
-2. Open Cbc\MSVisualStudio\v10\Cbc.sln with VS 2012
+2. Copy the directory Cbc\MSVisualStudio\v10 to Cbc\MSVisualStudio\v141 and open Cbc\MSVisualStudio\v141\Cbc.sln with VS 2017
 
-3. Let VS update the projects
+3. Let VS update the projects (Windows SDK Version 8.1, PlatForm Toolset v141)
 
 4. Right-click onto "Solution" in the Solution Explorer and choose "Properties". Then use the following settings:
     * Common Properties / Project Dependencies:
@@ -112,31 +112,26 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
     * libOsiClp
 
 7. Right-click onto the marked projects and choose "Properties" -> "Configuration Properties".
-    * Select "All Configurations" and use the following settings:
-        * General / Output Directory:
-            * for 32 bit: $(SolutionDir)$(Configuration)\
-            * for 64 bit: $(SolutionDir)$(Platform)_$(Configuration)\
-        * General / Intermediate Directory:
-            * for 32 bit: $(SolutionDir)obj\
-            * for 64 bit: $(SolutionDir)$(Platform)_obj\
-        * General / Platform Toolset:        v110_xp
+    * Select "All Configurations" and "All Platforms" and use the following settings:
+        * General / Output Directory:                $(SolutionDir)$(Platform)-$(PlatformToolset)-$(Configuration)\
+        * General / Intermediate Directory:          $(Platform)-$(PlatformToolset)-$(Configuration)\
+        * General / Windows SDK Version:             8.1
+        * General / Platform Toolset:                Visual Studio 2017 (v141)
         * C/C++   / Preprocessor / Preprocessor Definitions:   prepend "_ITERATOR_DEBUG_LEVEL=0;" (without double quotes)
         * C/C++   / Output Files / Program Database File Name: $(OutDir)$(TargetName).pdb
 
     * For faster compilation, you can additionally use the following settings (set none or both):
-        * C/C++   / General         / Multi-processor Compilation:  Yes
-        * C/C++   / Code Generation / Enable Minimal Rebuild:       No
+        * C/C++   / General         / Multi-processor Compilation:  Yes (/MP)
+        * C/C++   / Code Generation / Enable Minimal Rebuild:       No (/Gm-)
 
-8. If you want to support multithreading: Build pthreads-win32 as described in section 2.2 Otherwise proceed as in step 8.
+8. If you want to support multithreading: Build pthreads-win32 as described in section 2.2 Otherwise proceed as in step 9.
     * Right-click onto the project "libCbc" in the Solution Explorer and choose
     * "Properties" -> "Configuration Properties".
-    * Select "All Configurations" and use the following settings:
-        * C/C++     / General      / Additional Include Directories: path to pthreads-win32
+    * Select "All Configurations" and "All Platforms" and use the following settings:
+        * C/C++     / General      / Additional Include Directories: prepend "$(PTHREAD_DIR);" (without double quotes)
         * C/C++     / Preprocessor / Preprocessor Definitions:       prepend "CBC_THREAD;" (without double quotes)
         * Librarian / General      / Additional Dependencies:        pthread.lib
-        * Librarian / General      / Additional Library Directories:
-            * for 32 bit: (path to pthreads-win32)\ $(Configuration) (without space)
-            * for 64 bit: (path to pthreads-win32)\ $(Platform)_$(Configuration) (without space)
+        * Librarian / General      / Additional Library Directories: $(PTHREAD_DIR)\$(Platform)-$(PlatformToolset)-$(Configuration)
 
 9. Choose "Build" -> "Batch-Build" and select the following projects and configurations:
     * for 32 bit:
@@ -147,15 +142,19 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
         * libOsiCbc  Release  x64
 
 
-2.2 Optional: Building pthreads-win32 with VS 2012 (only if Cbc should support multi-threading)
+2.2 Optional: Building pthreads-win32 with VS 2017 (only if Cbc should support multi-threading)
 -----------------------------------------------------------------------------------------------
 
 1. Download pthreads-win32 from the [Pthreads-Win32 project](https://sourceware.org/pthreads-win32/)
     * Download: ftp://sourceware.org/pub/pthreads-win32/
 
-2. Open pthread.dsw with VS 2012 and let it upgrade the project.
+2. Open pthread.dsw with VS 2017 and let it upgrade the project.
 
-3. When you want to compile for 64 bit platforms:
+3. When you want to compile for 32 bit platforms:
+    * Choose "Build" -> "Configuration Manager".
+    * In the "Active solution platform" dropdown menu, select "Edit" and rename "x86" to "Win32".
+
+   When you want to compile for 64 bit platforms:
     * Choose "Build" -> "Configuration Manager".
     * In the "Active solution platform" dropdown menu, select "New" and choose "x64" as new platform.
     * Make sure that "Copy settings from: Win32" is chosen and "Create new project platforms" is checked.
@@ -166,28 +165,26 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 
 5. Right-click onto the project "pthread" in the Solution Explorer and choose
     * "Properties" -> "Configuration Properties".
-    * Select "All Configurations" and use the following settings:
-        * General / Output Directory:
-            * for 32 bit: $(SolutionDir)$(Configuration)\
-            * for 64 bit: $(SolutionDir)$(Platform)_$(Configuration)\
-        * General / Intermediate Directory:
-            * for 32 bit: $(SolutionDir)obj\ $(Configuration)\ (without space)
-            * for 64 bit: $(SolutionDir)obj\ $(Platform)_$(Configuration)\ (without space)
-        * General / Platform Toolset:       v110_xp
+    * Select "All Configurations" and "All Platforms" and use the following settings:
+        * General / Output Directory:                $(SolutionDir)$(Platform)-$(PlatformToolset)-$(Configuration)\
+        * General / Intermediate Directory:          $(Platform)-$(PlatformToolset)-$(Configuration)\
+        * General / Windows SDK Version:             8.1
+        * General / Platform Toolset:                Visual Studio 2017 (v141)
         * C/C++ / General             / Debug Information Output:       Program Database (/Zi)
-        * C/C++ / Preprocessor        / Preprocessor Definitions:       prepend "_ITERATOR_DEBUG_LEVEL=0;" (without double quotes)
+        * C/C++ / Preprocessor        / Preprocessor Definitions:       prepend "_ITERATOR_DEBUG_LEVEL=0;_TIMESPEC_DEFINED;" (without double quotes)
         * C/C++ / Precompiled Headers / Precompiled Header Output File: $(IntDir)pthread.pch
         * C/C++ / Output Files        / ASM List Location:              $(IntDir)
         * C/C++ / Output Files        / Object File Name:               $(IntDir)
         * C/C++ / Output Files        / Program Database File Name:     $(IntDir)
         * Linker / General   / Output File:         $(OutDir)$(TargetName)$(TargetExt)
-        * Linker / Debugging / Generate Debug Info: Yes (/DEBUG)
+        * Linker / Debugging / Generate Debug Info: Generate Debug Information (/DEBUG)
         * Linker / Advanced  / Import Library:      $(OutDir)$(TargetName).lib
-    * If you want multi processor compilation:
-        * C/C++ / General         / Multi-processor Compilation: Yes (/MP)
-        * C/C++ / Code Generation / Enable Minimal Rebuild:      No (/Gm-)
 
-6. In the Solution Explorer
+    * For faster compilation, you can additionally use the following settings (set none or both):
+        * C/C++   / General         / Multi-processor Compilation:  Yes (/MP)
+        * C/C++   / Code Generation / Enable Minimal Rebuild:       No (/Gm-)
+
+8. In the Solution Explorer
     * Find the filter "Resource Files"
     * Right-click onto "version.rc"
     * Choose "Properties".
@@ -196,23 +193,29 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
         * prepend "PTW32_ARCHx86;" (without double quotes) when compiling for 32 bit platforms
         * or      "PTW32_ARCHx64;" (without double quotes) otherwise.
 
-2.3 Building ScaiIlp with VS 2012
+9. Find the file pthreads.h in project "pthread" -> "Header Files"
+    * At the top of the file, insert the line "#define _TIMESPEC_DEFINED" (without double quotes)
+
+
+2.3 Building ScaiIlp with VS 2017
 ---------------------------------
 
 1. Ensure that you have built Cbc as described above.
 
-2. Ensure that you have built Boost.
+2. Ensure that you have built Boost. When building Boost, you need to set the parameters
+    * "define=_ITERATOR_DEBUG_LEVEL=0" (without double quotes)
+    * "define=BOOST_TEST_NO_MAIN"      (without double quotes)
 
 3. Specify the location of Cbc by setting the environment variable CBC_DIR.
 
 4. If you want to support multithreading,
    specify the location of pthread by setting the environment variable PTHREAD_DIR,
-   whereby PTHREAD_DIR has to contain the folder "Release", "Debug", "x64_Release" and "x64_Debug",
+   whereby PTHREAD_DIR has to contain the folders "Win32-v141-Release", "Win32-v141-Debug", "x64-v141-Release" and "x64-v141-Debug",
    each containing the appropriate version of pthread.dll. Otherwise proceed with step 5.
 
 5. Specify the location of Boost by setting the environment variable BOOST_DIR. Note that the
-include files must be located in $(BOOST_DIR)\include and the lib files must be located in
-$(BOOST_DIR)\lib.
+   include files must be located in $(BOOST_DIR)\include\boost-1_66 and the lib files must be located in
+   $(BOOST_DIR)\lib (for 32 bit) and $(BOOST_DIR)\lib_64 (for 64 bit).
 
 6. Build ScaiIlpDll, ScaiIlpExe, and UnitTest.
 

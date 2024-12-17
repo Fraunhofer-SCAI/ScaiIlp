@@ -12,7 +12,7 @@ namespace ilp_solver
     class SolverExeException : public std::runtime_error
     {
     public:
-        SolverExeException (const std::string& p_what) : std::runtime_error(p_what) {};
+        explicit SolverExeException (const std::string& p_what) : std::runtime_error(p_what) {};
     };
 
 

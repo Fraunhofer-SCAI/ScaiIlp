@@ -28,7 +28,7 @@ namespace ilp_solver
         double max_seconds;
 
         ILPData() : objective_sense(ObjectiveSense::MINIMIZE),
-                    num_threads(0), log_level(0), max_seconds(std::numeric_limits<double>::max()) {}
+                    num_threads(0), deterministic(true), log_level(0), max_seconds(std::numeric_limits<double>::max()) {}
     };
 
 

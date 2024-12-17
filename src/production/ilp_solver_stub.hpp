@@ -13,7 +13,7 @@ namespace ilp_solver
     class ILPSolverStub : public ILPSolverCollect
     {
         public:
-            ILPSolverStub(const std::string& p_executable_basename);
+            explicit ILPSolverStub(const std::string& p_executable_basename);
 
         private:
             std::string d_executable_basename;

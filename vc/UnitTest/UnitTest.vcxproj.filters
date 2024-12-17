@@ -41,33 +41,10 @@
     <Filter Include="binaries">
       <UniqueIdentifier>{435216ea-7ea4-42bb-b1c3-0d9e019c621c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="binaries\Debug">
-      <UniqueIdentifier>{15c8d77a-1c05-46cd-bb7f-adb9e16a79de}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="binaries\Release">
-      <UniqueIdentifier>{7d15dc34-6a7a-4367-8336-10c9cc3b8248}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="$(PTHREAD_DIR)\Debug\pthread.dll" />
-    <CustomBuild Include="$(PTHREAD_DIR)\Release\pthread.dll" />
-    <CustomBuild Include="$(PTHREAD_DIR)\x64_Debug\pthread.dll" />
-    <CustomBuild Include="$(PTHREAD_DIR)\x64_Release\pthread.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="$(PTHREAD_DIR)\Release\pthread.dll">
-      <Filter>binaries\Release</Filter>
-    </CustomBuild>
-    <CustomBuild Include="$(PTHREAD_DIR)\Debug\pthread.dll">
-      <Filter>binaries\Debug</Filter>
-    </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="$(PTHREAD_DIR)\x64_Release\pthread.dll">
-      <Filter>binaries\x64_Release</Filter>
-    </CustomBuild>
-    <CustomBuild Include="$(PTHREAD_DIR)\x64_Debug\pthread.dll">
-      <Filter>binaries\x64_Debug</Filter>
+    <CustomBuild Include="$(PTHREAD_DIR)\$(Platform)-$(PlatformToolset)-$(Configuration)\pthread.dll">
+      <Filter>binaries</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>

@@ -112,7 +112,7 @@ static ILPSolutionData solve_ilp(const ILPData& p_data)
     // RAII for deleting solver
     struct SolverDeleter
     {
-        SolverDeleter(ILPSolverInterface* p_solver) : solver(p_solver) {}
+        explicit SolverDeleter(ILPSolverInterface* p_solver) : solver(p_solver) {}
         ~SolverDeleter()                                               { ilp_solver::destroy_solver(solver); }
 
         ILPSolverInterface* solver;

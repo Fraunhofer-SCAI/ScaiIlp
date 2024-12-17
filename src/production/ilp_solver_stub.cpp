@@ -106,7 +106,7 @@ namespace ilp_solver
         // close handles via RAII
         struct HandleCloser
         {
-            HandleCloser(PROCESS_INFORMATION* p_process_info) : process_info(p_process_info) {}
+            explicit HandleCloser(PROCESS_INFORMATION* p_process_info) : process_info(p_process_info) {}
             ~HandleCloser()
             {
                 CloseHandle(process_info->hProcess);

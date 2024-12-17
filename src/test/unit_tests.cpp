@@ -18,5 +18,5 @@ const auto c_solver_exe_name = "ScaiIlpExe.exe";
 
 int main(int p_argc, char* p_argv[])
 {
-    return  unit_test_main(init_unit_test_suite, p_argc, p_argv );
+    return unit_test_main(init_unit_test_suite, p_argc, p_argv);
 }

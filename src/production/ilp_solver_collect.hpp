@@ -17,6 +17,9 @@ public:
     int  get_num_constraints() const override;
     int  get_num_variables  () const override;
 
+    // The file name is converted to boost::filesystem::path internally.
+    // You may set a locale for boost::filesystem, such that your desired encoding is used.
+    // Note in particular the convenient boost::nowide::nowide_filesystem.
     void print_mps_file(const std::string& p_filename) override;
 protected:
     ILPSolverCollect();

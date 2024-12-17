@@ -2,7 +2,7 @@
 // For documentation what is allowed in resource files, see
 // https://docs.microsoft.com/en-us/windows/win32/menurc/about-resource-files.
 #define SCAIILP_VERSION_MAJOR 3
-#define SCAIILP_VERSION_MINOR 0
+#define SCAIILP_VERSION_MINOR 1
 #define SCAIILP_VERSION_BUILD 0
 #define SCAIILP_VERSION_DEBUG 0
 

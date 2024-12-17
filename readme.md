@@ -11,8 +11,9 @@ Table of Contents
 
     1. Building Cbc for ScaiIlp
     2. Optional: Building pthreads-win32 with VS 2022
-    3. Building SCIP with VS 2022
-    4. Building ScaiIlp with VS 2022
+    3. Building HiGHS with VS 2022
+    4. Building SCIP with VS 2022
+    5. Building ScaiIlp with VS 2022
 
 3. Code Structure
 
@@ -29,7 +30,12 @@ Table of Contents
 ---------
 
 ScaiIlp can provide an interface to different ILP solvers.
-Currently, we support Cbc, SCIP, and Gurobi.
+
+Currently supported solvers are:
+* Cbc
+* HiGHS
+* SCIP
+* Gurobi
 
 
 1.2 License
@@ -149,7 +155,7 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 
 2. Uncomment the line `add_definitions(-D_ITERATOR_DEBUG_LEVEL=0)` in CMakeLists.txt.
 
-3. Open CMakeLists.txt in VS2022 with File -> Open -> CMake.
+3. Open CMakeLists.txt (the file in the root folder) in VS2022 with File -> Open -> CMake.
 
 4. Build and install all desired configurations.
 
@@ -159,7 +165,7 @@ A: If you don't experience solver crashes, you can avoid some overhead by using 
 1. To obtain SCIP, visit https://scip.zib.de/index.php#download
    and download the SCIP Optimization Suite.
 
-2. Open CMakeLists.txt in VS2022 with File -> Open -> CMake.
+2. Open CMakeLists.txt (the file in the root folder) in VS2022 with File -> Open -> CMake.
 
 3. You may need to overwrite some compiler flags to compile the Release builds.
    In the files ./scip/CMakeLists.txt and ./soplex/CMakeLists.txt in lines 3 and 4 respectively,

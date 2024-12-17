@@ -2,9 +2,10 @@
 
 #include "utility.hpp"
 
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <cassert>
 #include <format>
-#include <fstream>
 #include <span>
 #include <sstream>
 #include <vector>
@@ -98,7 +99,7 @@ namespace
         return cons_names;
     }
 
-    std::string handle_mps_cols(const ILPData& p_data, std::span<std::string> p_names, std::ofstream& v_outstream)
+    std::string handle_mps_cols(const ILPData& p_data, std::span<std::string> p_names, boost::filesystem::ofstream& v_outstream)
     {
         std::stringstream bounds;
 
@@ -150,7 +151,7 @@ namespace
 
 void ILPSolverCollect::print_mps_file(const std::string& p_filename)
 {
-    std::ofstream outstream{p_filename};
+    boost::filesystem::ofstream outstream{boost::filesystem::path(p_filename)};
     assert(outstream);
     assert(d_ilp_data.constraint_lower.size() == d_ilp_data.constraint_upper.size());
 

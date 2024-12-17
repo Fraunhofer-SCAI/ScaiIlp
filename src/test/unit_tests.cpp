@@ -1,12 +1,11 @@
-// definiert Funktion init_unit_test bzw init_unit_test_suite
+// Definiert Funktion init_unit_test beziehungsweise init_unit_test_suite.
 // #define BOOST_TEST_MAIN muss vor #include <boost/test/unit_test.hpp> stehen.
 // Deshalb darf diese Datei nicht mit Precompiled Header uebersetzt werden.
 #define BOOST_TEST_MAIN
 
-
-#include "tester.hpp"
 #include "ilp_solver_factory.hpp"
 #include "ilp_solver_interface.hpp"
+#include "tester.hpp"
 
 #include <boost/nowide/filesystem.hpp>
 #include <boost/test/unit_test.hpp>

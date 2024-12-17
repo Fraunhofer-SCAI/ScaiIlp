@@ -2,16 +2,18 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <BOOST_VERSION>1_83</BOOST_VERSION>
+    <BOOST_VERSION>1_86</BOOST_VERSION>
     <BOOST_LIB_TOOLSET>vc143</BOOST_LIB_TOOLSET>
     <BOOST_DIR>$(optsoft)\boost_$(BOOST_VERSION)_0_$(BOOST_LIB_TOOLSET)_idl0_$(PlatformTarget)</BOOST_DIR>
     <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc142_full</PTHREAD_DIR>
     <PTHREAD_LIB_PATH>$(PTHREAD_DIR)\$(PlatformTarget)-v142-$(Configuration)</PTHREAD_LIB_PATH>
     <WITH_HIGHS>false</WITH_HIGHS>
-    <HIGHS_DIR>$(optsoft)\HiGHS_1.7.1\$(PlatformTarget)-Clang-$(Configuration)</HIGHS_DIR>
+    <HIGHS_DIR>$(optsoft)\HiGHS_1.8.1\$(PlatformTarget)-Clang-$(Configuration)</HIGHS_DIR>
     <HIGHS_INCLUDE_PATH>$(HIGHS_DIR)\include\highs</HIGHS_INCLUDE_PATH>
     <HIGHS_LIB_PATH>$(HIGHS_DIR)\lib</HIGHS_LIB_PATH>
     <WITH_OSI>true</WITH_OSI>
+  <!--Without STUB the ScaiIlpExe project doesn't need to be build.-->
+    <WITH_STUB>true</WITH_STUB>
     <WITH_CBC>true</WITH_CBC>
     <COIN_DIR>$(optsoft)\Cbc-2.10.10\vc143_$(Configuration)_$(PlatformTarget)</COIN_DIR>
     <WITH_SCIP>false</WITH_SCIP>
@@ -45,6 +47,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(BOOST_INCLUDE_PATH);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(WITH_OSI)' == 'true'">WITH_OSI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    <PreprocessorDefinitions Condition="'$(WITH_STUB)' == 'true'">WITH_STUB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_CBC)' == 'true'">WITH_CBC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_SCIP)' == 'true'">WITH_SCIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' == 'true'">WITH_GUROBI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -114,6 +117,9 @@
     <BuildMacro Include="WITH_OSI">
       <Value>$(WITH_OSI)</Value>
     </BuildMacro>
+  <BuildMacro Include="WITH_STUB">
+    <Value>$(WITH_STUB)</Value>
+  </BuildMacro>
     <BuildMacro Include="WITH_CBC">
       <Value>$(WITH_CBC)</Value>
     </BuildMacro>

@@ -51,6 +51,15 @@ std::vector<double> ILPSolverHighs::get_solution() const
 }
 
 
+std::vector<double> ILPSolverHighs::get_dual_sol() const
+{
+    auto& solution = d_highs.getSolution();
+    if (solution.value_valid)
+        return solution.row_dual;
+    return {};
+}
+
+
 double ILPSolverHighs::get_objective() const
 {
     return d_highs.getObjectiveValue();
@@ -117,13 +126,11 @@ void ILPSolverHighs::reset_solution()
 }
 
 
-void ILPSolverHighs::set_num_threads([[maybe_unused]] int p_num_threads)
+void ILPSolverHighs::set_num_threads(int p_num_threads)
 {
-    assert(p_num_threads >= 0);
-    // We currently ignore the value given as a parameter
-    // as threads=1 is a necessary workaround for a bug that causes HiGHS to run indefinitely,
-    // see https://github.com/ERGO-Code/HiGHS/issues/1639
-    ASSERT_OK(d_highs.setOptionValue("threads", 1));
+    assert(p_num_threads >= 0);     // 0 -> automatic
+    // Values >1 might still cause problems, see https://github.com/ERGO-Code/HiGHS/issues/1639
+    ASSERT_OK(d_highs.setOptionValue("threads", p_num_threads));
 }
 
 

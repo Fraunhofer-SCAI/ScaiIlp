@@ -1,3 +1,5 @@
+#ifdef WITH_STUB
+
 #include "ilp_solver_stub.hpp"
 
 #include "ilp_solver_interface.hpp"
@@ -115,24 +117,6 @@ ILPSolverStub::ILPSolverStub(const std::string& p_executable_basename, bool p_th
 { }
 
 
-std::vector<double> ILPSolverStub::get_solution() const
-{
-    return d_ilp_solution_data.solution;
-}
-
-
-double ILPSolverStub::get_objective() const
-{
-    return d_ilp_solution_data.objective;
-}
-
-
-SolutionStatus ILPSolverStub::get_status() const
-{
-    return d_ilp_solution_data.solution_status;
-}
-
-
 void ILPSolverStub::reset_solution()
 {
     d_ilp_data.start_solution.clear();
@@ -217,3 +201,5 @@ void ILPSolverStub::solve_impl()
 }
 
 } // namespace ilp_solver
+
+#endif

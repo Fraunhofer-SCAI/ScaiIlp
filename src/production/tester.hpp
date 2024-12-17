@@ -19,5 +19,7 @@ namespace ilp_solver
     extern "C" __declspec(dllexport) void             __stdcall destroy_exception_tester(ExceptionTester* p_exception);
     // Tests if stub + ScaiIlpExe work at least for a very easy instance.
     // Useful to check for broken installation, such as antivirus software preventing execution of ScaiIlpExe.
+#ifdef WITH_STUB
     SolverExitCode stub_tester(const std::string& p_executable_basename);
-}
+#endif
+    }

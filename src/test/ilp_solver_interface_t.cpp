@@ -5,9 +5,9 @@
 
 #include <algorithm>
 #include <array>
-#include <chrono>
-#include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <string_view>
@@ -22,13 +22,13 @@ namespace ilp_solver
 {
     static int round(double x)
     {
-        return static_cast<int>(x+0.5);
+        return static_cast<int>(x + 0.5);
     }
 
 
     static double rand_double()
     {
-        return -0.5 + (1.0*rand())/RAND_MAX;
+        return static_cast<double>(rand())/RAND_MAX - 0.5;
     }
 
 
@@ -49,33 +49,29 @@ namespace ilp_solver
 
         for (auto i = 0; i < p_num_constraints; ++i)
         {
-            std::generate(std::begin(constraint_vector), std::end(constraint_vector), []() { return rand_double(); });
+            std::ranges::generate(constraint_vector, rand_double);
             p_solver->add_constraint(constraint_vector, constraint_scaling*rand_double(), constraint_scaling*(1.0 + rand_double()));
         }
         const auto end_time = std::chrono::steady_clock::now();
 
-        const auto time_variables   = std::chrono::duration_cast<std::chrono::milliseconds>(middle_time - start_time).count();
-        const auto time_constraints = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - middle_time).count();
+        const auto time_variables   = std::chrono::duration_cast<std::chrono::milliseconds>(middle_time -  start_time).count();
+        const auto time_constraints = std::chrono::duration_cast<std::chrono::milliseconds>(   end_time - middle_time).count();
         return {time_variables, time_constraints};
     }
-
-
-    using TestFunction    = void(*)(ILPSolverInterface*);
-    using FactoryFunction = ScopedILPSolver (__stdcall *)(void);
-
 
 
     void test_sorting(ILPSolverInterface* p_solver)
     {
         std::stringstream logging;
 
-        const std::vector<int> numbers{ 62, 20, 4, 49, 97, 73, 35, 51, 18, 86};
+        const std::vector<int> numbers{62, 20, 4, 49, 97, 73, 35, 51, 18, 86};
         const auto num_vars = isize(numbers);
 
         // xi - target position of numbers[i]
         //
         // min x0 + ... + x9
-        // s.t. xk - xl >= 0.1 for every (k,l) for which numbers[k] > numbers[l] (Note: If we set the rhs to 1.0, then the integrality constraint is superfluous.)
+        // s.t. xk - xl >= 0.1 for every (k,l) for which numbers[k] > numbers[l]
+        // (Note: If we set the rhs to 1.0, then the integrality constraint is superfluous.)
         //      xi >= 0 integral
 
         // Add variables
@@ -104,13 +100,13 @@ namespace ilp_solver
             }
             logging << numbers[i] << " ";
         }
-        logging << std::endl << std::endl;
+        logging << "\n" << std::endl;
 
         p_solver->minimize();
 
-        const auto obj_value = p_solver->get_objective();
+        const auto obj_value   = p_solver->get_objective();
         const auto permutation = p_solver->get_solution();
-        const auto status = p_solver->get_status();
+        const auto status      = p_solver->get_status();
 
         // Check solution status
         const auto optimal = status == SolutionStatus::PROVEN_OPTIMAL;
@@ -118,11 +114,11 @@ namespace ilp_solver
         BOOST_REQUIRE(optimal);
 
         // Check correctness of objective
-        const auto expected_obj_value = num_vars*(num_vars-1)/2;
+        const auto expected_obj_value = num_vars*(num_vars - 1)/2;
         BOOST_REQUIRE_CLOSE(obj_value, expected_obj_value, c_eps);  // objective should be 0+1+...+(num_numbers-1)
 
         // Check correctness of solution
-        auto sorted = std::vector<int>(num_vars, INT_MIN);       // sort according solution
+        auto sorted = std::vector<int>(num_vars, INT_MIN);          // sort according solution
 
         logging << std::endl << "Resulting permutation: ";
         for (auto i = 0; i < num_vars; ++i)
@@ -131,7 +127,7 @@ namespace ilp_solver
 
             logging << pos << " ";
 
-            BOOST_REQUIRE_CLOSE(pos, permutation[i], c_eps);    // solution must be integral
+            BOOST_REQUIRE_CLOSE(pos, permutation[i], c_eps);        // solution must be integral
             sorted[pos] = numbers[i];
         }
         logging << std::endl;
@@ -143,7 +139,7 @@ namespace ilp_solver
 
             BOOST_REQUIRE_NE(sorted[i], INT_MIN);                   // solution must be a permutation
             if (i > 0)
-                BOOST_REQUIRE_LT(sorted[i-1], sorted[i]);            // solution must sort
+                BOOST_REQUIRE_LT(sorted[i-1], sorted[i]);           // solution must sort
         }
         logging << std::endl;
 
@@ -158,19 +154,23 @@ namespace ilp_solver
 
         const auto num_vars = 5;
         const auto num_dirs = num_vars;
+        const auto num_cons = 7;
         const auto constraint_shift = 10.0;
 
         // expected solution
-        double x0[num_vars] = { 2.72, 42.0, -1.41, 3.14, -1.62 };
+        double x0[num_vars] = {2.72, 42.0, -1.41, 3.14, -1.62};
+
+        // expected dual solution
+        double y0[num_cons] = {7, 0, 2, 5, 0, 6, 3};
 
         // constraint directions
-        double a[num_dirs][num_vars] = {{ 1.24, -3.47, 8.32, 4.78, -5.34 },
-                                        { -7.23, 4.90, -3.21, 0.39, 9.45 },
-                                        { 2.40, 9.38, -6.67, -6.43, 5.38 },
-                                        { -4.79, 1.47, 6.47, 4.30, -8.39 },
-                                        { 8.32, -7.20, 4.96, -9.41, 3.64 }};
+        double a[num_dirs][num_vars] = {{1.24, -3.47, 8.32, 4.78, -5.34},
+                                        {-7.23, 4.90, -3.21, 0.39, 9.45},
+                                        {2.40, 9.38, -6.67, -6.43, 5.38},
+                                        {-4.79, 1.47, 6.47, 4.30, -8.39},
+                                        {8.32, -7.20, 4.96, -9.41, 3.64}};
 
-        double scalar[num_dirs] = { 7, 2, 5, 6, 3 };
+        double scalar[num_dirs] = {7, 2, 5, 6, 3};
 
         // objective c = sum_j scalar[j]*a[j] (conical combination)
         double c[num_vars];
@@ -213,7 +213,7 @@ namespace ilp_solver
         {
             const auto values = std::vector<double>(a[j], a[j] + num_vars);
 
-            auto j_s{ std::to_string(j) };
+            auto j_s{std::to_string(j)};
             if (j % 2)
             {
                 p_solver->add_constraint_lower(values, b[j] - constraint_shift, "x*dir" + j_s + " >= b" + j_s + " - 10");
@@ -231,8 +231,9 @@ namespace ilp_solver
 
         p_solver->maximize();
 
-        const auto obj = p_solver->get_objective();
-        const auto x = p_solver->get_solution();
+        const auto obj    = p_solver->get_objective();
+        const auto x      = p_solver->get_solution();
+        const auto y      = p_solver->get_dual_sol();
         const auto status = p_solver->get_status();
 
         // Check solution status
@@ -246,14 +247,13 @@ namespace ilp_solver
             obj_cmp += c[i]*x[i];
         BOOST_REQUIRE_CLOSE(obj, obj_cmp, c_eps);   // objective should fit to the solution
 
-        logging << std::endl;
-        logging << "Expected objective: " << obj0 << std::endl;
-        logging << "Resulting objective: " << obj << std::endl;
+        logging << "\nExpected objective: " << obj0 << "\n"
+                <<  "Resulting objective: " << obj  << std::endl;
 
-        BOOST_REQUIRE_CLOSE(obj, obj0,  c_eps);      // objective should equal the optimal objective
+        BOOST_REQUIRE_CLOSE(obj, obj0, c_eps);      // objective should equal the optimal objective
 
         // Check correctness of solution
-        logging << std::endl << "Constraint values:" << std::endl;
+        logging << "\nConstraint values:" << std::endl;
         for (auto j = 0; j < num_dirs; ++j)
         {
             auto constraint_value = 0.0;
@@ -268,7 +268,7 @@ namespace ilp_solver
             BOOST_REQUIRE_GE(constraint_value, b[j] - c_eps);                     // upper bound of the j'th constraint is tight
         }
 
-        logging << std::endl << "Expected solution: ";
+        logging << "\nExpected solution: ";
         for (auto i = 0; i < num_vars; ++i)
             logging << x0[i] << " ";
         logging << std::endl;
@@ -278,6 +278,19 @@ namespace ilp_solver
         {
             logging << x[i] << " ";
             BOOST_REQUIRE_CLOSE(x[i], x0[i], c_eps);
+        }
+        logging << std::endl;
+
+        logging << "\nExpected dual solution: ";
+        for (auto j = 0; j < num_cons; ++j)
+            logging << y0[j] << " ";
+        logging << std::endl;
+
+        logging << "Resulting dual solution: ";
+        for (auto j = 0; j < y.size(); ++j)
+        {
+            logging << y[j] << " ";
+            BOOST_REQUIRE_CLOSE(y[j], y0[j], c_eps);
         }
         logging << std::endl;
 
@@ -349,15 +362,15 @@ namespace ilp_solver
 
     void test_performance_big(ILPSolverInterface* p_solver)
     {
-        static constexpr int c_num_constraints{ 50 };
-        static constexpr int c_num_variables  { 50000 };
+        static constexpr int c_num_constraints{50};
+        static constexpr int c_num_variables{50000};
         const auto           start_time = std::chrono::steady_clock::now();
 
         auto [var_time, cons_time] = generate_random_problem(p_solver, c_num_variables, c_num_constraints);
 
         // Check before finalizing.
-        BOOST_REQUIRE_EQUAL( p_solver->get_num_constraints(), c_num_constraints );
-        BOOST_REQUIRE_EQUAL( p_solver->get_num_variables(),   c_num_variables );
+        BOOST_REQUIRE_EQUAL(p_solver->get_num_constraints(), c_num_constraints);
+        BOOST_REQUIRE_EQUAL(p_solver->get_num_variables(),   c_num_variables);
 
         const auto middle_time = std::chrono::steady_clock::now();
         p_solver->set_max_seconds(0.001);
@@ -372,11 +385,11 @@ namespace ilp_solver
         if (LOGGING)
         {
             const auto time_creating = std::chrono::duration_cast<std::chrono::milliseconds>(middle_time - start_time).count();
-            const auto time_solving = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - middle_time).count();
+            const auto time_solving  = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - middle_time).count();
             std::cout << "Test for creating a big problem took " << time_creating << " ms.\n"
-                      << "\t" <<  var_time              << " for creating the variables.\n"
-                      << "\t" << cons_time              << " for creating the constraints.\n"
-                      << "\t" << time_solving << " for finalizing the problem." << std::endl;
+                      << "\t" << var_time     << " for creating the variables.\n"
+                      << "\t" << cons_time    << " for creating the constraints.\n"
+                      << "\t" << time_solving << " for finalizing the problem."   << std::endl;
         }
     }
 
@@ -401,7 +414,7 @@ namespace ilp_solver
         const auto objective = p_solver->get_objective();
 
         const auto end_time = std::chrono::steady_clock::now();
-        BOOST_REQUIRE_CLOSE( objective, -1., c_eps );
+        BOOST_REQUIRE_CLOSE(objective, -1., c_eps);
 
         if (LOGGING)
         {
@@ -466,8 +479,8 @@ namespace ilp_solver
 
     void test_cutoff(ILPSolverInterface* p_solver)
     {
-        const std::vector obj{ 1., 1. };
-        const std::vector row{ 1., 1. };
+        const std::vector obj{1., 1.};
+        const std::vector row{1., 1.};
 
         p_solver->set_presolve(false);
 
@@ -478,7 +491,7 @@ namespace ilp_solver
         p_solver->set_cutoff(1.9);
 
         p_solver->minimize();
-        auto sol = p_solver->get_solution();
+        auto sol    = p_solver->get_solution();
         auto status = p_solver->get_status();
 
         BOOST_REQUIRE(status == SolutionStatus::PROVEN_INFEASIBLE);
@@ -513,7 +526,7 @@ namespace ilp_solver
             p_solver->minimize();
 
             BOOST_REQUIRE(p_solver->get_status() == SolutionStatus::NO_SOLUTION);
-            BOOST_REQUIRE_EQUAL (p_solver->get_solution().size(), 0u);
+            BOOST_REQUIRE_EQUAL(p_solver->get_solution().size(), 0u);
         }
         catch (const std::exception& e)
         {
@@ -526,46 +539,13 @@ namespace ilp_solver
             BOOST_FAIL("Bad alloc test failed (threw exception instead of treating as >>no solution<<.");
         }
     }
-
-
-    ScopedILPSolver __stdcall create_stub()
-    {
-        constexpr std::string_view solver_exe_name = "ScaiIlpExe.exe";
-        return create_solver_stub(solver_exe_name.data(), false /*throw on all crashes*/);
-    }
-}
-
-
-namespace
-{
-    using namespace ilp_solver;
-
-    // We need this because capturing lambdas are not usable for function pointers
-    // and we somehow need to get a different file path per solver.
-    int global_current_index{0};
-
-    static const std::vector<std::pair<FactoryFunction, std::string_view>> all_solvers
-    {
-#ifdef WITH_CBC
-        std::pair{create_solver_cbc,    "CBC"},
-        std::pair{create_stub,          "CBCStub"},
-#endif
-#ifdef WITH_SCIP
-        std::pair{create_solver_scip,   "SCIP"},
-#endif
-#if defined(WITH_GUROBI) && (_WIN64 == 1)
-        std::pair{create_solver_gurobi, "Gurobi"},
-#endif
-#if defined(WITH_HIGHS) && (_WIN64 == 1)
-        std::pair{create_solver_highs, "HiGHS"},
-#endif
-    };
 }
 
 
 int create_ilp_test_suite()
 {
-    constexpr std::array<std::pair<TestFunction, std::string_view>, 8> all_tests
+    using namespace ilp_solver;
+    constexpr std::array<std::pair<void (*)(ILPSolverInterface*), std::string_view>, 8> all_tests
     { std::pair{test_sorting,                     "Sorting"}
     , std::pair{test_linear_programming,          "LinProgr"}
     , std::pair{test_start_solution_minimization, "StartSolutionMin"}
@@ -579,7 +559,7 @@ int create_ilp_test_suite()
     boost::unit_test::test_suite* IlpSolverT = BOOST_TEST_SUITE("IlpSolverT");
 
     // Create a test suite for each kind of solver.
-    for (auto& [solver, solver_name] : all_solvers )
+    for (auto& [solver, solver_name] : all_solvers)
     {
         boost::unit_test::test_suite* suite = BOOST_TEST_SUITE(solver_name.data());
         for (auto& [test, test_name] : all_tests)
@@ -587,21 +567,20 @@ int create_ilp_test_suite()
             // We need an object to pass to make_test_case, and it needs copy-by-value (solver and test are merely pointers anyway.).
             auto lambda = [solver, test]() { test(solver().get()); };
             // Since we use a functor and a name, we avoid using one of the macros and create a test case directly.
-            suite->add( boost::unit_test::make_test_case(lambda, (std::string(solver_name) + '_' + test_name.data()).c_str(), __FILE__, __LINE__) );
+            suite->add(boost::unit_test::make_test_case(lambda, (std::string(solver_name) + '_' + test_name.data()).c_str(), __FILE__, __LINE__));
         }
 
-        auto mps_path   = [](ILPSolverInterface* p_solver) -> void {test_mps_output(p_solver, std::string(all_solvers[global_current_index++].second) + "_unittest.mps");};
-        auto mps_lambda = [solver, mps_path]() { mps_path(solver().get()); };
-        suite->add( boost::unit_test::make_test_case(mps_lambda, (std::string(solver_name) + "_MPSOut").c_str(), __FILE__, __LINE__) );
+        auto mps_lambda = [solver, solver_name]() { test_mps_output(solver().get(), std::string(solver_name) + "_unittest.mps"); };
+        suite->add(boost::unit_test::make_test_case(mps_lambda, (std::string(solver_name) + "_MPSOut").c_str(), __FILE__, __LINE__));
 
         if (solver_name.rfind("Stub") != std::string::npos)
         {
             auto lambda = [solver]() { test_bad_alloc(solver().get()); };
-            suite->add( boost::unit_test::make_test_case(lambda, (std::string(solver_name) + "_BadAlloc").c_str(), __FILE__, __LINE__) );
+            suite->add(boost::unit_test::make_test_case(lambda, (std::string(solver_name) + "_BadAlloc").c_str(), __FILE__, __LINE__));
         }
 
         // Add the current solver to the IlpSolverT test suite.
-        IlpSolverT->add( suite );
+        IlpSolverT->add(suite);
     }
 
     // Add the whole IlpSolver test suite to the master test suite.

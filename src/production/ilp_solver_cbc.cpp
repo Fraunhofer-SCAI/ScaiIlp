@@ -86,6 +86,17 @@ namespace ilp_solver
     }
 
 
+    std::vector<double> ILPSolverCbc::get_dual_sol() const
+    {
+        // The best solution is stored by CbcModel, not by the solver, thus reimplementation.
+        const auto* result = d_model.getRowPrice();
+        if (!result)
+            return std::vector<double>();
+        // No virtual call necessary, since the problem is solved.
+        return std::vector<double>(result, result + d_model.getNumRows());
+    }
+
+
     double ILPSolverCbc::get_objective() const
     {
         // The best objective value is stored by CbcModel, not by the solver, thus reimplementation.

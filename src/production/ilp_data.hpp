@@ -180,6 +180,7 @@ struct ILPDataView final : public ILPDataBase
 struct ILPSolutionData
 {
     std::vector<double> solution;
+    std::vector<double> dual_sol;
     double              objective{std::numeric_limits<double>::quiet_NaN()};
     SolutionStatus      solution_status{SolutionStatus::NO_SOLUTION};
     double              cpu_time_sec{};

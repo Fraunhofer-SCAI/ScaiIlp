@@ -32,7 +32,7 @@ const inline int c_mimalloc_version = mi_version();
 
 using namespace ilp_solver;
 
-class ModelException : public std::exception {};
+class ModelException  : public std::exception {};
 class SolverException : public std::exception {};
 
 using ilp_solver::ScopedILPSolver;
@@ -43,7 +43,7 @@ using UserClock = boost::chrono::process_user_cpu_clock;
 // 0 never crash on purpose
 // 1 crash on large LPs
 // 2 always crash
-constexpr int   c_test_crash = 0;
+constexpr int  c_test_crash = 0;
 constexpr auto c_test_exit_code
 //= SolverExitCode::out_of_memory; // results in warning if only large LPs fail
 //= SolverExitCode::missing_dll; // always results in error
@@ -76,7 +76,7 @@ static void add_constraints(ScopedILPSolver& v_solver, const ILPDataView& p_data
 
     for (auto i = 0; i < num_constraints; ++i)
     {
-        const auto& values  = p_data.matrix.d_values[i];
+        const auto& values  = p_data.matrix.d_values [i];
         const auto& indices = p_data.matrix.d_indices[i];
         const auto  lower   = p_data.constraint_lower[i];
         const auto  upper   = p_data.constraint_upper[i];
@@ -88,7 +88,7 @@ static void add_constraints(ScopedILPSolver& v_solver, const ILPDataView& p_data
 
 static void generate_ilp(ScopedILPSolver& v_solver, const ILPDataView& p_data)
 {
-    add_variables(v_solver, p_data);
+    add_variables  (v_solver, p_data);
     add_constraints(v_solver, p_data);
 }
 
@@ -140,6 +140,7 @@ static ILPSolutionData solution_data(const ScopedILPSolver& p_solver, UserClock:
     ILPSolutionData solution_data;
 
     solution_data.solution        = p_solver->get_solution();
+    solution_data.dual_sol        = p_solver->get_dual_sol();
     solution_data.objective       = p_solver->get_objective();
     solution_data.solution_status = p_solver->get_status();
     solution_data.peak_memory     = peak_memory_usage();
@@ -153,7 +154,7 @@ static ILPSolutionData solution_data(const ScopedILPSolver& p_solver, UserClock:
 static ILPSolutionData solve_ilp(const ILPDataView& p_data, CommunicationChild& p_communicator)
 {
     const auto start_time = UserClock::now();
-    auto       solver     = ilp_solver::create_solver_cbc();
+    auto       solver     = std::get<0>(all_solvers[1])();
 
     try
     {
@@ -222,7 +223,7 @@ static SolverExitCode solve_ilp(const std::string& p_shared_memory_name)
 }
 
 
-SolverExitCode my_main (int argc, wchar_t* argv[])
+SolverExitCode my_main(int argc, wchar_t* argv[])
 {
     SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
     if (argc != 2)

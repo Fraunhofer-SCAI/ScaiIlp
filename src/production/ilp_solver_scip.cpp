@@ -101,10 +101,30 @@ namespace ilp_solver
 
         res.reserve(d_cols.size());
 
-        // Obtain the best solution value for each variable in the current best solution.
+        // Obtain the value for each variable in the current best solution.
         auto sol = SCIPgetBestSol(d_scip);
         for (auto& s : d_cols)
             res.push_back(SCIPgetSolVal(d_scip, sol, s));
+
+        return res;
+    }
+
+
+    std::vector<double> ILPSolverSCIP::get_dual_sol() const
+    {
+        std::vector<double> res = {};
+        if (!SCIPisDualSolAvailable(d_scip, true))
+            return res;
+
+        res.reserve(d_rows.size());
+
+        // Obtain the dual value for each constraint in the current best solution.
+        for (const auto& row : d_rows)
+        {
+            double x;
+            SCIPgetDualSolVal(d_scip, row, &x, NULL);
+            res.push_back(x);
+        }
 
         return res;
     }
@@ -119,7 +139,7 @@ namespace ilp_solver
 
     SolutionStatus ILPSolverSCIP::get_status() const
     {
-        int n = 0; // There are null-pointer accesses if called in the wrong stage, which happens if resetted.
+        int n = 0; // There are null-pointer accesses if called in the wrong stage, which happens if reset.
         switch (SCIPgetStage(d_scip))
         {
         case SCIP_STAGE_TRANSFORMED:  [[fallthrough]];

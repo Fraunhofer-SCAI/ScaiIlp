@@ -25,6 +25,17 @@ namespace ilp_solver
     }
 
 
+    std::vector<double> ILPSolverOsi::get_dual_sol() const
+    {
+        const auto* dual_sol_array = d_ilp_solver->getRowPrice(); // Returns nullptr if no solution was found.
+
+        if (!dual_sol_array)
+            return std::vector<double>();
+        // No virtual call necessary, since the problem is solved.
+        return std::vector<double>(dual_sol_array, dual_sol_array + d_ilp_solver->getNumRows());
+    }
+
+
     void ILPSolverOsi::set_start_solution(ValueArray p_solution)
     {
         // get_num_variables necessary since the cache may not be included in the problem.

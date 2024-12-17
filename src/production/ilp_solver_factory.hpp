@@ -40,7 +40,7 @@ namespace impl
 
 
     extern "C"
-#ifdef WITH_CBC
+#ifdef WITH_STUB
         __declspec(dllexport)
 #endif
             ILPSolverInterface* __stdcall create_solver_stub(const char* p_executable_basename, bool p_throw_on_all_crashes);
@@ -79,5 +79,23 @@ inline ScopedILPSolver create_solver_stub(const char* p_executable_basename, boo
 {
     return ScopedILPSolver(impl::create_solver_stub(p_executable_basename, p_throw_on_all_crashes));
 }
+
+static const std::vector<std::pair<ScopedILPSolver(__stdcall*)(void), std::string_view>> all_solvers{
+#ifdef WITH_STUB // If enabled, Stub uses the second solver in this list.
+    std::pair{[]() { return create_solver_stub("ScaiIlpExe.exe", false); }, "Stub"},
+#endif
+#ifdef WITH_CBC
+    std::pair{create_solver_cbc, "CBC"},
+#endif
+#if defined(WITH_HIGHS) && (_WIN64 == 1)
+    std::pair{create_solver_highs, "HiGHS"},
+#endif
+#ifdef WITH_SCIP
+    std::pair{create_solver_scip, "SCIP"},
+#endif
+#if defined(WITH_GUROBI) && (_WIN64 == 1)
+    std::pair{create_solver_gurobi, "Gurobi"},
+#endif
+};
 
 } // namespace ilp_solver

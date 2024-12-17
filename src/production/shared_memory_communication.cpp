@@ -16,9 +16,10 @@ namespace ilp_solver
 ***************************************/
 static void serialize_result(Serializer* v_serializer, const ILPSolutionData& p_solution_data)
 {
-    *v_serializer << p_solution_data.solution_status
+    *v_serializer   << p_solution_data.solution_status
                     << p_solution_data.objective
                     << p_solution_data.solution
+                    << p_solution_data.dual_sol
                     << p_solution_data.cpu_time_sec
                     << p_solution_data.peak_memory;
 }
@@ -29,6 +30,7 @@ static void deserialize_result(Deserializer* v_deserializer, ILPSolutionData* r_
     *v_deserializer >> r_solution_data->solution_status
                     >> r_solution_data->objective
                     >> r_solution_data->solution
+                    >> r_solution_data->dual_sol
                     >> r_solution_data->cpu_time_sec
                     >> r_solution_data->peak_memory;
 }
@@ -39,7 +41,7 @@ static void deserialize_result(Deserializer* v_deserializer, ILPSolutionData* r_
 **********************************/
 static void* serialize_ilp_data(Serializer* v_serializer, const ILPData& p_data, const ILPSolutionData& p_solution_data)
 {
-    *v_serializer << p_data.matrix.d_values
+    *v_serializer   << p_data.matrix.d_values
                     << p_data.matrix.d_indices
                     << p_data.matrix.d_num_cols
                     << p_data.objective
@@ -69,7 +71,7 @@ static void* serialize_ilp_data(Serializer* v_serializer, const ILPData& p_data,
 
 static void* deserialize_ilp_data(Deserializer& v_deserializer, ILPDataView& r_data)
 {
-    v_deserializer >> r_data.matrix.d_values
+    v_deserializer  >> r_data.matrix.d_values
                     >> r_data.matrix.d_indices
                     >> r_data.matrix.d_num_cols
                     >> r_data.objective
@@ -99,7 +101,8 @@ static void* deserialize_ilp_data(Deserializer& v_deserializer, ILPDataView& r_d
 static ILPSolutionData dummy_solution(const ILPData& p_data)
 {
     ILPSolutionData dummy_solution_data(p_data.objective_sense);
-    dummy_solution_data.solution.resize(p_data.variable_type.size());
+    dummy_solution_data.solution.resize(p_data.matrix.d_num_cols);
+    dummy_solution_data.dual_sol.resize(p_data.matrix.d_values.size());
     return dummy_solution_data;
 }
 

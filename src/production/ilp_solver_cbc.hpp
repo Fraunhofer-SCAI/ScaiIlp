@@ -25,6 +25,7 @@ namespace ilp_solver
             ILPSolverCbc();
 
             std::vector<double> get_solution  () const override;
+            std::vector<double> get_dual_sol  () const override;
             double              get_objective () const override;
             SolutionStatus      get_status    () const override;
 

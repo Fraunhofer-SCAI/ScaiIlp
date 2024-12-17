@@ -7,7 +7,6 @@
 #include <stdexcept>
 #include <vector>
 
-constexpr double c_eps = 0.0001;
 
 namespace ilp_solver
 {
@@ -29,6 +28,7 @@ extern "C" void __stdcall destroy_exception_tester(ExceptionTester* p_exception)
 }
 
 
+#ifdef WITH_STUB
 SolverExitCode stub_tester(const std::string& p_executable_basename)
 {
     ilp_solver::ScopedILPSolver solver;
@@ -53,7 +53,7 @@ SolverExitCode stub_tester(const std::string& p_executable_basename)
         const auto solution = solver->get_solution();
 
         std::vector<double> expected_solution{2. / 3., 2. / 3.};
-        auto equal_eps = [](double p_value_1, double p_value_2) { return fabs(p_value_1 - p_value_2) <= c_eps; };
+        auto equal_eps = [](double p_value_1, double p_value_2) { return fabs(p_value_1 - p_value_2) <= 0.0001; };
 
         if (solver->get_status() != SolutionStatus::PROVEN_OPTIMAL)
             return SolverExitCode::stub_tester_failed;
@@ -69,4 +69,5 @@ SolverExitCode stub_tester(const std::string& p_executable_basename)
         return solver->get_external_exit_code();
     }
 }
+#endif
 } // namespace ilp_solver

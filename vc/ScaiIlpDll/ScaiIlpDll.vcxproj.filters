@@ -51,12 +51,16 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="$(SCIP_DIR)\bin\scip.dll">
-      <Filter>binaries</Filter>
-    </CustomBuild>
-    <CustomBuild Include="$(GUROBI_DIR)\bin\gurobi80.dll">
-      <Filter>binaries</Filter>
-    </CustomBuild>
-    <CustomBuild Include="$(PTHREAD_LIB_PATH)\pthread.dll" />
+    <CopyFileToFolders Include="$(GUROBI_DIR)\bin\gurobi$(GUROBI_VERSION_MAJOR)$(GUROBI_VERSION_MINOR).dll"><Filter>binaries</Filter></CopyFileToFolders>
+    <CopyFileToFolders Include="$(PTHREAD_LIB_PATH)\pthread.dll"><Filter>binaries</Filter></CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\coinmumps-3.dll"><Filter>binaries</Filter></CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\libifcoremd.dll"><Filter>binaries</Filter></CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\svml_dispmd.dll"><Filter>binaries</Filter></CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\libiomp5md.dll"><Filter>binaries</Filter></CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\ipopt-3.dll"><Filter>binaries</Filter></CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\libscip.dll"><Filter>binaries</Filter></CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\libmmd.dll"><Filter>binaries</Filter></CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\tbb12.dll"><Filter>binaries</Filter></CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\mpir.dll"><Filter>binaries</Filter></CopyFileToFolders>
   </ItemGroup>
 </Project>

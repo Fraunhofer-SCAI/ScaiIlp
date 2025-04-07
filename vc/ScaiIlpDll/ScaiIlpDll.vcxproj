@@ -1,8 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DebClang|x64">
+      <Configuration>DebClang</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelClang|x64">
+      <Configuration>RelClang</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
@@ -24,10 +32,22 @@
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebClang|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>ClangCL</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelClang|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>ClangCL</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -38,7 +58,7 @@
     <Import Project="..\properties.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <ItemDefinitionGroup Condition="'$(IS_DEBUG)'=='true'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>Disabled</Optimization>
@@ -54,7 +74,7 @@
       </ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <ItemDefinitionGroup Condition="'$(IS_DEBUG)'!='true'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
@@ -105,26 +125,39 @@
     <ClCompile Include="..\..\src\production\shared_memory_communication.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="$(SCIP_DIR)\bin\scip.dll">
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(WITH_SCIP)' != 'true'">true</ExcludedFromBuild>
-      <Command Condition="'$(WITH_SCIP)' == 'true'">copy "%(FullPath)" "$(OutDir)\"</Command>
-      <Message Condition="'$(WITH_SCIP)' == 'true'">Copy %(Filename)%(Extension)</Message>
-      <Outputs Condition="'$(WITH_SCIP)' == 'true'">$(OutDir)\%(Filename)%(Extension)</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="$(PTHREAD_LIB_PATH)\pthread.dll">
-      <FileType>Document</FileType>
-      <Command>copy "%(FullPath)" "$(OutDir)\"</Command>
-      <Message>Copy %(Filename)%(Extension)</Message>
-      <Outputs>$(OutDir)\%(Filename)%(Extension)</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="$(GUROBI_DIR)\bin\gurobi80.dll">
-      <FileType>Document</FileType>
+    <CopyFileToFolders Include="$(PTHREAD_LIB_PATH)\pthread.dll">
+      <ExcludedFromBuild Condition="'$(WITH_CBC)' != 'true'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="$(GUROBI_DIR)\bin\gurobi$(GUROBI_VERSION_MAJOR)$(GUROBI_VERSION_MINOR).dll">
       <ExcludedFromBuild Condition="'$(WITH_GUROBI)' != 'true'">true</ExcludedFromBuild>
-      <Command Condition="'$(WITH_GUROBI)' == 'true'">copy "%(FullPath)" "$(OutDir)\"</Command>
-      <Message Condition="'$(WITH_GUROBI)' == 'true'">Copy %(Filename)%(Extension)</Message>
-      <Outputs Condition="'$(WITH_GUROBI)' == 'true'">$(OutDir)\%(Filename)%(Extension)</Outputs>
-    </CustomBuild>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\coinmumps-3.dll">
+      <ExcludedFromBuild Condition="'$(WITH_SCIP)' != 'true'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\ipopt-3.dll">
+      <ExcludedFromBuild Condition="'$(WITH_SCIP)' != 'true'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\libifcoremd.dll">
+      <ExcludedFromBuild Condition="'$(WITH_SCIP)' != 'true'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\libiomp5md.dll">
+      <ExcludedFromBuild Condition="'$(WITH_SCIP)' != 'true'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\libmmd.dll">
+      <ExcludedFromBuild Condition="'$(WITH_SCIP)' != 'true'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\libscip.dll">
+      <ExcludedFromBuild Condition="'$(WITH_SCIP)' != 'true'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\mpir.dll">
+      <ExcludedFromBuild Condition="'$(WITH_SCIP)' != 'true'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\svml_dispmd.dll">
+      <ExcludedFromBuild Condition="'$(WITH_SCIP)' != 'true'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="$(SCIP_DIR)\bin\tbb12.dll">
+      <ExcludedFromBuild Condition="'$(WITH_SCIP)' != 'true'">true</ExcludedFromBuild>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ScaiIlp.rc" />

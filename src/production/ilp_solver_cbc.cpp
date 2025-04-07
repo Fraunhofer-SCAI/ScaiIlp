@@ -23,7 +23,7 @@ namespace ilp_solver
     {
     public:
         CbcAction event(CbcEvent whichevent) override;
-        CbcEventHandler* clone() const;
+        CbcEventHandler* clone() const override;
 
         InterimEventHandler(std::function<void (ILPSolutionData*)> p_interim_handler) : d_interim_handler{std::move(p_interim_handler)} {}
     private:

@@ -2,12 +2,12 @@
 // For documentation what is allowed in resource files, see
 // https://docs.microsoft.com/en-us/windows/win32/menurc/about-resource-files.
 #define SCAIILP_VERSION_MAJOR 3
-#define SCAIILP_VERSION_MINOR 2
+#define SCAIILP_VERSION_MINOR 3
 #define SCAIILP_VERSION_BUILD 0
 #define SCAIILP_VERSION_DEBUG 0
 
 #define SCAIILP_PRODUCT_NAME_STRING  "ScaiIlp"
-#define SCAIILP_COPYRIGHT_STRING     "(C) Fraunhofer SCAI, 2016 - 2024, EPL"
+#define SCAIILP_COPYRIGHT_STRING     "(C) Fraunhofer SCAI, 2016 - 2025, EPL"
 #define SCAIILP_COMPANY_NAME_STRING  "Fraunhofer Institute for Algorithms and Scientific Computing SCAI"
 #define SCAIILP_FILE_DESC_STRING     "ScaiIlp"
 #define SCAIILP_EXE_FILE_NAME_STRING "ScaiIlpExe.exe"

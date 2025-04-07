@@ -43,7 +43,7 @@ static std::chrono::milliseconds seconds_to_millisecods(double p_seconds)
 {
     const auto     milliseconds     = 1000. * p_seconds;
     constexpr auto max_milliseconds = std::numeric_limits<std::chrono::milliseconds::rep>::max();
-    if (milliseconds >= max_milliseconds)
+    if (milliseconds >= static_cast<double>(max_milliseconds))
         return std::chrono::milliseconds(max_milliseconds);
     return std::chrono::milliseconds(static_cast<std::chrono::milliseconds::rep>(milliseconds));
 }

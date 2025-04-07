@@ -5,8 +5,6 @@
 
 #include "ilp_solver_impl.hpp"
 
-#pragma comment(lib, "gurobi80.lib")
-
 
 namespace ilp_solver
 {

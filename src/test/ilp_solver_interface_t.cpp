@@ -287,7 +287,7 @@ namespace ilp_solver
         logging << std::endl;
 
         logging << "Resulting dual solution: ";
-        for (auto j = 0; j < y.size(); ++j)
+        for (auto j = 0; j < isize(y); ++j)
         {
             logging << y[j] << " ";
             BOOST_REQUIRE_CLOSE(y[j], y0[j], c_eps);

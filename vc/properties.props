@@ -2,24 +2,31 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
+    <IS_DEBUG Condition="'$(Configuration)' == 'Debug' OR '$(Configuration)' == 'DebClang'">true</IS_DEBUG>
+    <IS_DEBUG Condition="'$(Configuration)' != 'Debug' AND '$(Configuration)' != 'DebClang'">false</IS_DEBUG>
+    <!--External libraries may use "Release" and "Debug" in folder names. Add a helper variable to be used in these cases.-->
+    <LIB_CONFIG Condition="'$(IS_DEBUG)' == 'true'">Debug</LIB_CONFIG>
+    <LIB_CONFIG Condition="'$(IS_DEBUG)' != 'true'">Release</LIB_CONFIG>
     <BOOST_VERSION>1_86</BOOST_VERSION>
     <BOOST_LIB_TOOLSET>vc143</BOOST_LIB_TOOLSET>
     <BOOST_DIR>$(optsoft)\boost_$(BOOST_VERSION)_0_$(BOOST_LIB_TOOLSET)_idl0_$(PlatformTarget)</BOOST_DIR>
     <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc142_full</PTHREAD_DIR>
-    <PTHREAD_LIB_PATH>$(PTHREAD_DIR)\$(PlatformTarget)-v142-$(Configuration)</PTHREAD_LIB_PATH>
+    <PTHREAD_LIB_PATH>$(PTHREAD_DIR)\$(PlatformTarget)-v142-$(LIB_CONFIG)</PTHREAD_LIB_PATH>
     <WITH_HIGHS>false</WITH_HIGHS>
-    <HIGHS_DIR>$(optsoft)\HiGHS_1.8.1\$(PlatformTarget)-Clang-$(Configuration)</HIGHS_DIR>
+    <HIGHS_DIR>$(optsoft)\HiGHS_1.8.1\$(PlatformTarget)-Clang-$(LIB_CONFIG)</HIGHS_DIR>
     <HIGHS_INCLUDE_PATH>$(HIGHS_DIR)\include\highs</HIGHS_INCLUDE_PATH>
     <HIGHS_LIB_PATH>$(HIGHS_DIR)\lib</HIGHS_LIB_PATH>
     <WITH_OSI>true</WITH_OSI>
-  <!--Without STUB the ScaiIlpExe project doesn't need to be build.-->
-    <WITH_STUB>true</WITH_STUB>
+    <WITH_STUB>true</WITH_STUB>     <!--Without STUB the ScaiIlpExe project doesn't need to be build.-->
     <WITH_CBC>true</WITH_CBC>
-    <COIN_DIR>$(optsoft)\Cbc-2.10.10\vc143_$(Configuration)_$(PlatformTarget)</COIN_DIR>
+    <COIN_DIR>$(optsoft)\Cbc-2.10.10\vc143_$(LIB_CONFIG)_$(PlatformTarget)</COIN_DIR>
     <WITH_SCIP>false</WITH_SCIP>
-    <SCIP_DIR>$(optsoft)\SCIP-6.0.0\$(PlatformTarget)-$(Configuration)</SCIP_DIR>
+    <SCIP_DIR>$(optsoft)\SCIP-9.2.0</SCIP_DIR>
     <WITH_GUROBI>false</WITH_GUROBI>
-    <GUROBI_DIR>$(optsoft)\Gurobi-8.0.1</GUROBI_DIR>
+    <GUROBI_VERSION_MAJOR>12</GUROBI_VERSION_MAJOR>
+    <GUROBI_VERSION_MINOR>0</GUROBI_VERSION_MINOR>
+    <GUROBI_VERSION_TECHNICAL>0</GUROBI_VERSION_TECHNICAL>
+    <GUROBI_DIR>$(optsoft)\Gurobi-$(GUROBI_VERSION_MAJOR).$(GUROBI_VERSION_MINOR).$(GUROBI_VERSION_TECHNICAL)</GUROBI_DIR>
     <BOOST_LIB_PATH>$(BOOST_DIR)\lib</BOOST_LIB_PATH>
     <BOOST_INCLUDE_PATH>$(BOOST_DIR)\include\boost-$(BOOST_VERSION)</BOOST_INCLUDE_PATH>
     <COIN_LIB_PATH>$(COIN_DIR)\lib</COIN_LIB_PATH>
@@ -30,31 +37,32 @@
     <GUROBI_LIB_PATH>$(GUROBI_DIR)\lib</GUROBI_LIB_PATH>
     <WITH_MIMALLOC>true</WITH_MIMALLOC>
     <MIMALLOC_DIR>$(optsoft)\mimalloc-2.0.9</MIMALLOC_DIR>
-    <MIMALLOC_OVERRIDE_DIR>$(MIMALLOC_DIR)\out\msvc-$(PlatformTarget)\$(Configuration)</MIMALLOC_OVERRIDE_DIR>
+    <MIMALLOC_INCLUDE_PATH>$(MIMALLOC_DIR)\include</MIMALLOC_INCLUDE_PATH>
+    <MIMALLOC_OVERRIDE_DIR>$(MIMALLOC_DIR)\out\msvc-$(PlatformTarget)\$(LIB_CONFIG)</MIMALLOC_OVERRIDE_DIR>
     <!--Enable Assertions in Release Mode. (Condition makes this changeable via command line parameter.)-->
     <RELEASE_ASSERTIONS Condition="'$(RELEASE_ASSERTIONS)'==''">false</RELEASE_ASSERTIONS>
     <!--Enable Code Analysis.  (Condition makes this changeable via command line parameter.)-->
-    <CODE_ANALYSIS Condition="'$(CODE_ANALYSIS)'==''">true</CODE_ANALYSIS>
+    <CODE_ANALYSIS Condition="'$(CODE_ANALYSIS)'==''">false</CODE_ANALYSIS>
   </PropertyGroup>
   <PropertyGroup>
     <OutDir>$(SolutionDir)$(Configuration)_$(PlatformTarget)\</OutDir>
     <IntDir>$(ProjectDir)$(Configuration)_$(PlatformTarget)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <RunCodeAnalysis>$(CODE_ANALYSIS)</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>$(ROOT)..\code-analysis.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)code-analysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(BOOST_INCLUDE_PATH);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(WITH_OSI)' == 'true'">WITH_OSI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    <PreprocessorDefinitions Condition="'$(WITH_STUB)' == 'true'">WITH_STUB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_CBC)' == 'true'">WITH_CBC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_STUB)' == 'true'">WITH_STUB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_SCIP)' == 'true'">WITH_SCIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' == 'true'">WITH_GUROBI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_HIGHS)' == 'true'">WITH_HIGHS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(WITH_GUROBI)' == 'true'">WITH_GUROBI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(WITH_MIMALLOC)' == 'true'">WITH_MIMALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)' == 'Debug'">_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)' != 'Debug' AND '$(RELEASE_ASSERTIONS)' == 'false'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(IS_DEBUG)' == 'true'">_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(IS_DEBUG)' != 'true' AND '$(RELEASE_ASSERTIONS)' == 'false'">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(BOOST_LIB_TOOLSET)' != ''">BOOST_LIB_TOOLSET="$(BOOST_LIB_TOOLSET)";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;WINVER=0x0601;_ITERATOR_DEBUG_LEVEL=0;WIN32;BOOST_FILESYSTEM_VERSION=4;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -66,8 +74,8 @@
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <TreatWarningAsError>true</TreatWarningAsError>
       <SupportJustMyCode>false</SupportJustMyCode>
-      <IntrinsicFunctions Condition="'$(Configuration)' == 'Debug'">false</IntrinsicFunctions>
-      <IntrinsicFunctions Condition="'$(Configuration)' != 'Debug'">true</IntrinsicFunctions>
+      <IntrinsicFunctions Condition="'$(IS_DEBUG)' == 'true'">false</IntrinsicFunctions>
+      <IntrinsicFunctions Condition="'$(IS_DEBUG)' != 'true'">true</IntrinsicFunctions>
       <!--Enable Warnings: 4265= class has virtual functions, but its non-trivial destructor is not virtual
                            4355= 'this' used in base member initializer list
                            4484= method matches base ref class method, but is not marked 'virtual', 'new' or 'override'
@@ -85,6 +93,8 @@
                            5266= 'const' qualifier on return type has no effect
                            -->
       <AdditionalOptions>/utf-8 /w34265 /w34355 /w34484 /w34643 /w34654 /w34668 /w34800 /w35024 /w35026 /w35038 /w35204 /w35259 /w35263 /w35264 /w35266 %(AdditionalOptions)</AdditionalOptions>
+      <!--Clang does not recognise /external:anglebrackets. Therefore, we also explicitly mark libraries that produce warnings as external here. -->
+      <AdditionalOptions>%(AdditionalOptions) /external:I"$(MIMALLOC_INCLUDE_PATH)" /external:I"$(BOOST_INCLUDE_PATH)"</AdditionalOptions>
 
       <!--Code Analysis: Disable analysis and warnings for external code -->
       <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
@@ -92,8 +102,8 @@
       <ExternalWarningLevel>Level2</ExternalWarningLevel>
     </ClCompile>
     <Link>
-      <EnableCOMDATFolding Condition="'$(Configuration)' == 'Debug'">false</EnableCOMDATFolding>
-      <EnableCOMDATFolding Condition="'$(Configuration)' != 'Debug'">true</EnableCOMDATFolding>
+      <EnableCOMDATFolding Condition="'$(IS_DEBUG)' == 'true'">false</EnableCOMDATFolding>
+      <EnableCOMDATFolding Condition="'$(IS_DEBUG)' != 'true'">true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(BOOST_LIB_PATH);$(OutputPath)</AdditionalLibraryDirectories>
@@ -117,9 +127,9 @@
     <BuildMacro Include="WITH_OSI">
       <Value>$(WITH_OSI)</Value>
     </BuildMacro>
-  <BuildMacro Include="WITH_STUB">
-    <Value>$(WITH_STUB)</Value>
-  </BuildMacro>
+    <BuildMacro Include="WITH_STUB">
+      <Value>$(WITH_STUB)</Value>
+    </BuildMacro>
     <BuildMacro Include="WITH_CBC">
       <Value>$(WITH_CBC)</Value>
     </BuildMacro>

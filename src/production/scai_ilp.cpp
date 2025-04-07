@@ -15,19 +15,22 @@
 #include <psapi.h> // GetProcessMemoryInfo
 
 #ifdef WITH_MIMALLOC
-#pragma warning(push)
-#pragma warning(disable : 28251) // inconsistent annotation
-#pragma warning(disable : 4559)  // redefinition with __declspec(restrict)
 
 // Include the new-delete header to make their redirections use mimalloc directly for efficiency,
-// c.f.https://github.com/microsoft/mimalloc
-#include "mimalloc-new-delete.h"
+// c.f. https://microsoft.github.io/mimalloc/overrides.html
+// Using this with clang causes crashes, so we deactivate it in this case.
+// This may be related to builtin new/delete in clang:
+// https://github.com/microsoft/mimalloc/issues/755#issuecomment-1681869620
+// #TODO: It would be clearer to use the mi_malloc Allocator directly anyways.
+#ifndef __clang__
+#include <mimalloc-new-delete.h>
+#endif
+
 // Include the mimalloc header and call mi_version to ensure that the dll is actually imported
 // and not skipped due to not being used.
-#include "mimalloc.h"
+#include <mimalloc.h>
 
 const inline int c_mimalloc_version = mi_version();
-#pragma warning(pop)
 #endif
 
 using namespace ilp_solver;

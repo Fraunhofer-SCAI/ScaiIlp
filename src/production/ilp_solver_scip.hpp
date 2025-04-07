@@ -4,9 +4,6 @@
 
 #include "ilp_solver_impl.hpp"
 
-#pragma comment(lib, "scip.lib")
-
-
 namespace ilp_solver
 {
     // Necessary forward declarations of structs and typedefs.

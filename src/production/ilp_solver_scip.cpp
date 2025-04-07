@@ -11,6 +11,7 @@ namespace ilp_solver
 {
     #include <scip/scip.h>
     #include <scip/scipdefplugins.h>
+    #pragma comment(lib, "libscip.lib")
 
     namespace
     {

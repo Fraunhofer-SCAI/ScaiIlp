@@ -36,7 +36,11 @@ private:
                              const std::string& p_name = "", OptionalIndexArray p_col_indices = {}) override;
     void set_objective_sense_impl(ObjectiveSense p_sense) override;
 
-    void set_start_solution     (ValueArray p_solution) override;
+    void set_objective          (ValueArray p_coeff)   override;
+    void set_variable_type      (int p_ind, VariableType p_type) override;
+    void set_bound_lower        (int p_index, double p_lower_bound) override;
+    void set_bound_upper        (int p_index, double p_upper_bound) override;
+    void set_start_solution     (ValueArray p_solution)override;
 
     void set_num_threads        (int p_num_threads)    override;
     void set_deterministic_mode (bool p_deterministic) override;

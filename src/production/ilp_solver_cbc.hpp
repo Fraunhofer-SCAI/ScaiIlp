@@ -53,11 +53,11 @@ namespace ilp_solver
         private:
             CbcModel d_model;
 
-            OsiSolverInterface*       get_solver_osi_model    ()       override;
+            OsiSolverInterface* get_solver_osi_model() override;
 
-            void solve_impl() override;
+            void solve_impl              ()                       override;
+            void set_max_seconds_impl    (double p_seconds)       override;
             void set_objective_sense_impl(ObjectiveSense p_sense) override;
-            void set_max_seconds_impl(double p_seconds) override;
     };
 }
 

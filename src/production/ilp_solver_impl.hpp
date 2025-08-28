@@ -12,7 +12,6 @@ namespace ilp_solver
 
 using OptionalIndexArray = std::optional<IndexArray>;
 using OptionalValueArray = std::optional<ValueArray>;
-enum class VariableType   { INTEGER, CONTINUOUS, BINARY };
 enum class ObjectiveSense { MINIMIZE, MAXIMIZE };
 
 

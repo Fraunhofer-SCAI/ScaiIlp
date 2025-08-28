@@ -11,8 +11,10 @@
 // Wrapping this in a function instead of a macro would result in way less readable error messages, sadly.
 #ifdef NDEBUG
 #define ASSERT_OK(expression) expression
+#define ASSERT_NO_ERROR(expression) expression  // Accept small coefficient warnings for numeric inputs
 #else
 #define ASSERT_OK(expression) assert(expression == HighsStatus::kOk)
+#define ASSERT_NO_ERROR(expression) assert(expression != HighsStatus::kError)
 #endif
 
 namespace ilp_solver
@@ -24,9 +26,8 @@ ILPSolverHighs::ILPSolverHighs()
 
     // Disable presolve to enforce the time limit, as presolve does not respect it
     // see https://github.com/ERGO-Code/HiGHS/issues/1278
-    set_presolve(false);
+    ASSERT_OK(d_highs.setOptionValue("presolve", "off"));
     ASSERT_OK(d_highs.setOptionValue("presolve_reduction_limit", 0));
-    ASSERT_OK(d_highs.setOptionValue("restart_presolve_reduction_limit", 0));
 }
 
 
@@ -126,6 +127,39 @@ void ILPSolverHighs::reset_solution()
 }
 
 
+void ILPSolverHighs::set_objective(ValueArray p_coeff)
+{
+    ASSERT_NO_ERROR(d_highs.changeColsCost(0, isize(p_coeff) - 1, p_coeff.data()));
+}
+
+
+void ILPSolverHighs::set_variable_type(int p_index, VariableType p_type)
+{
+    ASSERT_OK(d_highs.changeColIntegrality(p_index,
+        (p_type == VariableType::CONTINUOUS) ? HighsVarType::kContinuous : HighsVarType::kInteger));
+    if (p_type == VariableType::BINARY)
+        d_highs.changeColBounds(p_index, 0.0, 1.0);
+}
+
+
+void ILPSolverHighs::set_bound_lower(int p_index, double p_lower_bound)
+{
+    double cost, lower, upper, value;
+    HighsInt num_col, num_nz, start, index;
+    d_highs.getCols(p_index, p_index, num_col, &cost, &lower, &upper, num_nz, &start, &index, &value);
+    d_highs.changeColBounds(p_index, p_lower_bound, upper);
+}
+
+
+void ILPSolverHighs::set_bound_upper(int p_index, double p_upper_bound)
+{
+    double   cost, lower, upper, value;
+    HighsInt num_col, num_nz, start, index;
+    d_highs.getCols(p_index, p_index, num_col, &cost, &lower, &upper, num_nz, &start, &index, &value);
+    d_highs.changeColBounds(p_index, lower, p_upper_bound);
+}
+
+
 void ILPSolverHighs::set_num_threads(int p_num_threads)
 {
     assert(p_num_threads >= 0);     // 0 -> automatic
@@ -146,10 +180,11 @@ void ILPSolverHighs::set_log_level(int p_level)
 }
 
 
-void ILPSolverHighs::set_presolve(bool p_presolve)
+void ILPSolverHighs::set_presolve(bool)
 {
+    // Disabled for now, otherwise the constructor setting is overwritten by stubs default.
     // Allowed values are "off", "choose" or "on". Default is "choose".
-    ASSERT_OK(d_highs.setOptionValue("presolve", p_presolve ? "choose" : "off"));
+    //ASSERT_OK(d_highs.setOptionValue("presolve", p_presolve ? "choose" : "off"));
 }
 
 
@@ -210,26 +245,26 @@ void ILPSolverHighs::add_variable_impl(VariableType p_type, double p_objective, 
         if (p_row_indices) // Coefficients given as sparse vector.
         {
             assert(p_row_values->size() == p_row_indices->size());
-            ASSERT_OK(d_highs.addCol(p_objective, p_lower_bound, p_upper_bound, isize(*p_row_values),
-                                     p_row_indices->data(), p_row_values->data()));
+            ASSERT_NO_ERROR(d_highs.addCol(p_objective, p_lower_bound, p_upper_bound, isize(*p_row_values),
+                                           p_row_indices->data(), p_row_values->data()));
         }
         else // Coefficients given as dense vector.
         {
             d_sparse.init_from_dense(*p_row_values);
-            ASSERT_OK(d_highs.addCol(p_objective, p_lower_bound, p_upper_bound, isize(d_sparse),
-                                     d_sparse.indices().data(), d_sparse.values().data()));
+            ASSERT_NO_ERROR(d_highs.addCol(p_objective, p_lower_bound, p_upper_bound, isize(d_sparse),
+                                           d_sparse.indices().data(), d_sparse.values().data()));
         }
     }
     else // No coefficients given.
     {
         assert(!p_row_indices);
-        ASSERT_OK(d_highs.addCol(p_objective, p_lower_bound, p_upper_bound, 0, nullptr, nullptr));
+        ASSERT_NO_ERROR(d_highs.addCol(p_objective, p_lower_bound, p_upper_bound, 0, nullptr, nullptr));
     }
 
     const auto new_col_idx = d_highs.getNumCol() - 1;
     // HiGHS has no binary variables, so we use an integral variable bounded by 0 and 1.
     assert(p_type != VariableType::BINARY || (p_lower_bound == 0. && p_upper_bound == 1.));
-    auto highs_type = p_type == VariableType::CONTINUOUS ? HighsVarType::kContinuous : HighsVarType::kInteger;
+    HighsVarType highs_type = (p_type == VariableType::CONTINUOUS) ? HighsVarType::kContinuous : HighsVarType::kInteger;
     ASSERT_OK(d_highs.changeColIntegrality(new_col_idx, highs_type));
     // HiGHS returns an error for empty names.
     if (!p_name.empty())
@@ -243,14 +278,14 @@ void ILPSolverHighs::add_constraint_impl(double p_lower_bound, double p_upper_bo
     if (p_col_indices) // Sparse value vector given
     {
         assert(p_col_values.size() == p_col_indices->size());
-        ASSERT_OK(d_highs.addRow(p_lower_bound, p_upper_bound, isize(p_col_values), p_col_indices->data(),
-                                 p_col_values.data()));
+        ASSERT_NO_ERROR(d_highs.addRow(p_lower_bound, p_upper_bound, isize(p_col_values), p_col_indices->data(),
+                                       p_col_values.data()));
     }
     else // Dense value vector given.
     {
         d_sparse.init_from_dense(p_col_values);
-        ASSERT_OK(d_highs.addRow(p_lower_bound, p_upper_bound, isize(d_sparse), d_sparse.indices().data(),
-                                 d_sparse.values().data()));
+        ASSERT_NO_ERROR(d_highs.addRow(p_lower_bound, p_upper_bound, isize(d_sparse), d_sparse.indices().data(),
+                                       d_sparse.values().data()));
     }
     // HiGHS returns an error for empty names.
     if (!p_name.empty())

@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <numeric>
 
 
 namespace ilp_solver
@@ -43,29 +44,51 @@ namespace
                 p_vec.push_back(i);
         }
     }
+} // namespace
+
+
+// Returns a Gurobi environment wrapped in a shared_ptr.
+// Internally, this environment is tracked by a weak_ptr, so future calls to this function will return
+// a pointer to the already existing environment and only set up a new one, if it has been destroyed.
+static auto load_environment()
+{
+    // In the GuRoBi abstraction an environment binds a license and models are created from it.
+    // The GuRoBi environment is itself not thread safe, hence set up at most one environment per thread.
+    // We use a thread_local weak_ptr to be able to check if an environment already exists.
+    thread_local std::weak_ptr<_GRBenv> weak_env_ptr{};
+    // If an environment already exists in this thread, use that.
+    if (auto env = weak_env_ptr.lock())
+        return env;
+    // Otherwise, set up a new environment and keep track of it in weak_env_ptr.
+    _GRBenv* new_env;
+    if (GRBloadenv(&new_env, nullptr) != 0)
+        throw std::runtime_error("Gurobi Error: \"Could not set up the environment.\"");
+    auto env     = std::shared_ptr<_GRBenv>(new_env, [](_GRBenv* p_env) { GRBfreeenv(p_env); });
+    weak_env_ptr = env;
+    return env;
 }
 
 
-ILPSolverGurobi::ILPSolverGurobi()
+static GurobiModel load_model(_GRBenv* p_env)
 {
-    // We can not use call_gurobi before the model is set up.
-    auto ret = GRBloadenv(&d_env, nullptr);
-    if (ret != 0)
-        throw std::runtime_error("Gurobi Error: \"Could not set up the environment.\"");
-
-    ret = GRBnewmodel(d_env, &d_model, "", 0, nullptr, nullptr, nullptr, nullptr, nullptr);
+    _GRBmodel* model;
+    auto       ret = GRBnewmodel(p_env, &model, "", 0, nullptr, nullptr, nullptr, nullptr, nullptr);
     if (ret != 0)
         throw std::runtime_error("Gurobi Error: \"Could not create a new model.\"");
+    return GurobiModel(model);
+};
 
-    set_default_parameters(this);
+
+void GurobiModelDeleter::operator()(_GRBmodel* p_model)
+{
+    // Do not use `call_gurobi` and ignore errors so that this destructor does not throw.
+    GRBfreemodel(p_model);
 }
 
 
-ILPSolverGurobi::~ILPSolverGurobi()
+ILPSolverGurobi::ILPSolverGurobi() : d_env(load_environment()), d_model(load_model(d_env.get()))
 {
-    // Do not use `call_gurobi` and ignore errors so that this destructor does not throw.
-    GRBfreemodel(d_model);
-    GRBfreeenv(d_env);
+    set_default_parameters(this);
 }
 
 
@@ -84,35 +107,35 @@ int ILPSolverGurobi::get_num_variables() const
 std::vector<double> ILPSolverGurobi::get_solution() const
 {
     int sol_count{0};
-    call_gurobi(d_model, GRBgetintattr, d_model, GRB_INT_ATTR_SOLCOUNT, &sol_count);
+    call_gurobi(model(), GRBgetintattr, model(), GRB_INT_ATTR_SOLCOUNT, &sol_count);
     if (sol_count > 0)
     {
         std::vector<double> solution(d_num_vars);
-        call_gurobi(d_model, GRBgetdblattrarray, d_model, GRB_DBL_ATTR_X, 0, d_num_vars, solution.data());
+        call_gurobi(model(), GRBgetdblattrarray, model(), GRB_DBL_ATTR_X, 0, d_num_vars, solution.data());
         return solution;
     }
-    return std::vector<double>();
+    return {};
 }
 
 
 std::vector<double> ILPSolverGurobi::get_dual_sol() const
 {
     int sol_count{0};
-    call_gurobi(d_model, GRBgetintattr, d_model, GRB_INT_ATTR_SOLCOUNT, &sol_count);
+    call_gurobi(model(), GRBgetintattr, model(), GRB_INT_ATTR_SOLCOUNT, &sol_count);
     if (sol_count > 0)
     {
         std::vector<double> dual_sol(d_num_cons);
-        call_gurobi(d_model, GRBgetdblattrarray, d_model, GRB_DBL_ATTR_PI, 0, d_num_cons, dual_sol.data());
+        call_gurobi(model(), GRBgetdblattrarray, model(), GRB_DBL_ATTR_PI, 0, d_num_cons, dual_sol.data());
         return dual_sol;
     }
-    return std::vector<double>();
+    return {};
 }
 
 
 double ILPSolverGurobi::get_objective() const
 {
     double result{0.};
-    call_gurobi(d_model, GRBgetdblattr, d_model, GRB_DBL_ATTR_OBJVAL, &result);
+    call_gurobi(model(), GRBgetdblattr, model(), GRB_DBL_ATTR_OBJVAL, &result);
     return result;
 }
 
@@ -120,9 +143,9 @@ double ILPSolverGurobi::get_objective() const
 SolutionStatus ILPSolverGurobi::get_status() const
 {
     int status{0};
-    call_gurobi(d_model, GRBgetintattr, d_model, GRB_INT_ATTR_STATUS, &status);
+    call_gurobi(model(), GRBgetintattr, model(), GRB_INT_ATTR_STATUS, &status);
     int sol_count{0};
-    call_gurobi(d_model, GRBgetintattr, d_model, GRB_INT_ATTR_SOLCOUNT, &sol_count);
+    call_gurobi(model(), GRBgetintattr, model(), GRB_INT_ATTR_SOLCOUNT, &sol_count);
 
     SolutionStatus current_status = (sol_count > 0) ? SolutionStatus::SUBOPTIMAL : SolutionStatus::NO_SOLUTION;
     switch (status)
@@ -147,24 +170,56 @@ SolutionStatus ILPSolverGurobi::get_status() const
 }
 
 
+void ILPSolverGurobi::set_objective(ValueArray p_coeff)
+{
+    int sense;
+    std::vector<int> ind(isize(p_coeff));
+    std::iota(ind.begin(), ind.end(), 0);
+    call_gurobi(model(), GRBgetintattr, model(), GRB_INT_ATTR_MODELSENSE, &sense);
+    call_gurobi(model(), GRBsetobjective, model(), sense, 0.0, isize(p_coeff), ind.data(),
+                const_cast<double*>(p_coeff.data()), 0, nullptr, nullptr, nullptr);
+}
+
+
+void ILPSolverGurobi::set_variable_type(int p_index, VariableType p_type)
+{
+    char type = (p_type == VariableType::INTEGER)    ? GRB_INTEGER
+              : (p_type == VariableType::CONTINUOUS) ? GRB_CONTINUOUS
+                                                     : GRB_BINARY;
+    call_gurobi(model(), GRBsetcharattrelement, model(), GRB_CHAR_ATTR_VTYPE, p_index, type);
+}
+
+
+void ILPSolverGurobi::set_bound_lower(int p_index, double p_lower_bound)
+{
+    call_gurobi(model(), GRBsetdblattrelement, model(), GRB_DBL_ATTR_LB, p_index, p_lower_bound);
+}
+
+
+void ILPSolverGurobi::set_bound_upper(int p_index, double p_upper_bound)
+{
+    call_gurobi(model(), GRBsetdblattrelement, model(), GRB_DBL_ATTR_UB, p_index, p_upper_bound);
+}
+
+
 void ILPSolverGurobi::set_start_solution(ValueArray p_solution)
 {
     assert(isize(p_solution) == d_num_vars);
     // Check feasibility of the start solution by optimizing with all variables fixed and
     // throw an InvalidStartSolutionException if it is not.
     // Needs to backup and afterwards restore the lower and upper bounds on the variables.
-    call_gurobi(d_model, GRBupdatemodel, d_model);
+    call_gurobi(model(), GRBupdatemodel, model());
     std::vector<double> lb(d_num_vars);
     std::vector<double> ub(d_num_vars);
-    call_gurobi(d_model, GRBgetdblattrarray, d_model, GRB_DBL_ATTR_LB,    0, d_num_vars, lb.data());
-    call_gurobi(d_model, GRBgetdblattrarray, d_model, GRB_DBL_ATTR_UB,    0, d_num_vars, ub.data());
-    call_gurobi(d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_LB,    0, d_num_vars, const_cast<double*>(p_solution.data()));
-    call_gurobi(d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_UB,    0, d_num_vars, const_cast<double*>(p_solution.data()));
+    call_gurobi(model(), GRBgetdblattrarray, model(), GRB_DBL_ATTR_LB,    0, d_num_vars, lb.data());
+    call_gurobi(model(), GRBgetdblattrarray, model(), GRB_DBL_ATTR_UB,    0, d_num_vars, ub.data());
+    call_gurobi(model(), GRBsetdblattrarray, model(), GRB_DBL_ATTR_LB,    0, d_num_vars, const_cast<double*>(p_solution.data()));
+    call_gurobi(model(), GRBsetdblattrarray, model(), GRB_DBL_ATTR_UB,    0, d_num_vars, const_cast<double*>(p_solution.data()));
     solve_impl();
     SolutionStatus status = get_status();
-    call_gurobi(d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_LB,    0, d_num_vars, lb.data());
-    call_gurobi(d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_UB,    0, d_num_vars, ub.data());
-    call_gurobi(d_model, GRBsetdblattrarray, d_model, GRB_DBL_ATTR_START, 0, d_num_vars, const_cast<double*>(p_solution.data()));
+    call_gurobi(model(), GRBsetdblattrarray, model(), GRB_DBL_ATTR_LB,    0, d_num_vars, lb.data());
+    call_gurobi(model(), GRBsetdblattrarray, model(), GRB_DBL_ATTR_UB,    0, d_num_vars, ub.data());
+    call_gurobi(model(), GRBsetdblattrarray, model(), GRB_DBL_ATTR_START, 0, d_num_vars, const_cast<double*>(p_solution.data()));
     if (status == SolutionStatus::PROVEN_INFEASIBLE)
         throw InvalidStartSolutionException();
 }
@@ -172,14 +227,14 @@ void ILPSolverGurobi::set_start_solution(ValueArray p_solution)
 
 void ILPSolverGurobi::reset_solution()
 {
-    call_gurobi(d_model, GRBreset, d_model, false);
+    call_gurobi(model(), GRBreset, model(), false);
 }
 
 
 void ILPSolverGurobi::set_num_threads(int p_num_threads)
 {
     assert(p_num_threads >= 0);
-    call_gurobi(d_model, GRBsetintparam, GRBgetenv(d_model), GRB_INT_PAR_THREADS, p_num_threads);
+    call_gurobi(model(), GRBsetintparam, env(), GRB_INT_PAR_THREADS, p_num_threads);
 }
 
 
@@ -194,16 +249,16 @@ void ILPSolverGurobi::set_log_level(int p_level)
 {
     p_level = (p_level < 0) ? 0 : p_level;
     if (p_level == 0)
-        call_gurobi(d_model, GRBsetintparam, GRBgetenv(d_model), GRB_INT_PAR_OUTPUTFLAG, 0); // 0 means no output.
+        call_gurobi(model(), GRBsetintparam, env(), GRB_INT_PAR_OUTPUTFLAG, 0); // 0 means no output.
     else
     {
-        call_gurobi(d_model, GRBsetintparam, GRBgetenv(d_model), GRB_INT_PAR_OUTPUTFLAG, 1);
-        call_gurobi(d_model, GRBsetintparam, GRBgetenv(d_model), GRB_INT_PAR_LOGTOCONSOLE, 1);
+        call_gurobi(model(), GRBsetintparam, env(), GRB_INT_PAR_OUTPUTFLAG, 1);
+        call_gurobi(model(), GRBsetintparam, env(), GRB_INT_PAR_LOGTOCONSOLE, 1);
 
         p_level = 1 + 9 / p_level;
         // Gurobi prints log lines every DisplayInterval seconds.
         // We chose 10 seconds as the maximum, while 1 second is the Gurobi minimum (reached for p_level > 9).
-        call_gurobi(d_model, GRBsetintparam, GRBgetenv(d_model), GRB_INT_PAR_DISPLAYINTERVAL, p_level);
+        call_gurobi(model(), GRBsetintparam, env(), GRB_INT_PAR_DISPLAYINTERVAL, p_level);
     }
 }
 
@@ -211,42 +266,42 @@ void ILPSolverGurobi::set_log_level(int p_level)
 void ILPSolverGurobi::set_presolve(bool p_preprocessing)
 {
     // -1 is the automatic setting and Gurobi default, 0 disables presolving.
-    call_gurobi(d_model, GRBsetintparam, GRBgetenv(d_model), GRB_INT_PAR_PRESOLVE, p_preprocessing ? -1 : 0);
+    call_gurobi(model(), GRBsetintparam, env(), GRB_INT_PAR_PRESOLVE, p_preprocessing ? -1 : 0);
 }
 
 
 void ILPSolverGurobi::set_max_seconds_impl(double p_seconds)
 {
     assert(p_seconds >= 0.);
-    call_gurobi(d_model, GRBsetdblparam, GRBgetenv(d_model), GRB_DBL_PAR_TIMELIMIT, p_seconds);
+    call_gurobi(model(), GRBsetdblparam, env(), GRB_DBL_PAR_TIMELIMIT, p_seconds);
 }
 
 
 void ILPSolverGurobi::set_max_nodes(int p_nodes)
 {
     assert(p_nodes >= 0);
-    call_gurobi(d_model, GRBsetdblparam, GRBgetenv(d_model), GRB_DBL_PAR_NODELIMIT, p_nodes);
+    call_gurobi(model(), GRBsetdblparam, env(), GRB_DBL_PAR_NODELIMIT, p_nodes);
 }
 
 
 void ILPSolverGurobi::set_max_solutions(int p_solutions)
 {
     p_solutions = std::clamp(p_solutions, 1, 2000000000); // Gurobi MAXINT
-    call_gurobi(d_model, GRBsetintparam, GRBgetenv(d_model), GRB_INT_PAR_SOLUTIONLIMIT, p_solutions);
+    call_gurobi(model(), GRBsetintparam, env(), GRB_INT_PAR_SOLUTIONLIMIT, p_solutions);
 }
 
 
 void ILPSolverGurobi::set_max_abs_gap(double p_abs_gap)
 {
     assert(p_abs_gap >= 0.);
-    call_gurobi(d_model, GRBsetdblparam, GRBgetenv(d_model), GRB_DBL_PAR_MIPGAPABS, p_abs_gap);
+    call_gurobi(model(), GRBsetdblparam, env(), GRB_DBL_PAR_MIPGAPABS, p_abs_gap);
 }
 
 
 void ILPSolverGurobi::set_max_rel_gap(double p_rel_gap)
 {
     assert(p_rel_gap >= 0.);
-    call_gurobi(d_model, GRBsetdblparam, GRBgetenv(d_model), GRB_DBL_PAR_MIPGAP, p_rel_gap);
+    call_gurobi(model(), GRBsetdblparam, env(), GRB_DBL_PAR_MIPGAP, p_rel_gap);
 }
 
 
@@ -254,14 +309,14 @@ void ILPSolverGurobi::set_cutoff(double p_cutoff)
 {
     // Only set cutoff if intended. Otherwise stick to the Gurobi default.
     if (p_cutoff != c_default_cutoff)
-        call_gurobi(d_model, GRBsetdblparam, GRBgetenv(d_model), GRB_DBL_PAR_CUTOFF, p_cutoff);
+        call_gurobi(model(), GRBsetdblparam, env(), GRB_DBL_PAR_CUTOFF, p_cutoff);
 }
 
 
 void ILPSolverGurobi::print_mps_file(const std::string& p_filename)
 {
     assert(p_filename.substr(p_filename.size() - 4, 4) == ".mps");
-    call_gurobi(d_model, GRBwrite, d_model, p_filename.c_str());
+    call_gurobi(model(), GRBwrite, model(), p_filename.c_str());
 }
 
 
@@ -294,7 +349,8 @@ void ILPSolverGurobi::add_variable_impl(VariableType p_type, double p_objective,
               : (p_type == VariableType::CONTINUOUS) ? GRB_CONTINUOUS
                                                      : GRB_BINARY;
 
-    call_gurobi(d_model, GRBaddvar, d_model, num, indices, values, p_objective, p_lower_bound, p_upper_bound, type, p_name.c_str());
+    call_gurobi(model(), GRBaddvar, model(), num, indices, values, p_objective, p_lower_bound, p_upper_bound, type,
+                p_name.c_str());
     ++d_num_vars;
 }
 
@@ -325,22 +381,22 @@ void ILPSolverGurobi::add_constraint_impl(double p_lower_bound, double p_upper_b
 
     if (p_lower_bound == p_upper_bound)
     {
-        call_gurobi(d_model, GRBaddconstr, d_model, num, indices, values, GRB_EQUAL, p_lower_bound, p_name.c_str());
+        call_gurobi(model(), GRBaddconstr, model(), num, indices, values, GRB_EQUAL, p_lower_bound, p_name.c_str());
         ++d_num_cons;
     }
     else if (p_lower_bound >= c_neg_inf_bound && p_upper_bound <= c_pos_inf_bound)
     {
-        call_gurobi(d_model, GRBaddrangeconstr, d_model, num, indices, values, p_lower_bound, p_upper_bound, p_name.c_str());
+        call_gurobi(model(), GRBaddrangeconstr, model(), num, indices, values, p_lower_bound, p_upper_bound, p_name.c_str());
         ++d_num_cons;
     }
     else if (p_lower_bound >= c_neg_inf_bound && p_upper_bound > c_pos_inf_bound)
     {
-        call_gurobi(d_model, GRBaddconstr, d_model, num, indices, values, GRB_GREATER_EQUAL, p_lower_bound, p_name.c_str());
+        call_gurobi(model(), GRBaddconstr, model(), num, indices, values, GRB_GREATER_EQUAL, p_lower_bound, p_name.c_str());
         ++d_num_cons;
     }
     else if (p_lower_bound < c_neg_inf_bound && p_upper_bound <= c_pos_inf_bound)
     {
-        call_gurobi(d_model, GRBaddconstr, d_model, num, indices, values, GRB_LESS_EQUAL, p_upper_bound, p_name.c_str());
+        call_gurobi(model(), GRBaddconstr, model(), num, indices, values, GRB_LESS_EQUAL, p_upper_bound, p_name.c_str());
         ++d_num_cons;
     }
 }
@@ -348,15 +404,28 @@ void ILPSolverGurobi::add_constraint_impl(double p_lower_bound, double p_upper_b
 
 void ILPSolverGurobi::solve_impl()
 {
-    call_gurobi(d_model, GRBoptimize, d_model);
+    call_gurobi(model(), GRBoptimize, model());
 }
 
 
 void ILPSolverGurobi::set_objective_sense_impl(ObjectiveSense p_sense)
 {
     int sense{(p_sense == ObjectiveSense::MINIMIZE) ? 1 : -1};
-    call_gurobi(d_model, GRBsetintattr, d_model, GRB_INT_ATTR_MODELSENSE, sense);
+    call_gurobi(model(), GRBsetintattr, model(), GRB_INT_ATTR_MODELSENSE, sense);
 }
+
+
+_GRBenv* ILPSolverGurobi::env() const
+{
+    return GRBgetenv(model());
 }
+
+
+_GRBmodel* ILPSolverGurobi::model() const
+{
+    return d_model.get();
+}
+
+} // namespace ilp_solver
 
 #endif

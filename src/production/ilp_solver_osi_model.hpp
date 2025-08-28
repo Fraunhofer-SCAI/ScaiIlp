@@ -45,6 +45,11 @@ namespace ilp_solver
                                       ValueArray p_col_values, [[maybe_unused]] const std::string& p_name = "",
                                       OptionalIndexArray p_col_indices = {}) override;
 
+            void set_objective(ValueArray p_coeff) override;
+            void set_variable_type(int p_index, VariableType p_type) override;
+            void set_bound_lower(int p_index, double p_lower_bound) override;
+            void set_bound_upper(int p_index, double p_upper_bound) override;
+
             // Helper object for dense -> sparse conversions.
             SparseVec d_sparse{};
     };

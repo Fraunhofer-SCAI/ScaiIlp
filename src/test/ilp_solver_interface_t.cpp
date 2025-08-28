@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 #include <chrono>
 #include <iostream>
+#include <numeric>
 #include <string>
 #include <string_view>
 
@@ -539,13 +540,116 @@ namespace ilp_solver
             BOOST_FAIL("Bad alloc test failed (threw exception instead of treating as >>no solution<<.");
         }
     }
+
+
+    void test_set_bounds(ILPSolverInterface* p_solver)
+    {
+        // Positive objective value -> test upper bound
+        p_solver->add_variable_integer( 16, 0, c_pos_inf);
+        p_solver->add_variable_boolean( 4);
+        p_solver->add_variable_continuous( 1, 0, c_pos_inf);
+        // Negative objective value -> test lower bound
+        p_solver->add_variable_integer(-16, c_neg_inf, 0);
+        p_solver->add_variable_boolean(-4);
+        p_solver->add_variable_continuous(-1, c_neg_inf, 0);
+
+        // Bound all variables such that the objective preference is int > bool > cont
+        p_solver->add_constraint_upper(std::array<double,6> {9., 3., 1., 0., 0., 0.},  23.);
+        p_solver->add_constraint_lower(std::array<double,6> {0., 0., 0., 9., 3., 1.}, -20.);
+
+        // First find solution with unbounded variables
+        p_solver->maximize();
+        std::vector<double> solution = p_solver->get_solution();
+        for(int i = 0; i < 6; i++)
+            BOOST_REQUIRE_CLOSE(solution[i], (std::array<double,6> {2., 1., 2., -2., 0., -2.})[i], c_eps);
+        p_solver->reset_solution();
+
+        // Bound variables, which makes the constraints slack
+        p_solver->set_bound_upper(0,  1.);
+        p_solver->set_bound_upper(2,  1.);
+        p_solver->set_bound_lower(3, -1.);
+        p_solver->set_bound_lower(5, -1.);
+
+        p_solver->maximize();
+
+        // Check that the new solutions respects the variable bounds
+        solution = p_solver->get_solution();
+        for (int i = 0; i < 6; i++)
+            BOOST_REQUIRE_CLOSE(solution[i], (std::array<double, 6>{1., 1., 1., -1., 0., -1.})[i], c_eps);
+    }
+
+
+    void test_column_generation(ILPSolverInterface* p_main_solver, ILPSolverInterface* p_knapsack_solver)
+    {
+        // Parameters for a bin packing problem, taken from https://scipbook.readthedocs.io/en/latest/bpp.html
+        constexpr double bin_size = 9;
+        constexpr std::array<double,7> items  = {2., 3., 4., 5., 6., 7., 8.};
+        constexpr std::array<double,7> counts = {4., 2., 6., 6., 2., 2., 2.};
+
+        std::vector<std::vector<double>> confs;         // Set of configurations
+
+        for (auto count : counts)                       // Setup main problem
+            p_main_solver->add_constraint_equality({}, count);
+        for (size_t i = 0; i < items.size(); ++i)
+        {
+            std::vector<double> conf(items.size(), 0.);
+            conf[i] = 1.; // For denser start solution: std::min(count[i], bin_size / items[i]);
+            confs.push_back(conf);
+            p_main_solver->add_variable_continuous(conf, 1., 0., ilp_solver::c_pos_inf_bound);
+        }
+
+        for (const double ub : counts)                  // Setup knapsack problem
+            p_knapsack_solver->add_variable_integer(1., 0., ub);
+        p_knapsack_solver->add_constraint_upper(items, bin_size);
+
+        // Solve repeatedly, adding variables, until no improving variable is left.
+        int iters = 0;
+        std::chrono::milliseconds knapsack_time{0};
+        while (true)
+        {
+            p_main_solver->minimize();
+            if (LOGGING)
+                std::cout << "Iteration " << iters++ << " found relaxation with value: " << p_main_solver->get_objective() << "\n";
+            std::vector<double> dual_sol = p_main_solver->get_dual_sol();
+            if (!dual_sol.size())
+            {
+                std::cerr << "No valid dual solution obtained from solver!\n";
+                return;
+            }
+            auto start_time = std::chrono::high_resolution_clock::now();
+            p_knapsack_solver->reset_solution();
+            p_knapsack_solver->set_objective(dual_sol);
+            p_knapsack_solver->maximize();
+            auto end_time = std::chrono::high_resolution_clock::now();
+            knapsack_time += std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+            if (p_knapsack_solver->get_objective() < 1.001)
+              break;
+            std::vector<double> sol = p_knapsack_solver->get_solution();
+            confs.push_back(sol);
+            p_main_solver->reset_solution();
+            p_main_solver->add_variable_continuous(sol, 1, 0, ilp_solver::c_pos_inf_bound);
+        }
+        if (LOGGING)
+            std::cout << "Done. Knapsack solving took " << knapsack_time.count() << "ms\n";
+        BOOST_CHECK_CLOSE(p_main_solver->get_objective(), 12.5, c_eps);
+
+        // Set main problem variables to integer and solve again
+        int varcount = p_main_solver->get_num_variables();
+        for (int i = 0; i < varcount; i++)
+            p_main_solver->set_variable_type(i, VariableType::INTEGER);
+        p_main_solver->reset_solution();
+        p_main_solver->minimize();
+        if (LOGGING)
+            std::cout << "Solve integer found solution with value: " << p_main_solver->get_objective() << "\n";
+        BOOST_CHECK_CLOSE(p_main_solver->get_objective(), 13, c_eps);
+    }
 }
 
 
 int create_ilp_test_suite()
 {
     using namespace ilp_solver;
-    constexpr std::array<std::pair<void (*)(ILPSolverInterface*), std::string_view>, 8> all_tests
+    constexpr std::array<std::pair<void (*)(ILPSolverInterface*), std::string_view>, 9> all_tests
     { std::pair{test_sorting,                     "Sorting"}
     , std::pair{test_linear_programming,          "LinProgr"}
     , std::pair{test_start_solution_minimization, "StartSolutionMin"}
@@ -554,6 +658,7 @@ int create_ilp_test_suite()
     , std::pair{test_performance,                 "Performance"}
     , std::pair{test_performance_big,             "PerformanceBig"}
     , std::pair{test_performance_zero,            "PerformanceZero"}
+    , std::pair{test_set_bounds,                  "SetBounds"}
     };
 
     boost::unit_test::test_suite* IlpSolverT = BOOST_TEST_SUITE("IlpSolverT");
@@ -572,6 +677,9 @@ int create_ilp_test_suite()
 
         auto mps_lambda = [solver, solver_name]() { test_mps_output(solver().get(), std::string(solver_name) + "_unittest.mps"); };
         suite->add(boost::unit_test::make_test_case(mps_lambda, (std::string(solver_name) + "_MPSOut").c_str(), __FILE__, __LINE__));
+
+        auto cg_lambda = [solver]() { test_column_generation(solver().get(), solver().get()); };
+        suite->add(boost::unit_test::make_test_case(cg_lambda, (std::string(solver_name) + "_ColumnGeneration").c_str(), __FILE__, __LINE__));
 
         if (solver_name.rfind("Stub") != std::string::npos)
         {

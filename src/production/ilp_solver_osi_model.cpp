@@ -96,6 +96,36 @@ namespace ilp_solver
         }
         d_cache_changed = true;
     }
+
+
+    void ILPSolverOsiModel::set_objective(ValueArray p_coeff)
+    {
+        d_cache.setObjective(isize(p_coeff), p_coeff.data());
+        d_cache_changed = true;
+    }
+
+
+    void ILPSolverOsiModel::set_variable_type(int p_index, VariableType p_type)
+    {
+        d_cache.setColumnIsInteger(p_index, p_type != VariableType::CONTINUOUS);
+        if (p_type == VariableType::BINARY)
+            d_cache.setColBounds(p_index, 0.0, 1.0);
+        d_cache_changed = true;
+    }
+
+
+    void ILPSolverOsiModel::set_bound_lower(int p_index, double p_lower_bound)
+    {
+        d_cache.setColBounds(p_index, p_lower_bound, d_cache.columnUpper(p_index));
+        d_cache_changed = true;
+    }
+
+
+    void ILPSolverOsiModel::set_bound_upper(int p_index, double p_upper_bound)
+    {
+        d_cache.setColBounds(p_index, d_cache.columnLower(p_index), p_upper_bound);
+        d_cache_changed = true;
+    }
 }
 
 #endif

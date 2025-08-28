@@ -238,6 +238,30 @@ void ILPSolverCollect::set_objective_sense_impl(ObjectiveSense p_sense)
 }
 
 
+void ILPSolverCollect::set_objective(ValueArray p_coeff)
+{
+    d_ilp_data.objective.assign(p_coeff.begin(), p_coeff.end());
+}
+
+
+void ILPSolverCollect::set_variable_type(int p_ind, VariableType p_type)
+{
+    d_ilp_data.variable_type[p_ind] = p_type;
+}
+
+
+void ILPSolverCollect::set_bound_lower(int p_index, double p_lower_bound)
+{
+    d_ilp_data.variable_lower[p_index] = p_lower_bound;
+}
+
+
+void ILPSolverCollect::set_bound_upper(int p_index, double p_upper_bound)
+{
+    d_ilp_data.variable_upper[p_index] = p_upper_bound;
+}
+
+
 void ILPSolverCollect::set_start_solution(ValueArray p_solution)
 {
     d_ilp_data.start_solution.assign(p_solution.begin(), p_solution.end());

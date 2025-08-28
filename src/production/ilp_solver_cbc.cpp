@@ -73,6 +73,7 @@ namespace ilp_solver
 
         d_model.assignSolver(solver, true);
         set_default_parameters(this);
+        d_model.saveReferenceSolver();
     }
 
 
@@ -121,7 +122,7 @@ namespace ilp_solver
 
     void ILPSolverCbc::reset_solution()
     {
-        d_model.gutsOfDestructor2(); // "Clears enough to reset CbcModel as if no branch and bound done."
+        d_model.resetToReferenceSolver();
         d_model.solver()->loadFromCoinModel(d_cache, false);
         d_cache_changed = false;
     }

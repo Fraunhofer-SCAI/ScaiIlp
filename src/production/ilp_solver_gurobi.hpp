@@ -5,21 +5,24 @@
 
 #include "ilp_solver_impl.hpp"
 
+#include <memory>
 
 namespace ilp_solver
 {
+    // Forward declare internal Gurobi structs that we have too keep pointers to.
     struct _GRBmodel;
-    typedef struct _GRBmodel GRBmodel;
-
     struct _GRBenv;
-    typedef struct _GRBenv GRBenv;
 
+    struct GurobiModelDeleter
+    {
+        void operator()(_GRBmodel* p_model);
+    };
+    using GurobiModel = std::unique_ptr<_GRBmodel, GurobiModelDeleter>;
 
     class ILPSolverGurobi final : public ILPSolverImpl
     {
         public:
             ILPSolverGurobi();
-            ~ILPSolverGurobi();
 
             int get_num_constraints() const override;
             int get_num_variables  () const override;
@@ -29,6 +32,10 @@ namespace ilp_solver
             double              get_objective() const override;
             SolutionStatus      get_status   () const override;
 
+            void set_objective         (ValueArray p_coeff)                     override;
+            void set_variable_type     (int p_index, VariableType p_type)       override;
+            void set_bound_lower       (int p_index, double p_lower_bound)      override;
+            void set_bound_upper       (int p_index, double p_upper_bound)      override;
             void set_start_solution    (ValueArray p_solution)                  override;
             void reset_solution        ()                                       override;
 
@@ -47,8 +54,10 @@ namespace ilp_solver
 
             void set_interim_results   (std::function<void(ILPSolutionData*)>)  override { /* Not yet implemented*/ }
         private:
-            GRBmodel* d_model;
-            GRBenv*   d_env;
+            // This should only be used to construct the model and it has to outlive the model.
+            // To access the 'model environment' to set parameters etc. use the env() getter below.
+            std::shared_ptr<_GRBenv> d_env;
+            GurobiModel              d_model;
 
             // An index shortcut.
             std::vector<int> d_indices;
@@ -65,6 +74,9 @@ namespace ilp_solver
             void solve_impl              ()                       override;
             void set_objective_sense_impl(ObjectiveSense p_sense) override;
             void set_max_seconds_impl    (double p_seconds)       override;
+
+            _GRBenv*   env() const;
+            _GRBmodel* model() const;
     };
 }
 

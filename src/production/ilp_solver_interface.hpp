@@ -2,6 +2,7 @@
 
 #include "solver_exit_code.hpp"
 
+#include <array>
 #include <functional>
 #include <span>
 #include <stdexcept>
@@ -13,11 +14,11 @@ namespace ilp_solver
 {
     using IndexArray = std::span<const int>;
     using ValueArray = std::span<const double>;
+    enum class VariableType {INTEGER, CONTINUOUS, BINARY};
 
     struct ILPSolutionData;
 
-    enum class SolutionStatus {PROVEN_OPTIMAL, PROVEN_INFEASIBLE, PROVEN_UNBOUNDED, SUBOPTIMAL, NO_SOLUTION};
-
+    enum class SolutionStatus { PROVEN_OPTIMAL, PROVEN_INFEASIBLE, PROVEN_UNBOUNDED, SUBOPTIMAL, NO_SOLUTION };
 
     static constexpr int    c_default_num_threads   {1};
     static constexpr int    c_default_log_level     {0};
@@ -117,70 +118,81 @@ namespace ilp_solver
             virtual SolverExitCode      get_external_exit_code     () const { return SolverExitCode::ok; };
 
             // [Minimize | Maximize] the currently given objective function under the given constraints.
-            virtual void maximize() = 0;
-            virtual void minimize() = 0;
+            virtual void maximize()                                         = 0;
+            virtual void minimize()                                         = 0;
 
             // Delete all information about previous solutions while keeping the model and settings.
-            virtual void reset_solution() = 0;
+            virtual void reset_solution        ()                           = 0;
+
+            // Set the coefficients of the objective function.
+            virtual void set_objective         (ValueArray p_coeff)         = 0;
+
+            // Set the type of an existing variable.
+            // Depending on the solver, boolean variables might set/override variable bounds.
+            virtual void set_variable_type(int p_index, VariableType p_type)= 0;
+
+            // Set the bounds of an existing variable.
+            virtual void set_bound_lower(int p_index, double p_lower_bound) = 0;
+            virtual void set_bound_upper(int p_index, double p_lower_bound) = 0;
 
             // Set the maximum number of threads used during the solve.
             // May be unsupported by some solvers.
-            virtual void set_num_threads       (int p_num_threads)     = 0;
+            virtual void set_num_threads       (int p_num_threads)          = 0;
 
             // Set whether the solve should be deterministic.
             // May be unsupported by some solvers.
-            virtual void set_deterministic_mode(bool p_deterministic)  = 0;
+            virtual void set_deterministic_mode(bool p_deterministic)       = 0;
 
             // Set the logging level of the given solver.
             // 0 means that the solver should not have any output.
             // Otherwise, the verbosity increases with p_level.
             // May be unsupported by some solvers.
-            virtual void set_log_level         (int p_level)           = 0;
+            virtual void set_log_level         (int p_level)                = 0;
 
             // Enables or disables preprocessing and presolve directives of the solver.
             // May also enable or disable some heuristics.
             // May be unsupported by some solvers.
             // true:  on
             // false: off
-            virtual void set_presolve          (bool p_presolve)       = 0;
+            virtual void set_presolve          (bool p_presolve)            = 0;
 
             // Set the number of seconds after which the solver should terminate.
             // This may be not followed exactly. The duration may be slightly longer than the given number.
             // Setting this to zero guarantees to not produce a solution.
             // May be unsupported by some solvers.
-            virtual void set_max_seconds       (double p_seconds)      = 0;
+            virtual void set_max_seconds       (double p_seconds)           = 0;
 
             // Set the maximum number of nodes in the branch & bound tree after which the solver should terminate.
             // What exactly constitutes a node may be solver-dependent.
             // May be unsupported by some solvers.
-            virtual void set_max_nodes         (int p_nodes)           = 0;
+            virtual void set_max_nodes         (int p_nodes)                = 0;
 
             // Set the maximum number of solutions found after which the solver should terminate.
             // What exactly constitutes a solution may be solver-dependent.
             // May be unsupported by some solvers.
-            virtual void set_max_solutions     (int p_solutions)       = 0;
+            virtual void set_max_solutions     (int p_solutions)            = 0;
 
             // Instructs the solver to stop when the gap between the objective value of the best known solution
             // and the current best bound on any solution is less than p_gap.
             // May be unsupported by some solvers.
-            virtual void set_max_abs_gap       (double p_gap)          = 0;
+            virtual void set_max_abs_gap       (double p_gap)               = 0;
 
             // Instructs the solver to stop when the gap between the objective value of the best known solution
             // and the current best bound on any solution is less than this fraction of the absolute value
             // of the best known solution.
             // The computation of the relative gap may be solver-dependent.
             // May be unsupported by some solvers.
-            virtual void set_max_rel_gap       (double p_gap)          = 0;
+            virtual void set_max_rel_gap       (double p_gap)               = 0;
 
             // Set cutoff bound on the objective function
             // (i.e. upper bound for minimization problems and lower bound for maximization problems).
             // May be unsupported by some solvers.
-            virtual void set_cutoff            (double p_cutoff)       = 0;
+            virtual void set_cutoff            (double p_cutoff)            = 0;
 
             // Set a starting solution.
             // Depending on the solver, it may be checked whether the solution is actually valid or not.
             // May throw InvalidStartSolutionException if the solver does not accept the given solution.
-            virtual void set_start_solution    (ValueArray p_solution) = 0;
+            virtual void set_start_solution    (ValueArray p_solution)      = 0;
 
             // Instructs the solver to deal with interim results.
             // On obtaining any valid solution, if this solution improves the current one, it is written to an
@@ -191,7 +203,7 @@ namespace ilp_solver
             // Print a mps-formatted file of the current model.
             // p_path must be valid path to a file with write-permission.
             // Not const because some solvers may apply their caches, e.g. CoinModel.writeMps is not const.
-            virtual void print_mps_file (const std::string& p_path) = 0;
+            virtual void print_mps_file        (const std::string& p_path)  = 0;
 
             virtual ~ILPSolverInterface() = default;
     };

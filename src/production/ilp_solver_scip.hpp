@@ -34,6 +34,10 @@ namespace ilp_solver
 
         void                reset_solution()      override;
 
+        void set_objective         (ValueArray p_coeff)                    override;
+        void set_variable_type     (int p_index, VariableType p_type)      override;
+        void set_bound_lower       (int p_index, double p_lower_bound)     override;
+        void set_bound_upper       (int p_index, double p_upper_bound)     override;
         void set_start_solution    (ValueArray p_solution)                 override;
 
         void set_num_threads       (int p_num_threads)                     override;

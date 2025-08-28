@@ -223,6 +223,39 @@ namespace ilp_solver
     }
 
 
+    void ILPSolverSCIP::set_objective(ValueArray p_coeff)
+    {
+        call_scip(SCIPfreeReoptSolve, d_scip);      //Check solver stage, move to reset solution?
+        for (int i = 0; i < isize(p_coeff); ++i)
+            call_scip(SCIPchgVarObj, d_scip, d_cols[i], p_coeff[i]);
+    }
+
+
+    void ILPSolverSCIP::set_variable_type(int p_index, VariableType p_type)
+    {
+        call_scip(SCIPfreeReoptSolve, d_scip);
+        unsigned int infeasible;
+        SCIP_VARTYPE type = (p_type == VariableType::INTEGER)    ? SCIP_VARTYPE_INTEGER
+                          : (p_type == VariableType::CONTINUOUS) ? SCIP_VARTYPE_CONTINUOUS
+                                                                 : SCIP_VARTYPE_BINARY;
+        call_scip(SCIPchgVarType, d_scip, d_cols[p_index], type, &infeasible);
+    }
+
+
+    void ILPSolverSCIP::set_bound_lower(int p_index, double p_lower_bound)
+    {
+        // Might need to call SCIPfreeTransform first
+        call_scip(SCIPchgVarLb, d_scip, d_cols[p_index], p_lower_bound);
+    }
+
+
+    void ILPSolverSCIP::set_bound_upper(int p_index, double p_upper_bound)
+    {
+        // Might need to call SCIPfreeTransform first
+        call_scip(SCIPchgVarUb, d_scip, d_cols[p_index], p_upper_bound);
+    }
+
+
     void ILPSolverSCIP::set_num_threads(int p_num_threads)
     {
         // Possibly does nothing if not using FiberSCIP or some other parallelization method.
@@ -335,7 +368,7 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverSCIP::add_variable_impl (VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
+    void ILPSolverSCIP::add_variable_impl(VariableType p_type, double p_objective, double p_lower_bound, double p_upper_bound,
         const std::string& p_name, OptionalValueArray p_row_values, OptionalIndexArray p_row_indices)
     {
         SCIP_VAR*    var;
@@ -379,7 +412,7 @@ namespace ilp_solver
     }
 
 
-    void ILPSolverSCIP::add_constraint_impl (double p_lower_bound, double p_upper_bound,
+    void ILPSolverSCIP::add_constraint_impl(double p_lower_bound, double p_upper_bound,
         ValueArray p_col_values, const std::string& p_name, OptionalIndexArray p_col_indices)
     {
         SCIP_CONS*             cons;

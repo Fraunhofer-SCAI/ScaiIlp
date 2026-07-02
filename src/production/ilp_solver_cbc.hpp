@@ -24,12 +24,13 @@ namespace ilp_solver
         public:
             ILPSolverCbc();
 
-            std::vector<double> get_solution  () const override;
-            std::vector<double> get_dual_sol  () const override;
-            double              get_objective () const override;
-            SolutionStatus      get_status    () const override;
+            std::vector<double> get_solution   () const override;
+            std::vector<double> get_dual_sol   () const override;
+            double              get_objective  () const override;
+            double              get_dual_bound () const override;
+            SolutionStatus      get_status     () const override;
 
-            void                reset_solution()       override;
+            void                reset_solution ()       override;
 
             void set_start_solution     (ValueArray p_solution)                                    override;
 

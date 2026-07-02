@@ -145,6 +145,7 @@ static ILPSolutionData solution_data(const ScopedILPSolver& p_solver, UserClock:
     solution_data.solution        = p_solver->get_solution();
     solution_data.dual_sol        = p_solver->get_dual_sol();
     solution_data.objective       = p_solver->get_objective();
+    solution_data.dual_bound      = p_solver->get_dual_bound();
     solution_data.solution_status = p_solver->get_status();
     solution_data.peak_memory     = peak_memory_usage();
     solution_data.cpu_time_sec    = Seconds(UserClock::now() - p_start_time).count();

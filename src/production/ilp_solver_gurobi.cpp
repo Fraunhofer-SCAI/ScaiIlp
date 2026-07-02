@@ -140,6 +140,14 @@ double ILPSolverGurobi::get_objective() const
 }
 
 
+double ILPSolverGurobi::get_dual_bound() const
+{
+    double bound{0.};
+    call_gurobi(model(), GRBgetdblattr, model(), GRB_DBL_ATTR_OBJBOUND, &bound);
+    return bound;
+}
+
+
 SolutionStatus ILPSolverGurobi::get_status() const
 {
     int status{0};
@@ -174,7 +182,7 @@ void ILPSolverGurobi::set_objective(ValueArray p_coeff)
 {
     int sense;
     std::vector<int> ind(isize(p_coeff));
-    std::iota(ind.begin(), ind.end(), 0);
+    std::ranges::iota(ind, 0);
     call_gurobi(model(), GRBgetintattr, model(), GRB_INT_ATTR_MODELSENSE, &sense);
     call_gurobi(model(), GRBsetobjective, model(), sense, 0.0, isize(p_coeff), ind.data(),
                 const_cast<double*>(p_coeff.data()), 0, nullptr, nullptr, nullptr);

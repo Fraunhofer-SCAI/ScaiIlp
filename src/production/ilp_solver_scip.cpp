@@ -138,6 +138,12 @@ namespace ilp_solver
     }
 
 
+    double ILPSolverSCIP::get_dual_bound() const
+    {
+        return SCIPgetDualbound(d_scip);
+    }
+
+
     SolutionStatus ILPSolverSCIP::get_status() const
     {
         int n = 0; // There are null-pointer accesses if called in the wrong stage, which happens if reset.

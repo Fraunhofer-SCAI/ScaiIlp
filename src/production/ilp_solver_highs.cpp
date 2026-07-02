@@ -67,6 +67,16 @@ double ILPSolverHighs::get_objective() const
 }
 
 
+double ILPSolverHighs::get_dual_bound() const
+{
+    double dual_bound{};
+    auto   status = d_highs.getInfoValue("mip_dual_bound", dual_bound);
+    if (status == HighsStatus::kOk)
+        return dual_bound;
+    return {};
+}
+
+
 SolutionStatus ILPSolverHighs::get_status() const
 {
     switch (auto status = d_highs.getModelStatus())
@@ -104,7 +114,7 @@ SolutionStatus ILPSolverHighs::get_status() const
 void ILPSolverHighs::set_start_solution(ValueArray p_solution)
 {
     HighsSolution new_solution{};
-    new_solution.col_value.assign(p_solution.begin(), p_solution.end());
+    new_solution.col_value.assign_range(p_solution);
     auto set_solution_status = d_highs.setSolution(new_solution);
     // Note that d_highs.getSolution().value_valid will be true for infeasible solutions.
     // Also, setSolution will only reject solutions that have an invalid size.
@@ -232,7 +242,7 @@ void ILPSolverHighs::set_cutoff(double p_cutoff)
 void ILPSolverHighs::print_mps_file(const std::string& p_filename)
 {
     assert(p_filename.substr(p_filename.size() - 4, 4) == ".mps");
-    ASSERT_OK(d_highs.writeModel(p_filename));
+    ASSERT_NO_ERROR(d_highs.writeModel(p_filename));
 }
 
 

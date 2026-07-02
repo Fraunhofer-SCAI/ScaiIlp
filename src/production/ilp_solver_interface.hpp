@@ -20,6 +20,8 @@ namespace ilp_solver
 
     enum class SolutionStatus { PROVEN_OPTIMAL, PROVEN_INFEASIBLE, PROVEN_UNBOUNDED, SUBOPTIMAL, NO_SOLUTION };
 
+    constexpr std::string_view to_string(SolutionStatus p_val);
+
     static constexpr int    c_default_num_threads   {1};
     static constexpr int    c_default_log_level     {0};
     static constexpr bool   c_default_deterministic {true};
@@ -104,6 +106,10 @@ namespace ilp_solver
 
             // Obtain the value of the objective function of the best solution found.
             virtual double              get_objective              () const = 0;
+
+            // Obtain the best bound on the objective function of dual solution that was found.
+            // Works only for (mixed) integer programs - not for linear programs!
+            virtual double              get_dual_bound             () const = 0;
 
             // Obtain the current status of the solver.
             virtual SolutionStatus      get_status                 () const = 0;
@@ -207,4 +213,15 @@ namespace ilp_solver
 
             virtual ~ILPSolverInterface() = default;
     };
-}
+
+
+    constexpr std::string_view to_string(SolutionStatus p_val)
+    {
+        return p_val == SolutionStatus::PROVEN_OPTIMAL    ? "Proven Optimal"
+             : p_val == SolutionStatus::PROVEN_INFEASIBLE ? "Proven Infeasible"
+             : p_val == SolutionStatus::PROVEN_UNBOUNDED  ? "Proven Unbounded"
+             : p_val == SolutionStatus::SUBOPTIMAL        ? "Suboptimal"
+                                                          : "No Solution";
+    };
+
+} // namespace ilp_solver

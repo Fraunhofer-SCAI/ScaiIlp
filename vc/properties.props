@@ -7,13 +7,13 @@
     <!--External libraries may use "Release" and "Debug" in folder names. Add a helper variable to be used in these cases.-->
     <LIB_CONFIG Condition="'$(IS_DEBUG)' == 'true'">Debug</LIB_CONFIG>
     <LIB_CONFIG Condition="'$(IS_DEBUG)' != 'true'">Release</LIB_CONFIG>
-    <BOOST_VERSION>1_86</BOOST_VERSION>
+    <BOOST_VERSION>1_90</BOOST_VERSION>
     <BOOST_LIB_TOOLSET>vc143</BOOST_LIB_TOOLSET>
     <BOOST_DIR>$(optsoft)\boost_$(BOOST_VERSION)_0_$(BOOST_LIB_TOOLSET)_idl0_$(PlatformTarget)</BOOST_DIR>
     <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc142_full</PTHREAD_DIR>
     <PTHREAD_LIB_PATH>$(PTHREAD_DIR)\$(PlatformTarget)-v142-$(LIB_CONFIG)</PTHREAD_LIB_PATH>
-    <WITH_HIGHS>false</WITH_HIGHS>
-    <HIGHS_DIR>$(optsoft)\HiGHS_1.11.0\$(PlatformTarget)-Clang-$(LIB_CONFIG)</HIGHS_DIR>
+    <WITH_HIGHS>true</WITH_HIGHS>
+    <HIGHS_DIR>$(optsoft)\HiGHS_1.13.1\$(PlatformTarget)-Clang-$(LIB_CONFIG)</HIGHS_DIR>
     <HIGHS_INCLUDE_PATH>$(HIGHS_DIR)\include\highs</HIGHS_INCLUDE_PATH>
     <HIGHS_LIB_PATH>$(HIGHS_DIR)\lib</HIGHS_LIB_PATH>
     <WITH_OSI>true</WITH_OSI>
@@ -23,9 +23,9 @@
     <WITH_SCIP>false</WITH_SCIP>
     <SCIP_DIR>$(optsoft)\SCIP-9.2.0</SCIP_DIR>
     <WITH_GUROBI>false</WITH_GUROBI>
-    <GUROBI_VERSION_MAJOR>12</GUROBI_VERSION_MAJOR>
+    <GUROBI_VERSION_MAJOR>13</GUROBI_VERSION_MAJOR>
     <GUROBI_VERSION_MINOR>0</GUROBI_VERSION_MINOR>
-    <GUROBI_VERSION_TECHNICAL>0</GUROBI_VERSION_TECHNICAL>
+    <GUROBI_VERSION_TECHNICAL>2</GUROBI_VERSION_TECHNICAL>
     <GUROBI_DIR>$(optsoft)\Gurobi-$(GUROBI_VERSION_MAJOR).$(GUROBI_VERSION_MINOR).$(GUROBI_VERSION_TECHNICAL)</GUROBI_DIR>
     <BOOST_LIB_PATH>$(BOOST_DIR)\lib</BOOST_LIB_PATH>
     <BOOST_INCLUDE_PATH>$(BOOST_DIR)\include\boost-$(BOOST_VERSION)</BOOST_INCLUDE_PATH>
@@ -71,7 +71,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level4</WarningLevel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp23</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>true</WholeProgramOptimization>

@@ -23,10 +23,11 @@ public:
     int get_num_constraints() const override;
     int get_num_variables() const override;
 
-    std::vector<double> get_solution() const override;
-    std::vector<double> get_dual_sol() const override;
-    double              get_objective() const override;
-    SolutionStatus      get_status() const override;
+    std::vector<double> get_solution()   const override;
+    std::vector<double> get_dual_sol()   const override;
+    double              get_objective()  const override;
+    double              get_dual_bound() const override;
+    SolutionStatus      get_status()     const override;
 
     void set_start_solution(ValueArray p_solution) override;
     void reset_solution() override;

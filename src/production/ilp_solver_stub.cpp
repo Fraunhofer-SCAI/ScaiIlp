@@ -13,8 +13,11 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <boost/dll/runtime_symbol_info.hpp>
+#define NOMINMAX // asio leaks min/max macros from windows headers without this
+#include <boost/asio.hpp>
 #include <boost/process.hpp>
+// Avoid unresolved symbols with boost process in boost 1.90, cmp. https://github.com/boostorg/process/issues/385
+#pragma comment(lib, "ntdll.lib")
 
 namespace ilp_solver
 {
@@ -39,13 +42,17 @@ constexpr auto c_relative_overtime         = 0.5;
 constexpr auto c_absolute_overtime_seconds = 10.0;
 
 
-static std::chrono::milliseconds seconds_to_millisecods(double p_seconds)
+// Convert double seconds to std::chrono::steady_clock::duration, possibly capping at the maximal representable value.
+// Note: We use the steady clock duration (usually nanoseconds) here, because asio uses it internally
+//       and passing it the maximal amount of milliseconds would cause an overflow.
+static auto sec_to_steady_clock_duration(double p_seconds)
 {
-    const auto     milliseconds     = 1000. * p_seconds;
-    constexpr auto max_milliseconds = std::numeric_limits<std::chrono::milliseconds::rep>::max();
-    if (milliseconds >= static_cast<double>(max_milliseconds))
-        return std::chrono::milliseconds(max_milliseconds);
-    return std::chrono::milliseconds(static_cast<std::chrono::milliseconds::rep>(milliseconds));
+    using Duration           = std::chrono::steady_clock::duration;
+    const auto     ticks     = Duration::period::den * p_seconds;
+    constexpr auto max_ticks = std::numeric_limits<Duration::rep>::max();
+    if (ticks >= static_cast<double>(max_ticks))
+        return Duration(max_ticks);
+    return Duration(static_cast<Duration::rep>(ticks));
 }
 
 
@@ -126,7 +133,7 @@ void ILPSolverStub::reset_solution()
 
 void ILPSolverStub::solve_impl()
 {
-    std::string    exit_message{};
+    std::string exit_message{};
 
     try
     {
@@ -134,41 +141,50 @@ void ILPSolverStub::solve_impl()
 
         CommunicationParent communicator;
         const auto          shared_memory_name = communicator.write_ilp_data(d_ilp_data);
+
+        namespace asio = boost::asio;
+        namespace bp   = boost::process;
         // We expect the ScaiILP executable lying next to the one calling it.
-        const auto full_executable_path = boost::dll::program_location().parent_path() / d_executable_basename;
+        const auto full_executable_path = bp::ext::exe(bp::current_pid()).parent_path() / d_executable_basename;
         // Start the process. If the log level is zero, suppress all of its output.
         // Ideally, suppressing the output should not be necessary,
         // but we have repeatedly observed CBC writing to stdout at log level zero.
-        auto proc = d_ilp_data.log_level != 0 ? boost::process::child(full_executable_path, shared_memory_name)
-                                              : boost::process::child(full_executable_path, shared_memory_name,
-                                                                      boost::process::std_out > boost::process::null,
-                                                                      boost::process::std_err > boost::process::null);
-        // Wait hopefully long enough. Kill child if time limit is exceeded. See comment on c_timeout_factor.
+        auto stdio = d_ilp_data.log_level != 0
+                       ? bp::process_stdio{}
+                       : bp::process_stdio{{} /*stdin*/, nullptr /*stdout*/, nullptr /*stderr*/};
+        auto ctx  = asio::io_context{};
+        auto proc = bp::process(ctx, full_executable_path, {shared_memory_name}, stdio);
         const auto wait_max_seconds = (1.0 + c_relative_overtime) * d_ilp_data.max_seconds + c_absolute_overtime_seconds;
-// boost::child::wait_for/wait_until have been deprecated, because they may be unreliable.
-// However, it seems that they are only problematic on posix based systems and not on windows.
-// See https://www.boost.org/doc/libs/1_83_0/doc/html/boost_process/v2.html#boost_process.v2.introduction.unreliable
-// So we just ignore the deprecation warning.
-#pragma warning(disable : 4996)
-        if (!proc.wait_for(seconds_to_millisecods(wait_max_seconds)))
-#pragma warning(default : 4996)
+        auto set_exit_code = [&](boost::system::error_code p_ec, int p_exitcode)
         {
-            proc.terminate(); // boost::process seems not to support to set the exit code by terminate().
-                              // Note that terminate(error_code&) does not set the exit code either, but has a different purpose.
-            d_exit_code = SolverExitCode::forced_termination; // Don't read the exit code, but set it manually to the fixed desired value.
-            exit_message = std::format("Failed solving by timeout. (limit:{} timeout:{})", d_ilp_data.max_seconds,
-                                       wait_max_seconds);
-        }
-        else
-        {
-            d_exit_code = SolverExitCode(proc.exit_code());
-            exit_message = exit_code_to_message(d_exit_code);
-        }
+            if (p_ec == asio::error::operation_aborted)
+            {
+                d_exit_code  = SolverExitCode::forced_termination;
+                exit_message = std::format("Failed solving by timeout. (limit:{} timeout:{})",
+                                            d_ilp_data.max_seconds, wait_max_seconds);
+            }
+            else
+            {
+                d_exit_code  = SolverExitCode(p_exitcode);
+                exit_message = exit_code_to_message(d_exit_code);
+            }
+        };
+        // In case of a timeout the async_wait is cancelled. Note that this does not terminate the process!
+        // The process is terminated at the end of the scope in this case.
+        // It would be better to use:
+        // bp::async_execute(std::move(proc))(asio::cancel_after(sec_to_steady_clock_duration(wait_max_seconds)))(set_exit_code);
+        // But as of Boost 1.90, this does not set the error code if the timeout was reached.
+        // See https://github.com/boostorg/process/issues/534
+        proc.async_wait(asio::cancel_after(sec_to_steady_clock_duration(wait_max_seconds)))(set_exit_code);
+        ctx.run();
 
         if (d_ilp_data.log_level)
-            std::cout << "External Solver messages: \"" << exit_message << "\" (Exit Code "
-                      << static_cast<int>(d_exit_code) << ")\n";
+            std::cout << std::format("External Solver messages: \"{}\" (Exit Code {})\n", exit_message, static_cast<int>(d_exit_code));
 
+        // If the child process timed out, reading the solution data is not safe.
+        // The child process may be writing to the shared memory right now.
+        // Note that terminating the child process would not solve that either, as we may terminate it while it is writing.
+        // If we do not read the solution data here, we lose intermediate results.
         communicator.read_solution_data(&d_ilp_solution_data);
     }
     // Rethrow all exceptions as SolverExeExceptions, so they can be easily traced back to this function.
@@ -190,8 +206,11 @@ void ILPSolverStub::solve_impl()
         // if the stub does not work even on a very simple LP, the installation is broken
         if (auto stub_tester_exit_code = stub_tester(d_executable_basename); stub_tester_exit_code != SolverExitCode::ok)
         {
+            exit_message = std::format("{}\nMessage from stub_tester: {}\nPreceding original message: {}",
+                                       exit_code_to_message(SolverExitCode::stub_tester_failed),
+                                       exit_code_to_message(stub_tester_exit_code),
+                                       exit_code_to_message(d_exit_code));
             d_exit_code  = SolverExitCode::stub_tester_failed;
-            exit_message = std::format("{} ({})", exit_code_to_message(d_exit_code), exit_code_to_message(stub_tester_exit_code));
             throw SolverExeException(exit_message);
         }
         // otherwise, we keep d_exit_code, but do not throw

@@ -499,6 +499,58 @@ namespace ilp_solver
     }
 
 
+    void test_dual_bound(ILPSolverInterface* p_solver)
+    {
+        // Trivial integer program: Solved optimally - thus the dual bound is equal to the objective value.
+        const std::vector obj{1., 1.};
+        const std::vector row{1., 2.};
+
+        p_solver->set_presolve(false);
+        p_solver->add_variable_integer(obj[0], 0., 4.);
+        p_solver->add_variable_integer(obj[1], 0., 5.);
+        p_solver->add_constraint_lower(row, 3.);
+        p_solver->minimize();
+
+        const auto objective  = p_solver->get_objective();
+        const auto dual_bound = p_solver->get_dual_bound();
+
+        // Check if the dual bound is equal to the objective. This holds because the solution is optimal.
+        BOOST_REQUIRE_CLOSE(objective, dual_bound, c_eps);
+    }
+
+
+    void test_dual_bound_limited_nodes(ILPSolverInterface* p_solver)
+    {
+        // More difficult integer program (AI generated): Due to the small node limit, may not be solved optimally.
+        // Thus the dual bound may be smaller than the objective value.
+
+        const std::vector obj{63., 44., 84., 49., 62., 77., 57., 92., 48., 67., 81., 39., 73., 55., 96., 42., 88.,
+                              71., 60., 85., 53., 78., 46., 91., 64., 37., 82., 59., 74., 68., 94., 41., 87., 56.,
+                              79., 50., 93., 45., 66., 83., 52., 76., 61., 38., 89., 54., 69., 95., 47., 72.};
+        const std::vector row{31., 22., 42., 25., 30., 38., 28., 46., 24., 33., 40., 19., 36., 27., 48., 21., 44.,
+                              35., 29., 43., 26., 39., 23., 45., 32., 18., 41., 29., 37., 34., 47., 20., 43., 28.,
+                              39., 25., 46., 22., 33., 41., 26., 38., 30., 19., 44., 27., 34., 47., 23., 36.};
+
+        p_solver->set_presolve(false);
+        p_solver->set_max_nodes(1);
+        p_solver->set_max_seconds(10);
+
+        for (int i = 0; i < 50; i++)
+            p_solver->add_variable_integer(obj[i], 0., 1.);
+
+        p_solver->add_constraint_lower(row, 11.);
+        p_solver->minimize();
+
+        const auto objective        = p_solver->get_objective();
+        const auto dual_bound       = p_solver->get_dual_bound();
+        const auto optimal_solution = 37.;
+        // Check if the dual bound is larger (or equal to) the optimal solution and larger than 0.
+        BOOST_REQUIRE_GE(objective + c_eps, optimal_solution);
+        BOOST_REQUIRE_GE(optimal_solution + c_eps, dual_bound);
+        BOOST_REQUIRE_GT(dual_bound, 0.);
+    }
+
+
     void test_bad_alloc(ILPSolverInterface* p_solver)
     {
         srand(3);
@@ -649,7 +701,7 @@ namespace ilp_solver
 int create_ilp_test_suite()
 {
     using namespace ilp_solver;
-    constexpr std::array<std::pair<void (*)(ILPSolverInterface*), std::string_view>, 9> all_tests
+    constexpr std::array<std::pair<void (*)(ILPSolverInterface*), std::string_view>, 11> all_tests
     { std::pair{test_sorting,                     "Sorting"}
     , std::pair{test_linear_programming,          "LinProgr"}
     , std::pair{test_start_solution_minimization, "StartSolutionMin"}
@@ -659,6 +711,8 @@ int create_ilp_test_suite()
     , std::pair{test_performance_big,             "PerformanceBig"}
     , std::pair{test_performance_zero,            "PerformanceZero"}
     , std::pair{test_set_bounds,                  "SetBounds"}
+    , std::pair{test_dual_bound,                  "DualBound"}
+    , std::pair{test_dual_bound_limited_nodes,    "DualBoundLimitedNodes"}
     };
 
     boost::unit_test::test_suite* IlpSolverT = BOOST_TEST_SUITE("IlpSolverT");

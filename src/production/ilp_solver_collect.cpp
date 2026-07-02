@@ -240,7 +240,7 @@ void ILPSolverCollect::set_objective_sense_impl(ObjectiveSense p_sense)
 
 void ILPSolverCollect::set_objective(ValueArray p_coeff)
 {
-    d_ilp_data.objective.assign(p_coeff.begin(), p_coeff.end());
+    d_ilp_data.objective.assign_range(p_coeff);
 }
 
 
@@ -264,7 +264,7 @@ void ILPSolverCollect::set_bound_upper(int p_index, double p_upper_bound)
 
 void ILPSolverCollect::set_start_solution(ValueArray p_solution)
 {
-    d_ilp_data.start_solution.assign(p_solution.begin(), p_solution.end());
+    d_ilp_data.start_solution.assign_range(p_solution);
 }
 
 

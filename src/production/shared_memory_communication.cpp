@@ -18,6 +18,7 @@ static void serialize_result(Serializer* v_serializer, const ILPSolutionData& p_
 {
     *v_serializer   << p_solution_data.solution_status
                     << p_solution_data.objective
+                    << p_solution_data.dual_bound
                     << p_solution_data.solution
                     << p_solution_data.dual_sol
                     << p_solution_data.cpu_time_sec
@@ -29,6 +30,7 @@ static void deserialize_result(Deserializer* v_deserializer, ILPSolutionData* r_
 {
     *v_deserializer >> r_solution_data->solution_status
                     >> r_solution_data->objective
+                    >> r_solution_data->dual_bound
                     >> r_solution_data->solution
                     >> r_solution_data->dual_sol
                     >> r_solution_data->cpu_time_sec

@@ -27,10 +27,11 @@ namespace ilp_solver
         int get_num_constraints() const override;
         int get_num_variables()   const override;
 
-        std::vector<double> get_solution()  const override;
-        std::vector<double> get_dual_sol()  const override;
-        double              get_objective() const override;
-        SolutionStatus      get_status()    const override;
+        std::vector<double> get_solution()   const override;
+        std::vector<double> get_dual_sol()   const override;
+        double              get_objective()  const override;
+        double              get_dual_bound() const override;
+        SolutionStatus      get_status()     const override;
 
         void                reset_solution()      override;
 
@@ -53,7 +54,7 @@ namespace ilp_solver
 
         void print_mps_file        (const std::string& p_path)             override;
 
-        void set_interim_results   (std::function<void(ILPSolutionData*)>) override{ /* Not yet implemented*/ }
+        void set_interim_results   (std::function<void(ILPSolutionData*)>) override{ } // Not yet implemented
 
     private:
         SCIP* d_scip;

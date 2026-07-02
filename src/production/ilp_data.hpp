@@ -182,6 +182,7 @@ struct ILPSolutionData
     std::vector<double> solution;
     std::vector<double> dual_sol;
     double              objective{std::numeric_limits<double>::quiet_NaN()};
+    double              dual_bound{std::numeric_limits<double>::quiet_NaN()};
     SolutionStatus      solution_status{SolutionStatus::NO_SOLUTION};
     double              cpu_time_sec{};
     double              peak_memory{};
@@ -190,6 +191,8 @@ struct ILPSolutionData
 
     explicit ILPSolutionData(ObjectiveSense p_objective_sense)
         : objective(p_objective_sense == ObjectiveSense::MINIMIZE ? std::numeric_limits<double>::max()
+                                                                  : std::numeric_limits<double>::lowest()),
+          dual_bound(p_objective_sense == ObjectiveSense::MINIMIZE ? std::numeric_limits<double>::max()
                                                                   : std::numeric_limits<double>::lowest()),
           solution_status(SolutionStatus::NO_SOLUTION)
         {}

@@ -27,10 +27,11 @@ namespace ilp_solver
             int get_num_constraints() const override;
             int get_num_variables  () const override;
 
-            std::vector<double> get_solution () const override;
-            std::vector<double> get_dual_sol () const override;
-            double              get_objective() const override;
-            SolutionStatus      get_status   () const override;
+            std::vector<double> get_solution()   const override;
+            std::vector<double> get_dual_sol()   const override;
+            double              get_objective()  const override;
+            double              get_dual_bound() const override;
+            SolutionStatus      get_status()     const override;
 
             void set_objective         (ValueArray p_coeff)                     override;
             void set_variable_type     (int p_index, VariableType p_type)       override;
@@ -52,7 +53,7 @@ namespace ilp_solver
 
             void print_mps_file        (const std::string& p_filename)          override;
 
-            void set_interim_results   (std::function<void(ILPSolutionData*)>)  override { /* Not yet implemented*/ }
+            void set_interim_results   (std::function<void(ILPSolutionData*)>)  override { } // Not yet implemented
         private:
             // This should only be used to construct the model and it has to outlive the model.
             // To access the 'model environment' to set parameters etc. use the env() getter below.

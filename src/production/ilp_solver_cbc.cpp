@@ -47,7 +47,8 @@ namespace ilp_solver
             {
                 auto size = model->getNumCols();
                 d_last_solution.solution.assign(best_solution, best_solution + size);
-                d_last_solution.objective = new_value;
+                d_last_solution.objective       = new_value;
+                d_last_solution.dual_bound      = model->getBestPossibleObjValue();
                 d_last_solution.solution_status = SolutionStatus::SUBOPTIMAL;
                 d_interim_handler(&d_last_solution);
             }
@@ -81,7 +82,8 @@ namespace ilp_solver
     {
         // The best solution is stored by CbcModel, not by the solver, thus reimplementation.
         const auto* result = d_model.bestSolution();
-        if (!result) return std::vector<double>();
+        if (!result)
+            return {};
         // No virtual call necessary, since the problem is solved.
         return std::vector<double>(result, result + d_model.getNumCols());
     }
@@ -92,7 +94,7 @@ namespace ilp_solver
         // The best solution is stored by CbcModel, not by the solver, thus reimplementation.
         const auto* result = d_model.getRowPrice();
         if (!result)
-            return std::vector<double>();
+            return {};
         // No virtual call necessary, since the problem is solved.
         return std::vector<double>(result, result + d_model.getNumRows());
     }
@@ -102,6 +104,12 @@ namespace ilp_solver
     {
         // The best objective value is stored by CbcModel, not by the solver, thus reimplementation.
         return d_model.getObjValue();
+    }
+
+
+    double ILPSolverCbc::get_dual_bound() const
+    {
+        return d_model.getBestPossibleObjValue();
     }
 
 

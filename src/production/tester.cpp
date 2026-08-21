@@ -34,7 +34,7 @@ SolverExitCode stub_tester(const std::string& p_executable_basename)
     ilp_solver::ScopedILPSolver solver;
     try
     {
-        solver = create_solver_stub(p_executable_basename.c_str(), true);
+        solver = create_solver(ilp_solver::Solver::STUB, p_executable_basename.c_str(), true);
         solver->set_max_seconds(5);
 
         // max x+y, -1 <= x, y <= 1

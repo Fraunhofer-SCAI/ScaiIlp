@@ -23,11 +23,6 @@ namespace ilp_solver
 ILPSolverHighs::ILPSolverHighs()
 {
     set_default_parameters(this);
-
-    // Disable presolve to enforce the time limit, as presolve does not respect it
-    // see https://github.com/ERGO-Code/HiGHS/issues/1278
-    ASSERT_OK(d_highs.setOptionValue("presolve", "off"));
-    ASSERT_OK(d_highs.setOptionValue("presolve_reduction_limit", 0));
 }
 
 
@@ -190,11 +185,12 @@ void ILPSolverHighs::set_log_level(int p_level)
 }
 
 
-void ILPSolverHighs::set_presolve(bool)
+void ILPSolverHighs::set_presolve(bool p_presolve)
 {
-    // Disabled for now, otherwise the constructor setting is overwritten by stubs default.
     // Allowed values are "off", "choose" or "on". Default is "choose".
-    //ASSERT_OK(d_highs.setOptionValue("presolve", p_presolve ? "choose" : "off"));
+    ASSERT_OK(d_highs.setOptionValue("presolve", p_presolve ? "choose" : "off"));
+    // Also set reduction limit, as presolve subroutines are also called during mip solving.
+    ASSERT_OK(d_highs.setOptionValue("presolve_reduction_limit", p_presolve ? -1 : 0));
 }
 
 

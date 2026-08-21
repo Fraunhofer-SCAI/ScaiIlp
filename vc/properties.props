@@ -13,7 +13,7 @@
     <PTHREAD_DIR>$(optsoft)\pthreads-w32-2-9-1-release_vc142_full</PTHREAD_DIR>
     <PTHREAD_LIB_PATH>$(PTHREAD_DIR)\$(PlatformTarget)-v142-$(LIB_CONFIG)</PTHREAD_LIB_PATH>
     <WITH_HIGHS>true</WITH_HIGHS>
-    <HIGHS_DIR>$(optsoft)\HiGHS_1.13.1\$(PlatformTarget)-Clang-$(LIB_CONFIG)</HIGHS_DIR>
+    <HIGHS_DIR>$(optsoft)\HiGHS_1.15.0\$(PlatformTarget)-Clang-$(LIB_CONFIG)</HIGHS_DIR>
     <HIGHS_INCLUDE_PATH>$(HIGHS_DIR)\include\highs</HIGHS_INCLUDE_PATH>
     <HIGHS_LIB_PATH>$(HIGHS_DIR)\lib</HIGHS_LIB_PATH>
     <WITH_OSI>true</WITH_OSI>

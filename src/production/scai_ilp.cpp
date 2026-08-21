@@ -158,7 +158,7 @@ static ILPSolutionData solution_data(const ScopedILPSolver& p_solver, UserClock:
 static ILPSolutionData solve_ilp(const ILPDataView& p_data, CommunicationChild& p_communicator)
 {
     const auto start_time = UserClock::now();
-    auto       solver     = std::get<0>(all_solvers[1])();
+    auto       solver     = ilp_solver::create_solver(std::get<0>(ilp_solver::impl::all_solvers()[1]));
 
     try
     {

@@ -9,44 +9,16 @@
 
 namespace ilp_solver
 {
+enum class Solver { STUB, CBC, HIGHS, SCIP, GUROBI };
+
 namespace impl
 {
-    extern "C"
-#ifdef WITH_CBC
-        __declspec(dllexport)
-#endif
-            ILPSolverInterface* __stdcall create_solver_cbc();
-
-
-    extern "C"
-#ifdef WITH_SCIP
-        __declspec(dllexport)
-#endif
-            ILPSolverInterface* __stdcall create_solver_scip();
-
-
-    extern "C"
-#if defined(WITH_GUROBI) && (_WIN64 == 1)
-        __declspec(dllexport)
-#endif
-            ILPSolverInterface* __stdcall create_solver_gurobi();
-
-
-    extern "C"
-#if defined(WITH_HIGHS) && (_WIN64 == 1)
-        __declspec(dllexport)
-#endif
-            ILPSolverInterface* __stdcall create_solver_highs();
-
-
-    extern "C"
-#ifdef WITH_STUB
-        __declspec(dllexport)
-#endif
-            ILPSolverInterface* __stdcall create_solver_stub(const char* p_executable_basename, bool p_throw_on_all_crashes);
-
+    extern "C" __declspec(dllexport) ILPSolverInterface* __stdcall create_solver(
+        const Solver p_solver, const char* p_executable_basename, bool p_throw_on_all_crashes);
 
     extern "C" __declspec(dllexport) void __stdcall destroy_solver(ILPSolverInterface* p_solver);
+
+    extern "C" __declspec(dllexport) const std::vector<std::pair<Solver, std::string_view>>& __stdcall all_solvers();
 } // namespace impl
 
 struct SolverDeleter
@@ -55,47 +27,11 @@ struct SolverDeleter
 };
 using ScopedILPSolver = std::unique_ptr<ILPSolverInterface, SolverDeleter>;
 
-inline ScopedILPSolver create_solver_cbc()
+// Returns nullptr if selected solver is not available in ScaiILP.
+inline ScopedILPSolver create_solver(const Solver p_solver, [[maybe_unused]] const char* p_executable_basename = "ScaiIlpExe.exe",
+                                     [[maybe_unused]] bool p_throw_on_all_crashes = false)
 {
-    return ScopedILPSolver(impl::create_solver_cbc());
+    return ScopedILPSolver(impl::create_solver(p_solver, p_executable_basename, p_throw_on_all_crashes));
 }
-
-inline ScopedILPSolver create_solver_scip()
-{
-    return ScopedILPSolver(impl::create_solver_scip());
-}
-
-inline ScopedILPSolver create_solver_gurobi()
-{
-    return ScopedILPSolver(impl::create_solver_gurobi());
-}
-
-inline ScopedILPSolver create_solver_highs()
-{
-    return ScopedILPSolver(impl::create_solver_highs());
-}
-
-inline ScopedILPSolver create_solver_stub(const char* p_executable_basename, bool p_throw_on_all_crashes)
-{
-    return ScopedILPSolver(impl::create_solver_stub(p_executable_basename, p_throw_on_all_crashes));
-}
-
-static const std::vector<std::pair<ScopedILPSolver(__stdcall*)(void), std::string_view>> all_solvers{
-#ifdef WITH_STUB // If enabled, Stub uses the second solver in this list.
-    std::pair{[]() { return create_solver_stub("ScaiIlpExe.exe", false); }, "Stub"},
-#endif
-#ifdef WITH_CBC
-    std::pair{create_solver_cbc, "CBC"},
-#endif
-#if defined(WITH_HIGHS) && (_WIN64 == 1)
-    std::pair{create_solver_highs, "HiGHS"},
-#endif
-#ifdef WITH_SCIP
-    std::pair{create_solver_scip, "SCIP"},
-#endif
-#if defined(WITH_GUROBI) && (_WIN64 == 1)
-    std::pair{create_solver_gurobi, "Gurobi"},
-#endif
-};
 
 } // namespace ilp_solver
